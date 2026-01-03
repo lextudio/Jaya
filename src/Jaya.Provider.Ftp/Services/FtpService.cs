@@ -25,20 +25,25 @@ namespace Jaya.Provider.Ftp.Services
             ConfigurationEditorType = typeof(ConfigurationView);
         }
 
-        async Task<FtpClient> GetConnection(AccountModel account)
+        async Task<AsyncFtpClient> GetConnection(AccountModel account)
         {
-            var connection = new FtpClient();
-            connection.Host = account.Host;
-            connection.Port = account.Port;
+            // FluentFTP v40+ has distinct sync/async clients. Since this service is async,
+            // use AsyncFtpClient to avoid blocking threads.
+
+            AsyncFtpClient client;
 
             if (!account.IsAnonymous)
             {
                 var credentials = new NetworkCredential(account.UserName, account.Password);
-                connection.Credentials = credentials;
+                client = new AsyncFtpClient(account.Host, credentials, account.Port);
+            }
+            else
+            {
+                client = new AsyncFtpClient(account.Host, account.Port);
             }
 
-            await connection.ConnectAsync();
-            return connection;
+            await client.Connect();
+            return client;
         }
 
         public override async Task<DirectoryModel> GetDirectoryAsync(AccountModelBase account, DirectoryModel directory = null)
@@ -59,14 +64,14 @@ namespace Jaya.Provider.Ftp.Services
             model.Directories = new List<DirectoryModel>();
             model.Files = new List<FileModel>();
 
-            using (var client = await GetConnection(account as AccountModel))
+            await using (var client = await GetConnection(account as AccountModel))
             {
-                var entries = await client.GetListingAsync(path, FtpListOption.AllFiles);
+                var entries = await client.GetListing(path, FtpListOption.AllFiles);
                 foreach (var entry in entries)
                 {
                     switch (entry.Type)
                     {
-                        case FtpFileSystemObjectType.Directory:
+                        case FtpObjectType.Directory:
                             var dir = new DirectoryModel();
                             dir.Id = entry.FullName.GetHashCode().ToString();
                             dir.Name = entry.Name;
@@ -77,7 +82,7 @@ namespace Jaya.Provider.Ftp.Services
                             model.Directories.Add(dir);
                             break;
 
-                        case FtpFileSystemObjectType.File:
+                        case FtpObjectType.File:
                             var file = new FileModel();
                             file.Id = entry.FullName.GetHashCode().ToString();
                             file.Name = entry.Name;
@@ -91,7 +96,7 @@ namespace Jaya.Provider.Ftp.Services
                 }
 
                 if (client.IsConnected)
-                    await client.DisconnectAsync();
+                    await client.Disconnect();
             }
 
             AddToCache(account, model);
@@ -102,12 +107,12 @@ namespace Jaya.Provider.Ftp.Services
         {
             var ftpAccount = account as AccountModel;
 
-            using (var connection = await GetConnection(ftpAccount))
+            await using (var connection = await GetConnection(ftpAccount))
             {
                 if (!connection.IsConnected)
                     return null;
 
-                await connection.DisconnectAsync();
+                await connection.Disconnect();
 
                 var config = GetConfiguration<ConfigModel>();
                 config.Accounts.Add(ftpAccount);

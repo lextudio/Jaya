@@ -16,8 +16,7 @@
       <Image Width="96" Height="96" />
     </StackPanel>
   </Design.PreviewWith>
-  <Style>
-    <Style.Resources>
+  <Styles.Resources>
       <LinearGradientBrush x:Key="IconRes.FolderBackBrush" StartPoint="0%,75%" EndPoint="0%,100%">
         <GradientStop Offset="0" Color="#FFE09F00"/>
         <GradientStop Offset="1" Color="#FFD18B00"/>
@@ -1160,6 +1159,5 @@
           <GeometryDrawing Brush="{StaticResource Window.ForegroundBrush}" Geometry="{StaticResource Icon.DiscClean}" />
         </DrawingImage.Drawing>
       </DrawingImage>
-    </Style.Resources>
-  </Style>
+</Styles.Resources>
 </Styles>

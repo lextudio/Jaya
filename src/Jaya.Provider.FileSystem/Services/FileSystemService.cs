@@ -64,16 +64,36 @@ namespace Jaya.Provider.FileSystem.Services
                     }
                     else
                     {
-                        foreach (var driveInfo in DriveInfo.GetDrives())
+                        try
                         {
-                            if (!driveInfo.IsReady)
-                                continue;
+                            foreach (var driveInfo in DriveInfo.GetDrives())
+                            {
+                                try
+                                {
+                                    if (!driveInfo.IsReady)
+                                        continue;
 
-                            var drive = new DirectoryModel(true);
-                            drive.Name = driveInfo.Name;
-                            drive.Path = driveInfo.RootDirectory.FullName;
-                            drive.Size = driveInfo.TotalSize;
-                            model.Directories.Add(drive);
+                                    var drive = new DirectoryModel(true);
+                                    drive.Name = driveInfo.Name;
+                                    drive.Path = driveInfo.RootDirectory.FullName;
+                                    drive.Size = driveInfo.TotalSize;
+                                    model.Directories.Add(drive);
+                                }
+                                catch (Exception)
+                                {
+                                    // Defensive: skip problematic drives during enumeration in environments
+                                    // where native calls may fault. This avoids crashing the app while
+                                    // we validate UI rendering. Specific exceptions can be handled
+                                    // more precisely if needed.
+                                    continue;
+                                }
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            // If DriveInfo.GetDrives throws at the native layer, swallow
+                            // the exception for now to allow UI testing. In production we
+                            // may want to surface or log this.
                         }
                     }
                     AddToCache(account, model);
@@ -81,7 +101,7 @@ namespace Jaya.Provider.FileSystem.Services
                 }
 
                 DirectoryInfo info = new DirectoryInfo(directory.Path);
-                model.Name = info.Name;
+                model.Name = string.IsNullOrEmpty(info.Name) ? info.FullName : info.Name;
                 model.Path = info.FullName;
                 model.Created = info.CreationTime;
                 model.Modified = info.LastWriteTime;
