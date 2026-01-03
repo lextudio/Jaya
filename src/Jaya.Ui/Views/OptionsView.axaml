@@ -22,25 +22,30 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <TextBlock Text="Color Theme:" />
-        <ComboBox
-            Grid.Column="1"
-            ItemsSource="{Binding Themes, Mode=OneWay}"
-            SelectedItem="{Binding ApplicationConfig.Theme, Mode=TwoWay}">
-            <ComboBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Name}" />
-                </DataTemplate>
-            </ComboBox.ItemTemplate>
-        </ComboBox>
+            <ComboBox
+                x:Name="ThemeSelector"
+                Grid.Column="1"
+                ItemsSource="{Binding Themes, Mode=OneWay}"
+                SelectedItem="{Binding SelectedThemePreview, Mode=TwoWay}"
+                >
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
 
         <CheckBox
             Grid.Row="1"
             Grid.ColumnSpan="3"
             Content="Use ribbon interface instead of menu and toolbar."
-            IsChecked="{Binding PaneConfig.IsRibbonVisible, Mode=TwoWay}" />
+            IsChecked="{Binding PaneConfig.IsRibbonVisible, Mode=TwoWay}"
+            Checked="OnPaneOptionChanged"
+            Unchecked="OnPaneOptionChanged" />
 
         <CheckBox
             Grid.Row="2"
@@ -51,12 +56,21 @@
             Grid.Row="3"
             Grid.ColumnSpan="3"
             Content="Show status bar."
-            IsChecked="{Binding PaneConfig.IsStatusBarVisible, Mode=TwoWay}" />
+            IsChecked="{Binding PaneConfig.IsStatusBarVisible, Mode=TwoWay}"
+            Checked="OnPaneOptionChanged"
+            Unchecked="OnPaneOptionChanged" />
 
         <CheckBox
             Grid.Row="4"
             Grid.ColumnSpan="3"
             Content="Show custom title header (menu + window controls)."
-            IsChecked="{Binding PaneConfig.IsMenuHeaderVisible, Mode=TwoWay}" />
+            IsChecked="{Binding PaneConfig.IsMenuHeaderVisible, Mode=TwoWay}"
+            Checked="OnPaneOptionChanged"
+            Unchecked="OnPaneOptionChanged" />
+
+        <StackPanel Grid.Row="5" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="_OK" Margin="4" Click="OnOkClicked" />
+            <Button Content="_Cancel" Margin="4" Click="OnCancelClicked" />
+        </StackPanel>
     </Grid>
 </UserControl>

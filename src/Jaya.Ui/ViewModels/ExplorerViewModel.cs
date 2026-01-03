@@ -9,6 +9,7 @@ using Jaya.Ui.Models;
 using Jaya.Ui.Services;
 using Serilog;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -78,7 +79,28 @@ namespace Jaya.Ui.ViewModels
                     break;
 
                 case ItemType.File:
-                    break;
+                {
+                    var file = obj.Object as FileModel;
+                    var path = file?.Path;
+
+                    FileSystemLogger.Information("File activated: {Label} path={Path}", obj.Label, path ?? "<unknown>");
+
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        try
+                        {
+                            OpenFile(path);
+                            FileSystemLogger.Information("Launched file: {Path}", path);
+                        }
+                        catch (Exception ex)
+                        {
+                            FileSystemLogger.Error(ex, "Failed to open file: {Path}", path);
+                        }
+                    }
+
+                    IsBusy = false;
+                    return;
+                }
 
                 case ItemType.Computer:
                     directory = obj.Object as DirectoryModel;
@@ -97,6 +119,27 @@ namespace Jaya.Ui.ViewModels
 
             var eventArgs = new SelectionChangedEventArgs(_service, _account, directory);
             EventAggregator.Publish(eventArgs);
+        }
+
+        static void OpenFile(string path)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                // Use cmd /c start to open with default app
+                var psi = new ProcessStartInfo("cmd", $"/c start \"\" \"{path}\"") { CreateNoWindow = true, UseShellExecute = false };
+                Process.Start(psi);
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                var psi = new ProcessStartInfo("open", $"\"{path}\"") { CreateNoWindow = true, UseShellExecute = false };
+                Process.Start(psi);
+            }
+            else
+            {
+                // Assume linux/unix
+                var psi = new ProcessStartInfo("xdg-open", $"\"{path}\"") { CreateNoWindow = true, UseShellExecute = false };
+                Process.Start(psi);
+            }
         }
 
         async void SelectionChanged(SelectionChangedEventArgs args)

@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using Jaya.Shared.Base;
 using Jaya.Shared.Models;
 using System;
@@ -15,6 +16,7 @@ namespace Jaya.Shared
         readonly List<ThemeModel> _themes;
         readonly List<Window> _windows;
         readonly Dictionary<Window, List<IStyle>> _windowStyles;
+        ThemeModel _selectedTheme;
 
         static ThemeManager()
         {
@@ -36,7 +38,7 @@ namespace Jaya.Shared
                     new Uri("avares://Jaya.Shared/Styles/Accents/BaseDark.axaml"))
             };
 
-            SelectedTheme = _themes[0];
+            ApplyTheme(_themes[0]);
         }
 
         public static ThemeManager Instance
@@ -55,33 +57,36 @@ namespace Jaya.Shared
 
         public IEnumerable<ThemeModel> Themes => _themes;
 
-        public ThemeModel SelectedTheme
+        public ThemeModel SelectedTheme => _selectedTheme;
+
+        public void ApplyTheme(ThemeModel value)
         {
-            get => Get<ThemeModel>();
-            set
+            if (Design.IsDesignMode || value == null || value.Styles.Count == 0)
+                return;
+
+            if (_selectedTheme == value)
+                return;
+
+            var previousTheme = _selectedTheme;
+            _selectedTheme = value;
+
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                if (Design.IsDesignMode)
-                    return;
-
-                var currentTheme = Get<ThemeModel>();
-
-                if (!Set(value) || value.Styles.Count == 0)
-                    return;
-
                 Application.Current.RequestedThemeVariant = value.Variant;
 
                 var currentAppStyles = new List<IStyle>();
                 currentAppStyles.AddRange(Application.Current.Styles);
 
-                // remove default theme styles
-                currentAppStyles.RemoveRange(0, 2);
+                var removalCount = Math.Min(2, currentAppStyles.Count);
+                if (removalCount > 0)
+                    currentAppStyles.RemoveRange(0, removalCount);
 
                 currentAppStyles.InsertRange(0, SelectedTheme.Styles);
 
                 Application.Current.Styles.Clear();
                 Application.Current.Styles.AddRange(currentAppStyles);
 
-                if (currentTheme != null)
+                if (previousTheme != null)
                 {
                     foreach (var window in _windows)
                     {
@@ -98,7 +103,7 @@ namespace Jaya.Shared
                             window.Styles.Add(style);
                     }
                 }
-            }
+            }, Avalonia.Threading.DispatcherPriority.Background);
         }
 
         public void EnableTheme(Window window)

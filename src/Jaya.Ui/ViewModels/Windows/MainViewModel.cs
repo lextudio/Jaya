@@ -6,6 +6,7 @@ using Jaya.Shared;
 using Jaya.Shared.Base;
 using Jaya.Ui.Models;
 using Jaya.Ui.Services;
+using Serilog;
 using System.ComponentModel;
 
 namespace Jaya.Ui.ViewModels.Windows
@@ -14,6 +15,7 @@ namespace Jaya.Ui.ViewModels.Windows
     {
         readonly Subscription<SelectionChangedEventArgs> _onDirectoryChanged;
         readonly SharedService _shared;
+        static readonly ILogger Logger = Log.ForContext<MainViewModel>();
         public MainViewModel()
         {
             WindowTitle = Constants.APP_NAME;
@@ -25,6 +27,8 @@ namespace Jaya.Ui.ViewModels.Windows
             _shared.PaneConfiguration.PropertyChanged += OnPropertyChanged;
 
             SimpleCommand = new RelayCommand<byte>(_shared.SimpleCommandAction);
+
+            LogRibbonVisibilityAtStartup();
         }
 
         ~MainViewModel()
@@ -65,6 +69,14 @@ namespace Jaya.Ui.ViewModels.Windows
 
         void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (PaneConfig == null)
+                return;
+
+            Logger.Debug("PaneConfig property changed: {Property} -> RibbonVisible={Ribbon}, MenuHeader={Menu}",
+                e.PropertyName,
+                PaneConfig.IsRibbonVisible,
+                PaneConfig.IsMenuHeaderVisible);
+
             switch(e.PropertyName)
             {
                 case nameof(PaneConfigModel.IsRibbonVisible):
@@ -79,6 +91,36 @@ namespace Jaya.Ui.ViewModels.Windows
                 case nameof(ToolbarConfigModel.IsVisible):
                     RaisePropertyChanged(nameof(IsToolbarVisible));
                     break;
+            }
+        }
+
+        void LogRibbonVisibilityAtStartup()
+        {
+            if (PaneConfig == null || ToolbarConfig == null)
+                return;
+
+            Logger.Information("Startup layout: RibbonVisible={Ribbon}, RibbonCollapsed={Collapsed}, MenuHeaderVisible={MenuHeader}, ToolbarVisible={Toolbar}",
+                PaneConfig.IsRibbonVisible,
+                PaneConfig.IsRibbonCollapsed,
+                PaneConfig.IsMenuHeaderVisible,
+                ToolbarConfig.IsVisible);
+
+            if (!PaneConfig.IsRibbonVisible)
+            {
+                var reason = PaneConfig.IsMenuHeaderVisible ? "menu header is enabled" : "ribbon was disabled";
+                Logger.Information("Ribbon UI is hidden at startup ({Reason})", reason);
+                return;
+            }
+
+            if (PaneConfig.IsMenuHeaderVisible)
+            {
+                Logger.Information("Ribbon UI replaced by inline menu because menu header choice is enabled.");
+                return;
+            }
+
+            if (PaneConfig.IsRibbonCollapsed)
+            {
+                Logger.Information("Ribbon UI is collapsed at startup; toggle via the ribbon collapse button.");
             }
         }
     }

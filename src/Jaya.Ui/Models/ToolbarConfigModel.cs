@@ -52,7 +52,7 @@ namespace Jaya.Ui.Models
                 IsEditVisible = true,
                 IsViewVisible = true,
                 IsHelpVisible = true,
-                IsVisible = true
+                IsVisible = false
             };
         }
     }

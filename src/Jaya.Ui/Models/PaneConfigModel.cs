@@ -235,7 +235,7 @@ namespace Jaya.Ui.Models
                 IsDetailsView = false,
                 IsThumbnailView = true,
                 IsStatusBarVisible = true,
-                IsRibbonVisible = false,
+                IsRibbonVisible = true,
                 IsRibbonCollapsed = false,
                 IsMenuHeaderVisible = false
             };

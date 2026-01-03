@@ -5,6 +5,7 @@
 using Jaya.Shared;
 using Jaya.Shared.Services;
 using Jaya.Ui.Models;
+using Serilog;
 using System.Collections.Generic;
 
 namespace Jaya.Ui.Services
@@ -16,6 +17,7 @@ namespace Jaya.Ui.Services
 
         readonly ICommandService _commandService;
         readonly IConfigurationService _configService;
+        static readonly ILogger Logger = Log.ForContext<SharedService>();
 
         public SharedService(
             ICommandService commandService,
@@ -64,7 +66,10 @@ namespace Jaya.Ui.Services
 
         public void SimpleCommandAction(byte type)
         {
-            switch ((CommandType)type)
+            var command = (CommandType)type;
+            Logger.Debug("Executing toolbar command {Command}", command);
+            var persistToolbar = false;
+            switch (command)
             {
                 case CommandType.ToggleItemCheckBoxes:
                     ApplicationConfiguration.IsItemCheckBoxVisible = !ApplicationConfiguration.IsItemCheckBoxVisible;
@@ -80,22 +85,27 @@ namespace Jaya.Ui.Services
 
                 case CommandType.ToggleToolbars:
                     ToolbarConfiguration.IsVisible = !ToolbarConfiguration.IsVisible;
+                    persistToolbar = true;
                     break;
 
                 case CommandType.ToggleToolbarFile:
                     ToolbarConfiguration.IsFileVisible = !ToolbarConfiguration.IsFileVisible;
+                    persistToolbar = true;
                     break;
 
                 case CommandType.ToggleToolbarEdit:
                     ToolbarConfiguration.IsEditVisible = !ToolbarConfiguration.IsEditVisible;
+                    persistToolbar = true;
                     break;
 
                 case CommandType.ToggleToolbarView:
                     ToolbarConfiguration.IsViewVisible = !ToolbarConfiguration.IsViewVisible;
+                    persistToolbar = true;
                     break;
 
                 case CommandType.ToggleToolbarHelp:
                     ToolbarConfiguration.IsHelpVisible = !ToolbarConfiguration.IsHelpVisible;
+                    persistToolbar = true;
                     break;
 
                 case CommandType.TogglePaneNavigation:
@@ -114,11 +124,41 @@ namespace Jaya.Ui.Services
                     App.Lifetime.Shutdown();
                     break;
             }
+            if (persistToolbar)
+            {
+                try
+                {
+                    _configService.Set(ToolbarConfiguration);
+                }
+                catch (System.Exception ex)
+                {
+                    Logger.Warning(ex, "Failed to persist toolbar configuration immediately");
+                }
+            }
+
+            Logger.Debug("PaneConfig states: Ribbon={Ribbon}, MenuHeader={MenuHeader}, ToolbarVisible={Toolbar}",
+                PaneConfiguration.IsRibbonVisible,
+                PaneConfiguration.IsMenuHeaderVisible,
+                ToolbarConfiguration.IsVisible);
+            LogPaneState(command.ToString());
         }
 
         void ParameterizedCommandAction(KeyValuePair<byte, object> parameter)
         {
             var command = (CommandType)parameter.Key;
+        }
+
+        void LogPaneState(string source)
+        {
+            if (PaneConfiguration == null || ToolbarConfiguration == null)
+                return;
+
+            Logger.Information("Pane state ({Source}): RibbonVisible={Ribbon}, MenuHeader={Menu}, Toolbar.IsVisible={Toolbar}, StatusBarVisible={Status}",
+                source,
+                PaneConfiguration.IsRibbonVisible,
+                PaneConfiguration.IsMenuHeaderVisible,
+                ToolbarConfiguration.IsVisible,
+                PaneConfiguration.IsStatusBarVisible);
         }
     }
 }

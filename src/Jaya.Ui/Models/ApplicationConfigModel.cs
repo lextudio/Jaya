@@ -49,6 +49,7 @@ namespace Jaya.Ui.Models
         }
 
 
+        [System.Text.Json.Serialization.JsonIgnore]
         public ThemeModel Theme
         {
             get => Get<ThemeModel>();
@@ -56,14 +57,14 @@ namespace Jaya.Ui.Models
             {
                 if (Set(value))
                 {
-                    ThemeManager.Instance.SelectedTheme = value;
+                    ThemeManager.Instance.ApplyTheme(value);
                     Set(value.Name, nameof(ThemeName), false);
                 }
             }
         }
 
         [JsonPropertyName("themeName")]
-        string ThemeName
+        public string ThemeName
         {
             get => Get<string>();
             set
