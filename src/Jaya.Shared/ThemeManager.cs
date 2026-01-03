@@ -14,6 +14,7 @@ namespace Jaya.Shared
         static ThemeManager _instance;
         readonly List<ThemeModel> _themes;
         readonly List<Window> _windows;
+        readonly Dictionary<Window, List<IStyle>> _windowStyles;
 
         static ThemeManager()
         {
@@ -23,14 +24,15 @@ namespace Jaya.Shared
         private ThemeManager()
         {
             _windows = new List<Window>();
+            _windowStyles = new Dictionary<Window, List<IStyle>>();
 
             _themes = new List<ThemeModel>
             {
-                new ThemeModel("Light",
-                    new Uri("avares://Avalonia.Themes.Default/Accents/BaseLight.xaml"),
+                new ThemeModel("Light", ThemeVariant.Light,
+                    new Uri("avares://Avalonia.Themes.Fluent/FluentTheme.xaml"),
                     new Uri("avares://Jaya.Shared/Styles/Accents/BaseLight.axaml")),
-                new ThemeModel("Dark",
-                    new Uri("avares://Avalonia.Themes.Default/Accents/BaseDark.xaml"),
+                new ThemeModel("Dark", ThemeVariant.Dark,
+                    new Uri("avares://Avalonia.Themes.Fluent/FluentTheme.xaml"),
                     new Uri("avares://Jaya.Shared/Styles/Accents/BaseDark.axaml"))
             };
 
@@ -66,6 +68,8 @@ namespace Jaya.Shared
                 if (!Set(value) || value.Styles.Count == 0)
                     return;
 
+                Application.Current.RequestedThemeVariant = value.Variant;
+
                 var currentAppStyles = new List<IStyle>();
                 currentAppStyles.AddRange(Application.Current.Styles);
 
@@ -81,10 +85,16 @@ namespace Jaya.Shared
                 {
                     foreach (var window in _windows)
                     {
-                        foreach (var style in currentTheme.Styles)
-                            window.Styles.Remove(style);
+                        if (_windowStyles.TryGetValue(window, out var attached))
+                        {
+                            foreach (var style in attached)
+                                window.Styles.Remove(style);
+                        }
 
-                        foreach (var style in SelectedTheme.Styles)
+                        var newStyles = CloneStyles(SelectedTheme);
+                        _windowStyles[window] = newStyles;
+
+                        foreach (var style in newStyles)
                             window.Styles.Add(style);
                     }
                 }
@@ -96,8 +106,11 @@ namespace Jaya.Shared
             if (Design.IsDesignMode)
             {
                 if (SelectedTheme != null && SelectedTheme.Styles.Count > 0)
-                    foreach (var style in SelectedTheme.Styles)
+                {
+                    var styles = CloneStyles(SelectedTheme);
+                    foreach (var style in styles)
                         window.Styles.Add(style);
+                }
             }
 
             window.Opened += (sender, e) =>
@@ -105,14 +118,50 @@ namespace Jaya.Shared
                 _windows.Add(window);
 
                 if (SelectedTheme != null && SelectedTheme.Styles.Count > 0)
-                    foreach (var style in SelectedTheme.Styles)
+                {
+                    var styles = CloneStyles(SelectedTheme);
+                    _windowStyles[window] = styles;
+
+                    foreach (var style in styles)
                         window.Styles.Add(style);
+                }
             };
 
             window.Closing += (sender, e) =>
             {
+                if (_windowStyles.TryGetValue(window, out var attached))
+                {
+                    foreach (var style in attached)
+                        window.Styles.Remove(style);
+
+                    _windowStyles.Remove(window);
+                }
+
                 _windows.Remove(window);
             };
+        }
+
+        static List<IStyle> CloneStyles(ThemeModel theme)
+        {
+            var clones = new List<IStyle>();
+
+            foreach (var style in theme.Styles)
+            {
+                if (style is Avalonia.Markup.Xaml.Styling.StyleInclude include)
+                {
+                    var clone = new Avalonia.Markup.Xaml.Styling.StyleInclude(include.Source)
+                    {
+                        Source = include.Source
+                    };
+                    clones.Add(clone);
+                }
+                else
+                {
+                    clones.Add(style);
+                }
+            }
+
+            return clones;
         }
     }
 }

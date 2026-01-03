@@ -8,22 +8,56 @@ namespace Jaya.Shared.Models
 {
     public class ThemeModel : ModelBase
     {
-        public ThemeModel(string name, params Uri[] themeStyleUris)
+        public ThemeModel(string name, params IStyle[] themeStyles)
+            : this(name, ThemeVariant.Light, themeStyles)
+        {
+        }
+
+        public ThemeModel(string name, ThemeVariant variant, params IStyle[] themeStyles)
         {
             Name = name;
+            Variant = variant;
+
+            Styles = new List<IStyle>(themeStyles ?? Array.Empty<IStyle>());
+        }
+
+        public ThemeModel(string name, params Uri[] themeStyleUris)
+            : this(name, ThemeVariant.Light, BuildStyles(themeStyleUris))
+        {
+        }
+
+        public ThemeModel(string name, ThemeVariant variant, params Uri[] themeStyleUris)
+            : this(name, variant, BuildStyles(themeStyleUris))
+        {
+        }
+
+        static IStyle[] BuildStyles(Uri[] themeStyleUris)
+        {
+            if (themeStyleUris == null || themeStyleUris.Length == 0)
+                return Array.Empty<IStyle>();
 
             var styles = new List<IStyle>();
             foreach (var styleUri in themeStyleUris)
             {
+                if (styleUri == null)
+                    continue;
+
                 var style = new StyleInclude(styleUri) { Source = styleUri };
                 styles.Add(style);
             }
-            Styles = styles;
+
+            return styles.ToArray();
         }
 
         public string Name
         {
             get => Get<string>();
+            private set => Set(value);
+        }
+
+        public ThemeVariant Variant
+        {
+            get => Get<ThemeVariant>();
             private set => Set(value);
         }
 
