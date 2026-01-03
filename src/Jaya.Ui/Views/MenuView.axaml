@@ -9,7 +9,7 @@
     xmlns:vm="clr-namespace:Jaya.Ui.ViewModels;assembly=Jaya.Ui"
     j:ViewModelLocator.AutoWireViewModel="True"
     mc:Ignorable="d">
-    <Menu>
+    <Menu x:Name="RootMenu">
         <Menu.Resources>
             <j:MultiValueConverter x:Key="MultiValueConverter" />
         </Menu.Resources>
@@ -206,15 +206,31 @@
                 </MenuItem.Icon>
             </MenuItem>
             <Separator />
-            <MenuItem Header="Plugins...">
+            <MenuItem Header="Plugins..."
+                      Command="{Binding OpenWindowCommand}">
                 <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.Plugin.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
+                <MenuItem.CommandParameter>
+                    <j:WindowOptionsModel
+                        Title="Plugins"
+                        Width="640"
+                        Height="480"
+                        ContentType="{x:Type v:ManagePluginsView}" />
+                </MenuItem.CommandParameter>
             </MenuItem>
-            <MenuItem Header="Options...">
+            <MenuItem Header="Options..."
+                      Command="{Binding OpenWindowCommand}">
                 <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.Property.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
+                <MenuItem.CommandParameter>
+                    <j:WindowOptionsModel
+                        Title="Options"
+                        Width="640"
+                        Height="480"
+                        ContentType="{x:Type v:OptionsView}" />
+                </MenuItem.CommandParameter>
             </MenuItem>
         </MenuItem>
 
@@ -261,10 +277,18 @@
                     <Image Source="{DynamicResource Icon.History.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
-            <MenuItem Header="Advanced Options">
+            <MenuItem Header="Advanced Options"
+                      Command="{Binding OpenWindowCommand}">
                 <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.Property.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
+                <MenuItem.CommandParameter>
+                    <j:WindowOptionsModel
+                        Title="Advanced Options"
+                        Width="640"
+                        Height="480"
+                        ContentType="{x:Type v:OptionsView}" />
+                </MenuItem.CommandParameter>
             </MenuItem>
             <MenuItem Header="Save Search">
                 <MenuItem.Icon>
