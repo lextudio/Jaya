@@ -16,604 +16,639 @@
     <Panel>
         <ribbon:Ribbon>
             <ribbon:Ribbon.Menu>
-              <ribbon:RibbonMenu>
-                <ribbon:RibbonMenuItem ribbon:KeyTip.KeyTipKeys="F" Command="{Binding SimpleCommand}" CommandParameter="{x:Static local:CommandType.Exit}" Header="Close">
-                </ribbon:RibbonMenuItem>
-              </ribbon:RibbonMenu>
-            </ribbon:Ribbon.Menu>
-            <ribbon:RibbonTab ribbon:KeyTip.KeyTipKeys="H" Header="Home">
-                <ribbon:RibbonTab.Groups>
-                    <ribbon:RibbonGroupBox Header="Clipboard">
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="CO"
-                            Content="Copy"
-                            MaxSize="Large"
-                            MinSize="Large">
-</ribbon:RibbonButton>
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="V"
-                            Content="Paste"
-                            MaxSize="Large"
-                            MinSize="Large">
-</ribbon:RibbonButton>
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="T"
-                            Content="Cut"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonButton>
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="CP"
-                            Content="Copy Path"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonButton>
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="PS"
-                            Content="Paste shortcut"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonButton>
-                    </ribbon:RibbonGroupBox>
-                    <ribbon:RibbonGroupBox Header="Organize">
-                        <ribbon:RibbonToggleButton
-                            ribbon:KeyTip.KeyTipKeys="M"
-                            Content="Move to"
-                            MaxSize="Large"
-                            MinSize="Medium">
-
-</ribbon:RibbonToggleButton>
-                        <ribbon:RibbonToggleButton
-                            ribbon:KeyTip.KeyTipKeys="CF"
-                            Content="Copy to"
-                            MaxSize="Large"
-                            MinSize="Medium">
-
-</ribbon:RibbonToggleButton>
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="D"
-                            Content="Delete"
-                            MaxSize="Large"
-                            MinSize="Medium">
-
-</ribbon:RibbonButton>
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="R"
-                            Content="Rename"
-                            MaxSize="Large"
-                            MinSize="Medium">
-
-</ribbon:RibbonButton>
-                    </ribbon:RibbonGroupBox>
-                    <ribbon:RibbonGroupBox Header="New">
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="N"
-                            Content="New folder"
-                            MaxSize="Large"
-                            MinSize="Small">
-
-</ribbon:RibbonButton>
-                        <ribbon:RibbonToggleButton
-                            ribbon:KeyTip.KeyTipKeys="W"
-                            Content="New item"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonToggleButton>
-                        <ribbon:RibbonToggleButton
-                            ribbon:KeyTip.KeyTipKeys="A"
-                            Content="Easy access"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonToggleButton>
-                    </ribbon:RibbonGroupBox>
-                    <ribbon:RibbonGroupBox Header="Open">
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="PR"
-                            Content="Properties"
-                            MaxSize="Large"
-                            MinSize="Small">
-
-</ribbon:RibbonButton>
-                        <ribbon:RibbonSplitButton
-                            ribbon:KeyTip.KeyTipKeys="PE"
-                            Content="Open"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonSplitButton>
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="E"
-                            Content="Edit"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonButton>
-                    </ribbon:RibbonGroupBox>
-                    <ribbon:RibbonGroupBox Header="Select">
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="E"
-                            Content="Select all"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonButton>
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="E"
-                            Content="Select none"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonButton>
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="E"
-                            Content="Invert selection"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonButton>
-                    </ribbon:RibbonGroupBox>
-                </ribbon:RibbonTab.Groups>
-            </ribbon:RibbonTab>
-            <!--ribbon:RibbonTab ribbon:KeyTip.KeyTipKeys="S" Header="Share">
-                <ribbon:RibbonTab.Groups>
-                    <ribbon:RibbonGroupBox Header="TBD" />
-                </ribbon:RibbonTab.Groups>
-            </ribbon:RibbonTab-->
-            <ribbon:RibbonTab ribbon:KeyTip.KeyTipKeys="V" Header="View">
-                <ribbon:RibbonTab.Groups>
-                    <ribbon:RibbonGroupBox Header="Panes">
-                        <ribbon:RibbonToggleButton
-                            ribbon:KeyTip.KeyTipKeys="N"
-                            Content="Navigation pane"
-                            IsChecked="{Binding PaneConfig.IsNavigationPaneVisible, Mode=TwoWay}"
-                            MaxSize="Large"
-                            MinSize="Small">
-
-</ribbon:RibbonToggleButton>
-                        <ribbon:RibbonToggleButton
-                            ribbon:KeyTip.KeyTipKeys="P"
-                            Content="Preview pane"
-                            IsChecked="{Binding PaneConfig.IsPreviewPaneVisible, Mode=TwoWay}"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonToggleButton>
-                        <ribbon:RibbonToggleButton
-                            ribbon:KeyTip.KeyTipKeys="D"
-                            Content="Details pane"
-                            IsChecked="{Binding PaneConfig.IsDetailsPaneVisible, Mode=TwoWay}"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonToggleButton>
-                    </ribbon:RibbonGroupBox>
-                    <ribbon:RibbonGroupBox Header="Layout">
-                      <ribbon:Gallery ribbon:KeyTip.KeyTipKeys="L">
-                        <ribbon:GalleryItem Content="Icons" IsSelected="{Binding PaneConfig.IsThumbnailView, Mode=TwoWay}">
-</ribbon:GalleryItem>
-                        <ribbon:GalleryItem Content="List" IsSelected="{Binding PaneConfig.IsListView, Mode=TwoWay}">
-</ribbon:GalleryItem>
-                        <ribbon:GalleryItem Content="Details" IsSelected="{Binding PaneConfig.IsDetailsView, Mode=TwoWay}">
-</ribbon:GalleryItem>
-                        <ribbon:GalleryItem Content="Tiles" IsSelected="{Binding PaneConfig.IsTilesView, Mode=TwoWay}">
-</ribbon:GalleryItem>
-                        <ribbon:GalleryItem Content="Content" IsSelected="{Binding PaneConfig.IsContentView, Mode=TwoWay}">
-</ribbon:GalleryItem>
-                      </ribbon:Gallery>
-                    </ribbon:RibbonGroupBox>
-                    <ribbon:RibbonGroupBox Header="Show/hide">
-                        <ribbon:RibbonToggleButton
-                            ribbon:KeyTip.KeyTipKeys="HT"
-                            Content="Item check boxes"
-                            IsChecked="{Binding ApplicationConfig.IsItemCheckBoxVisible, Mode=TwoWay}"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonToggleButton>
-                        <ribbon:RibbonToggleButton
-                            ribbon:KeyTip.KeyTipKeys="HF"
-                            Content="File name extensions"
-                            IsChecked="{Binding ApplicationConfig.IsFileNameExtensionVisible, Mode=TwoWay}"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonToggleButton>
-                        <ribbon:RibbonToggleButton
-                            ribbon:KeyTip.KeyTipKeys="HH"
-                            Content="Hidden items"
-                            IsChecked="{Binding ApplicationConfig.IsHiddenItemVisible, Mode=TwoWay}"
-                            MaxSize="Medium"
-                            MinSize="Small">
-</ribbon:RibbonToggleButton>
-                    </ribbon:RibbonGroupBox>
-                    <ribbon:RibbonGroupBox Header="Configuration">
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="OP"
-                            Command="{Binding OpenWindowCommand}"
-                            Content="Options"
-                            MaxSize="Large"
-                            MinSize="Medium">
-                            <ribbon:RibbonButton.CommandParameter>
-                                <j:WindowOptionsModel
-                                    Title="Options"
-                                    Width="640"
-                                    Height="480"
-                                    ContentType="{x:Type v:OptionsView}" />
-                            </ribbon:RibbonButton.CommandParameter>
-
-</ribbon:RibbonButton>
-                        <ribbon:RibbonButton
-                            ribbon:KeyTip.KeyTipKeys="PL"
-                            Command="{Binding OpenWindowCommand}"
-                            Content="Plugins"
-                            MaxSize="Large"
-                            MinSize="Medium">
-                            <ribbon:RibbonButton.CommandParameter>
-                                <j:WindowOptionsModel
-                                    Title="Plugins"
-                                    Width="640"
-                                    Height="480"
-                                    ContentType="{x:Type v:ManagePluginsView}" />
-                            </ribbon:RibbonButton.CommandParameter>
-
-</ribbon:RibbonButton>
-                    </ribbon:RibbonGroupBox>
-                </ribbon:RibbonTab.Groups>
-            </ribbon:RibbonTab>
-        </ribbon:Ribbon>
-        <!--Ribbon>
-        <RibbonTab Header="File">
-            <StackPanel>
-                <RibbonGroup Header="New">
-                    <Button Classes="Large" ToolTip.Tip="New Folder">
-                        <StackPanel>
-<TextBlock Text="New Folder" />
-                        </StackPanel>
-                    </Button>
-                </RibbonGroup>
-
-                <RibbonGroup Header="Open">
-                    <Button Classes="Large" ToolTip.Tip="Properties">
-                        <StackPanel>
-<TextBlock Text="Properties" />
-                        </StackPanel>
-                    </Button>
-                    <StackPanel>
-                        <Button Classes="Small" ToolTip.Tip="Open">
-                            <StackPanel>
-<TextBlock Text="Open" />
-                            </StackPanel>
-                        </Button>
-                        <Button Classes="Small" ToolTip.Tip="Edit">
-                            <StackPanel>
-<TextBlock Text="Edit" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </RibbonGroup>
-
-                <RibbonGroup Header="Actions">
-                    <Button
-                        Classes="Large"
+                <ribbon:RibbonMenu>
+                    <ribbon:RibbonMenuItem
+                        ribbon:KeyTip.KeyTipKeys="F"
                         Command="{Binding SimpleCommand}"
                         CommandParameter="{x:Static local:CommandType.Exit}"
-                        ToolTip.Tip="Exit">
-                        <StackPanel>
-<TextBlock Text="Exit" />
-                        </StackPanel>
-                    </Button>
-                </RibbonGroup>
-            </StackPanel>
-        </RibbonTab>
-        <RibbonTab Header="Edit">
-            <StackPanel>
-                <RibbonGroup Header="Clipboard">
-                    <Button Classes="Large" ToolTip.Tip="Copy">
-                        <StackPanel>
-<TextBlock Text="Copy" />
-                        </StackPanel>
-                    </Button>
-                    <Button Classes="Large" ToolTip.Tip="Paste">
-                        <StackPanel>
-<TextBlock Text="Paste" />
-                        </StackPanel>
-                    </Button>
-                    <StackPanel>
-                        <Button Classes="Small" ToolTip.Tip="Cut">
-                            <StackPanel>
-<TextBlock Text="Cut" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </RibbonGroup>
+                        Header="Close">
+                        <ribbon:RibbonMenuItem.Icon>
+                            <Image Source="{DynamicResource Icon.Close.Image}" Width="32" Height="32" />
+                        </ribbon:RibbonMenuItem.Icon>
+                    </ribbon:RibbonMenuItem>
 
-                <RibbonGroup Header="Organize">
-                    <Button Classes="Large" ToolTip.Tip="Delete">
-                        <StackPanel>
-<TextBlock Text="Delete" />
-                        </StackPanel>
-                    </Button>
-                    <Button Classes="Large" ToolTip.Tip="Rename">
-                        <StackPanel>
-<TextBlock Text="Rename" />
-                        </StackPanel>
-                    </Button>
-                    <Button Classes="Large" ToolTip.Tip="Format">
-                        <StackPanel>
-                            <Path Data="{StaticResource Icon.DiscClean}" />
-                            <TextBlock Text="Format" />
-                        </StackPanel>
-                    </Button>
-                </RibbonGroup>
-
-                <RibbonGroup Header="Select">
-                    <StackPanel>
-                        <Button Classes="Small" ToolTip.Tip="Select All">
-                            <StackPanel>
-<TextBlock Text="Select All" />
-                            </StackPanel>
-                        </Button>
-                        <Button Classes="Small" ToolTip.Tip="Select None">
-                            <StackPanel>
-<TextBlock Text="Select None" />
-                            </StackPanel>
-                        </Button>
-                        <Button Classes="Small" ToolTip.Tip="Invert Selection">
-                            <StackPanel>
-<TextBlock Text="Invert Selection" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </RibbonGroup>
-            </StackPanel>
-        </RibbonTab>
-        <RibbonTab Header="View">
-            <StackPanel>
-                <RibbonGroup Header="Panes">
-                    <ToggleButton
-                        Classes="Large"
-                        Command="{Binding SimpleCommand}"
-                        CommandParameter="{x:Static local:CommandType.TogglePaneNavigation}"
-                        IsChecked="{Binding PaneConfig.IsNavigationPaneVisible, Mode=OneWay}"
-                        ToolTip.Tip="Navigation Pane">
-                        <StackPanel>
-<TextBlock Text="Navigation Pane" />
-                        </StackPanel>
-                    </ToggleButton>
-                    <StackPanel>
-                        <ToggleButton
-                            Classes="Small"
+                    <ribbon:RibbonMenuItem Header="File" ribbon:KeyTip.KeyTipKeys="FI">
+                        <ribbon:RibbonMenuItem
                             Command="{Binding SimpleCommand}"
-                            CommandParameter="{x:Static local:CommandType.TogglePanePreview}"
-                            IsChecked="{Binding PaneConfig.IsPreviewPaneVisible, Mode=OneWay}"
-                            ToolTip.Tip="Preview Pane">
-                            <StackPanel>
-<TextBlock Text="Preview Pane" />
-                            </StackPanel>
-                        </ToggleButton>
-                        <ToggleButton
-                            Classes="Small"
-                            Command="{Binding SimpleCommand}"
-                            CommandParameter="{x:Static local:CommandType.TogglePaneDetails}"
-                            IsChecked="{Binding PaneConfig.IsDetailsPaneVisible, Mode=OneWay}"
-                            ToolTip.Tip="Details Pane">
-                            <StackPanel>
-<TextBlock Text="Details Pane" />
-                            </StackPanel>
-                        </ToggleButton>
-                    </StackPanel>
-                </RibbonGroup>
+                            CommandParameter="{x:Static local:CommandType.Exit}"
+                            Header="Exit" />
+                    </ribbon:RibbonMenuItem>
 
-                <RibbonGroup Header="Show/Hide">
-                    <StackPanel>
-                        <ToggleButton
-                            Classes="Small"
-                            Command="{Binding SimpleCommand}"
-                            CommandParameter="{x:Static local:CommandType.ToggleItemCheckBoxes}"
-                            IsChecked="{Binding ApplicationConfig.IsItemCheckBoxVisible, Mode=OneWay}"
-                            ToolTip.Tip="Item Check Boxes">
-                            <StackPanel>
-<TextBlock Text="Item Check Boxes" />
-                            </StackPanel>
-                        </ToggleButton>
-                        <ToggleButton
-                            Classes="Small"
-                            Command="{Binding SimpleCommand}"
-                            CommandParameter="{x:Static local:CommandType.ToggleFileNameExtensions}"
-                            IsChecked="{Binding ApplicationConfig.IsFileNameExtensionVisible, Mode=OneWay}"
-                            ToolTip.Tip="File Name Extensions">
-                            <StackPanel>
-<TextBlock Text="File Name Extensions" />
-                            </StackPanel>
-                        </ToggleButton>
-                        <ToggleButton
-                            Classes="Small"
-                            Command="{Binding SimpleCommand}"
-                            CommandParameter="{x:Static local:CommandType.ToggleHiddenItems}"
-                            IsChecked="{Binding ApplicationConfig.IsHiddenItemVisible, Mode=OneWay}"
-                            ToolTip.Tip="Hidden Items">
-                            <StackPanel>
-<TextBlock Text="Hidden Items" />
-                            </StackPanel>
-                        </ToggleButton>
-                    </StackPanel>
-                </RibbonGroup>
-
-                <RibbonGroup>
-                    <Button
-                        Classes="Large"
-                        Command="{Binding OpenWindowCommand}"
-                        ToolTip.Tip="Plugins...">
-                        <Button.CommandParameter>
-                            <j:WindowOptionsModel
-                                Title="Plugins"
-                                Width="640"
-                                Height="480"
-                                ContentType="{x:Type v:ManagePluginsView}" />
-                        </Button.CommandParameter>
-                        <StackPanel>
-<TextBlock Text="Plugins" />
-                        </StackPanel>
-                    </Button>
-                    <Button
-                        Classes="Large"
-                        Command="{Binding OpenWindowCommand}"
-                        ToolTip.Tip="Options...">
-                        <Button.CommandParameter>
-                            <j:WindowOptionsModel
-                                Title="Options"
-                                Width="640"
-                                Height="480"
-                                ContentType="{x:Type v:OptionsView}" />
-                        </Button.CommandParameter>
-                        <StackPanel>
-<TextBlock Text="Options" />
-                        </StackPanel>
-                    </Button>
-                </RibbonGroup>
-            </StackPanel>
-        </RibbonTab>
-
-        <RibbonTab Header="Search">
-            <StackPanel>
-                <RibbonGroup Header="Location">
-                    <StackPanel>
-                        <ToggleButton Classes="Small" ToolTip.Tip="Current Folder">
-                            <StackPanel>
-<TextBlock Text="Current Folder" />
-                            </StackPanel>
-                        </ToggleButton>
-                        <ToggleButton Classes="Small" ToolTip.Tip="All Subfolders">
-                            <StackPanel>
-<TextBlock Text="All Subfolders" />
-                            </StackPanel>
-                        </ToggleButton>
-                        <Button Classes="Small" ToolTip.Tip="Search Again In">
-                            <StackPanel>
-<TextBlock Text="Search Again In" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </RibbonGroup>
-
-                <RibbonGroup Header="Refine">
-                    <Button Classes="Large" ToolTip.Tip="Date Modified">
-                        <StackPanel>
-<TextBlock Text="Date Modified" />
-                        </StackPanel>
-                    </Button>
-                    <StackPanel>
-                        <Button Classes="Small" ToolTip.Tip="Kind">
-                            <StackPanel>
-<TextBlock Text="Kind" />
-                            </StackPanel>
-                        </Button>
-                        <Button Classes="Small" ToolTip.Tip="Size">
-                            <StackPanel>
-<TextBlock Text="Size" />
-                            </StackPanel>
-                        </Button>
-                        <Button Classes="Small" ToolTip.Tip="Other Properties">
-                            <StackPanel>
-<TextBlock Text="Other Properties" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </RibbonGroup>
-
-                <RibbonGroup Header="Options">
-                    <StackPanel>
-                        <Button Classes="Small" ToolTip.Tip="Recent Searches">
-                            <StackPanel>
-<TextBlock Text="Recent Searches" />
-                            </StackPanel>
-                        </Button>
-                        <Button Classes="Small" ToolTip.Tip="Advanced Options">
-                            <StackPanel>
-<TextBlock Text="Advanced Options" />
-                            </StackPanel>
-                        </Button>
-                        <Button Classes="Small" ToolTip.Tip="Save Search">
-                            <StackPanel>
-<TextBlock Text="Save Search" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </RibbonGroup>
-
-                <RibbonGroup Header="">
-                    <Button Classes="Large" ToolTip.Tip="Close Search">
-                        <StackPanel>
-<TextBlock Text="Close Search" />
-                        </StackPanel>
-                    </Button>
-                </RibbonGroup>
-            </StackPanel>
-        </RibbonTab>
-
-        <RibbonTab Header="Help">
-            <StackPanel>
-                <RibbonGroup Header="Help &amp; Support">
-                    <Button Classes="Large" ToolTip.Tip="View Help">
-                        <StackPanel>
-<TextBlock Text="View Help" />
-                        </StackPanel>
-                    </Button>
-                    <StackPanel>
-                        <Button Classes="Small" ToolTip.Tip="Project URL">
-                            <StackPanel>
-                                <Path Data="{StaticResource Icon.Github}" />
-                                <TextBlock Text="Project URL" />
-                            </StackPanel>
-                        </Button>
-                        <Button Classes="Small" ToolTip.Tip="View License">
-                            <StackPanel>
-<TextBlock Text="View License" />
-                            </StackPanel>
-                        </Button>
-                        <Button Classes="Small" ToolTip.Tip="Make a Donation">
-                            <StackPanel>
-                                <Path Data="{StaticResource Icon.Donate}" />
-                                <TextBlock Text="Donate" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </RibbonGroup>
-
-                <RibbonGroup Header="Support">
-                    <Button Classes="Large" ToolTip.Tip="Send Feedback...">
-                        <StackPanel>
-<TextBlock Text="Send Feedback" />
-                        </StackPanel>
-                    </Button>
-                    <Button
-                        Classes="Large"
-                        Command="{Binding OpenWindowCommand}"
-                        ToolTip.Tip="Update...">
-                        <Button.CommandParameter>
-                            <j:WindowOptionsModel
-                                Title="Update"
-                                Width="480"
-                                Height="320"
-                                ContentType="{x:Type v:UpdateView}" />
-                        </Button.CommandParameter>
-                        <StackPanel>
-<TextBlock Text="Update" />
-                        </StackPanel>
-                    </Button>
-                </RibbonGroup>
-
-                <RibbonGroup Header="About">
-                    <Button
-                        Classes="Large"
-                        Command="{Binding OpenWindowCommand}"
-                        ToolTip.Tip="About Jaya File Manager">
-                        <Button.CommandParameter>
-                            <j:WindowOptionsModel
-                                Title="About Jaya File Manager"
-                                Width="480"
-                                Height="320"
-                                ContentType="{x:Type v:AboutView}" />
-                        </Button.CommandParameter>
-                        <StackPanel>
-                            <Image Source="/Assets/Logo.ico" />
-                            <TextBlock Text="About" />
-                        </StackPanel>
-                    </Button>
-                </RibbonGroup>
-            </StackPanel>
-        </RibbonTab>
-    </Ribbon-->
+                    <ribbon:RibbonMenuItem Header="Help" ribbon:KeyTip.KeyTipKeys="H">
+                        <ribbon:RibbonMenuItem
+                            Command="{Binding OpenWindowCommand}"
+                            Header="About Jaya File Manager">
+                            <ribbon:RibbonMenuItem.CommandParameter>
+                                <j:WindowOptionsModel
+                                    Title="About Jaya File Manager"
+                                    Width="480"
+                                    Height="320"
+                                    ContentType="{x:Type v:AboutView}" />
+                            </ribbon:RibbonMenuItem.CommandParameter>
+                        </ribbon:RibbonMenuItem>
+                    </ribbon:RibbonMenuItem>
+                </ribbon:RibbonMenu>
+            </ribbon:Ribbon.Menu>
+            <ribbon:Ribbon.Tabs>
+                <ribbon:RibbonTab ribbon:KeyTip.KeyTipKeys="H" Header="Home">
+                    <ribbon:RibbonTab.Groups>
+                        <ribbon:RibbonGroupBox Header="Clipboard">
+                            <ribbon:RibbonButton
+                                    ribbon:KeyTip.KeyTipKeys="CO"
+                                    Content="Copy"
+                                    MaxSize="Large"
+                                    MinSize="Large">
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.Copy.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                    ribbon:KeyTip.KeyTipKeys="V"
+                                    Content="Paste"
+                                    MaxSize="Large"
+                                    MinSize="Large">
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.Paste.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                    ribbon:KeyTip.KeyTipKeys="T"
+                                    Content="Cut"
+                                    MaxSize="Medium"
+                                    MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Cut.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                    ribbon:KeyTip.KeyTipKeys="CP"
+                                    Content="Copy Path"
+                                    MaxSize="Medium"
+                                    MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.CopyPath.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                    ribbon:KeyTip.KeyTipKeys="PS"
+                                    Content="Paste shortcut"
+                                    MaxSize="Medium"
+                                    MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.PasteShortcut.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                        </ribbon:RibbonGroupBox>
+                        <ribbon:RibbonGroupBox Header="Organize">
+                            <ribbon:RibbonToggleButton
+                                ribbon:KeyTip.KeyTipKeys="M"
+                                Content="Move to"
+                                MaxSize="Large"
+                                MinSize="Medium">
+                                <ribbon:RibbonToggleButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.MoveTo.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonToggleButton.LargeIcon>
+                                <ribbon:RibbonToggleButton.Icon>
+                                    <Image Source="{DynamicResource Icon.MoveTo.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonToggleButton.Icon>
+                            </ribbon:RibbonToggleButton>
+                            <ribbon:RibbonToggleButton
+                                ribbon:KeyTip.KeyTipKeys="CF"
+                                Content="Copy to"
+                                MaxSize="Large"
+                                MinSize="Medium">
+                                <ribbon:RibbonToggleButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.CopyTo.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonToggleButton.LargeIcon>
+                                <ribbon:RibbonToggleButton.Icon>
+                                    <Image Source="{DynamicResource Icon.CopyTo.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonToggleButton.Icon>
+                            </ribbon:RibbonToggleButton>
+                            <ribbon:RibbonButton
+                                ribbon:KeyTip.KeyTipKeys="D"
+                                Content="Delete"
+                                MaxSize="Large"
+                                MinSize="Medium">
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.Delete.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Delete.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                ribbon:KeyTip.KeyTipKeys="R"
+                                Content="Rename"
+                                MaxSize="Large"
+                                MinSize="Medium">
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.Rename.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Rename.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                        </ribbon:RibbonGroupBox>
+                        <ribbon:RibbonGroupBox Header="New">
+                            <ribbon:RibbonButton
+                                ribbon:KeyTip.KeyTipKeys="N"
+                                Content="New folder"
+                                MaxSize="Large"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonToggleButton
+                                ribbon:KeyTip.KeyTipKeys="W"
+                                Content="New item"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonToggleButton.Icon>
+                                    <Image Source="{DynamicResource Icon.NewItem.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonToggleButton.Icon>
+                            </ribbon:RibbonToggleButton>
+                            <ribbon:RibbonToggleButton
+                                ribbon:KeyTip.KeyTipKeys="A"
+                                Content="Easy access"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonToggleButton.Icon>
+                                    <Image Source="{DynamicResource Icon.EasyAccess.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonToggleButton.Icon>
+                            </ribbon:RibbonToggleButton>
+                        </ribbon:RibbonGroupBox>
+                        <ribbon:RibbonGroupBox Header="Open">
+                            <ribbon:RibbonButton
+                                ribbon:KeyTip.KeyTipKeys="PR"
+                                Content="Properties"
+                                MaxSize="Large"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.FileProperties.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.FileProperties.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonSplitButton
+                                ribbon:KeyTip.KeyTipKeys="PE"
+                                Content="Open"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonSplitButton.Icon>
+                                    <Image Source="{DynamicResource Icon.OpenFile.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonSplitButton.Icon>
+                            </ribbon:RibbonSplitButton>
+                            <ribbon:RibbonButton
+                                ribbon:KeyTip.KeyTipKeys="E"
+                                Content="Edit"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.EditFile.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                        </ribbon:RibbonGroupBox>
+                        <ribbon:RibbonGroupBox Header="Select">
+                            <ribbon:RibbonButton
+                                ribbon:KeyTip.KeyTipKeys="SA"
+                                Content="Select all"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.SelectAll.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                ribbon:KeyTip.KeyTipKeys="SN"
+                                Content="Select none"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.SelectNone.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                ribbon:KeyTip.KeyTipKeys="IS"
+                                Content="Invert selection"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.InvertSelection.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                        </ribbon:RibbonGroupBox>
+                        <ribbon:RibbonGroupBox Header="Settings">
+                            <ribbon:RibbonToggleButton
+                                Content="Collapse Ribbon"
+                                IsChecked="{Binding PaneConfig.IsRibbonCollapsed, Mode=TwoWay}"
+                                Command="{Binding ToggleRibbonCommand}"
+                                ToolTip.Tip="Toggle ribbon collapse" />
+                            <ribbon:RibbonButton
+                                ribbon:KeyTip.KeyTipKeys="OP"
+                                Command="{Binding OpenWindowCommand}"
+                                Content="Options"
+                                MaxSize="Large"
+                                MinSize="Medium">
+                                <ribbon:RibbonButton.CommandParameter>
+                                    <j:WindowOptionsModel
+                                        Title="Options"
+                                        Width="640"
+                                        Height="480"
+                                        ContentType="{x:Type v:OptionsView}" />
+                                </ribbon:RibbonButton.CommandParameter>
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.Property.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Property.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                ribbon:KeyTip.KeyTipKeys="PL"
+                                Command="{Binding OpenWindowCommand}"
+                                Content="Plugins"
+                                MaxSize="Large"
+                                MinSize="Medium">
+                                <ribbon:RibbonButton.CommandParameter>
+                                    <j:WindowOptionsModel
+                                        Title="Plugins"
+                                        Width="640"
+                                        Height="480"
+                                        ContentType="{x:Type v:ManagePluginsView}" />
+                                </ribbon:RibbonButton.CommandParameter>
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.Plugin.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Plugin.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                        </ribbon:RibbonGroupBox>
+                    </ribbon:RibbonTab.Groups>
+                </ribbon:RibbonTab>
+                <ribbon:RibbonTab ribbon:KeyTip.KeyTipKeys="V" Header="View">
+                    <ribbon:RibbonTab.Groups>
+                        <ribbon:RibbonGroupBox Header="Panes">
+                            <ribbon:RibbonToggleButton
+                                ribbon:KeyTip.KeyTipKeys="N"
+                                Content="Navigation pane"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.TogglePaneNavigation}"
+                                IsChecked="{Binding PaneConfig.IsNavigationPaneVisible, Mode=TwoWay}"
+                                MaxSize="Large"
+                                MinSize="Small">
+                                <ribbon:RibbonToggleButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.NavigationPane.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonToggleButton.LargeIcon>
+                                <ribbon:RibbonToggleButton.Icon>
+                                    <Image Source="{DynamicResource Icon.NavigationPane.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonToggleButton.Icon>
+                            </ribbon:RibbonToggleButton>
+                            <ribbon:RibbonToggleButton
+                                ribbon:KeyTip.KeyTipKeys="P"
+                                Content="Preview pane"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.TogglePanePreview}"
+                                IsChecked="{Binding PaneConfig.IsPreviewPaneVisible, Mode=TwoWay}"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonToggleButton.Icon>
+                                    <Image Source="{DynamicResource Icon.PreviewPane.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonToggleButton.Icon>
+                            </ribbon:RibbonToggleButton>
+                            <ribbon:RibbonToggleButton
+                                ribbon:KeyTip.KeyTipKeys="D"
+                                Content="Details pane"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.TogglePaneDetails}"
+                                IsChecked="{Binding PaneConfig.IsDetailsPaneVisible, Mode=TwoWay}"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonToggleButton.Icon>
+                                    <Image Source="{DynamicResource Icon.DetailsPane.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonToggleButton.Icon>
+                            </ribbon:RibbonToggleButton>
+                        </ribbon:RibbonGroupBox>
+                        <ribbon:RibbonGroupBox Header="Layout">
+                            <ribbon:Gallery ribbon:KeyTip.KeyTipKeys="L">
+                                <ribbon:GalleryItem Content="Icons" IsSelected="{Binding PaneConfig.IsThumbnailView, Mode=TwoWay}">
+                                                                    <ribbon:GalleryItem.Icon>
+                                                                        <Image Source="{DynamicResource Icon.IconsView.Image}" Width="16" Height="16" />
+                                                                    </ribbon:GalleryItem.Icon>
+                                </ribbon:GalleryItem>
+                                <ribbon:GalleryItem Content="List" IsSelected="{Binding PaneConfig.IsListView, Mode=TwoWay}">
+                                                                    <ribbon:GalleryItem.Icon>
+                                                                        <Image Source="{DynamicResource Icon.ListView.Image}" Width="16" Height="16" />
+                                                                    </ribbon:GalleryItem.Icon>
+                                </ribbon:GalleryItem>
+                                <ribbon:GalleryItem Content="Details" IsSelected="{Binding PaneConfig.IsDetailsView, Mode=TwoWay}">
+                                                                    <ribbon:GalleryItem.Icon>
+                                                                        <Image Source="{DynamicResource Icon.DetailsView.Image}" Width="16" Height="16" />
+                                                                    </ribbon:GalleryItem.Icon>
+                                </ribbon:GalleryItem>
+                                <ribbon:GalleryItem Content="Tiles" IsSelected="{Binding PaneConfig.IsTilesView, Mode=TwoWay}">
+                                                                    <ribbon:GalleryItem.Icon>
+                                                                        <Image Source="{DynamicResource Icon.TilesView.Image}" Width="16" Height="16" />
+                                                                    </ribbon:GalleryItem.Icon>
+                                </ribbon:GalleryItem>
+                                <ribbon:GalleryItem Content="Content" IsSelected="{Binding PaneConfig.IsContentView, Mode=TwoWay}">
+                                                                    <ribbon:GalleryItem.Icon>
+                                                                        <Image Source="{DynamicResource Icon.ContentView.Image}" Width="16" Height="16" />
+                                                                    </ribbon:GalleryItem.Icon>
+                                </ribbon:GalleryItem>
+                            </ribbon:Gallery>
+                        </ribbon:RibbonGroupBox>
+                        <ribbon:RibbonGroupBox Header="Show/Hide">
+                            <ribbon:RibbonToggleButton
+                                ribbon:KeyTip.KeyTipKeys="HT"
+                                Content="Item check boxes"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.ToggleItemCheckBoxes}"
+                                IsChecked="{Binding ApplicationConfig.IsItemCheckBoxVisible, Mode=TwoWay}"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonToggleButton.Icon>
+                                    <Image Source="{DynamicResource Icon.CheckBox.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonToggleButton.Icon>
+                            </ribbon:RibbonToggleButton>
+                            <ribbon:RibbonToggleButton
+                                ribbon:KeyTip.KeyTipKeys="HF"
+                                Content="File name extensions"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.ToggleFileNameExtensions}"
+                                IsChecked="{Binding ApplicationConfig.IsFileNameExtensionVisible, Mode=TwoWay}"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonToggleButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Extension.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonToggleButton.Icon>
+                            </ribbon:RibbonToggleButton>
+                            <ribbon:RibbonToggleButton
+                                ribbon:KeyTip.KeyTipKeys="HH"
+                                Content="Hidden items"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.ToggleHiddenItems}"
+                                IsChecked="{Binding ApplicationConfig.IsHiddenItemVisible, Mode=TwoWay}"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonToggleButton.Icon>
+                                    <Image Source="{DynamicResource Icon.HiddenFiles.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonToggleButton.Icon>
+                            </ribbon:RibbonToggleButton>
+                        </ribbon:RibbonGroupBox>
+                        <ribbon:RibbonGroupBox Header="Toolbars">
+                            <ribbon:RibbonToggleButton
+                                Content="Show Toolbars"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.ToggleToolbars}"
+                                IsChecked="{Binding ToolbarConfig.IsVisible, Mode=TwoWay}"
+                                MaxSize="Large"
+                                MinSize="Small" />
+                            <ribbon:RibbonToggleButton
+                                Content="File"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.ToggleToolbarFile}"
+                                IsChecked="{Binding ToolbarConfig.IsFileVisible, Mode=TwoWay}"
+                                MaxSize="Medium"
+                                MinSize="Small" />
+                            <ribbon:RibbonToggleButton
+                                Content="Edit"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.ToggleToolbarEdit}"
+                                IsChecked="{Binding ToolbarConfig.IsEditVisible, Mode=TwoWay}"
+                                MaxSize="Medium"
+                                MinSize="Small" />
+                            <ribbon:RibbonToggleButton
+                                Content="View"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.ToggleToolbarView}"
+                                IsChecked="{Binding ToolbarConfig.IsViewVisible, Mode=TwoWay}"
+                                MaxSize="Medium"
+                                MinSize="Small" />
+                            <ribbon:RibbonToggleButton
+                                Content="Help"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.ToggleToolbarHelp}"
+                                IsChecked="{Binding ToolbarConfig.IsHelpVisible, Mode=TwoWay}"
+                                MaxSize="Medium"
+                                MinSize="Small" />
+                        </ribbon:RibbonGroupBox>
+                    </ribbon:RibbonTab.Groups>
+                </ribbon:RibbonTab>
+                <ribbon:RibbonTab ribbon:KeyTip.KeyTipKeys="S" Header="Search">
+                    <ribbon:RibbonTab.Groups>
+                        <ribbon:RibbonGroupBox Header="Scope">
+                            <ribbon:RibbonToggleButton
+                                Content="Current Folder"
+                                MaxSize="Small"
+                                MinSize="Small">
+                                <ribbon:RibbonToggleButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Folder.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonToggleButton.Icon>
+                            </ribbon:RibbonToggleButton>
+                            <ribbon:RibbonToggleButton
+                                Content="All Subfolders"
+                                MaxSize="Small"
+                                MinSize="Small">
+                                <ribbon:RibbonToggleButton.Icon>
+                                    <Image Source="{DynamicResource Icon.SubFolders.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonToggleButton.Icon>
+                            </ribbon:RibbonToggleButton>
+                            <ribbon:RibbonButton
+                                Content="Search Again"
+                                MaxSize="Small"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.FindInFiles.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                        </ribbon:RibbonGroupBox>
+                        <ribbon:RibbonGroupBox Header="Refine">
+                            <ribbon:RibbonButton
+                                Content="Date Modified"
+                                MaxSize="Large"
+                                MinSize="Medium">
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.Calendar.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Calendar.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                Content="Kind"
+                                MaxSize="Small"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.ContentType.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                Content="Size"
+                                MaxSize="Small"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.CodeFile.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                Content="Other Properties"
+                                MaxSize="Small"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.FileProperties.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                        </ribbon:RibbonGroupBox>
+                        <ribbon:RibbonGroupBox Header="Options">
+                            <ribbon:RibbonButton
+                                Content="Recent Searches"
+                                MaxSize="Small"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.History.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                Command="{Binding OpenWindowCommand}"
+                                Content="Advanced Options"
+                                MaxSize="Small"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.CommandParameter>
+                                    <j:WindowOptionsModel
+                                        Title="Advanced Options"
+                                        Width="640"
+                                        Height="480"
+                                        ContentType="{x:Type v:OptionsView}" />
+                                </ribbon:RibbonButton.CommandParameter>
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Property.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                Content="Save Search"
+                                MaxSize="Small"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Save.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                        </ribbon:RibbonGroupBox>
+                        <ribbon:RibbonGroupBox Header="Actions">
+                            <ribbon:RibbonButton
+                                Content="Close Search"
+                                MaxSize="Large"
+                                MinSize="Medium">
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.Close.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Close.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                        </ribbon:RibbonGroupBox>
+                    </ribbon:RibbonTab.Groups>
+                </ribbon:RibbonTab>
+                <ribbon:RibbonTab ribbon:KeyTip.KeyTipKeys="P" Header="Help">
+                    <ribbon:RibbonTab.Groups>
+                        <ribbon:RibbonGroupBox Header="Help &amp; Support">
+                            <ribbon:RibbonButton
+                                Content="View Help"
+                                MaxSize="Large"
+                                MinSize="Medium">
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.Help.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Help.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                Content="Project URL"
+                                MaxSize="Small"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Github.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                Content="View License"
+                                MaxSize="Small"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.CertificateWarning.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                Content="Donate"
+                                MaxSize="Small"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Donate.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                        </ribbon:RibbonGroupBox>
+                        <ribbon:RibbonGroupBox Header="Support">
+                            <ribbon:RibbonButton
+                                Content="Send Feedback"
+                                MaxSize="Large"
+                                MinSize="Medium">
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.SendMail.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.SendMail.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                Command="{Binding OpenWindowCommand}"
+                                Content="Update"
+                                MaxSize="Large"
+                                MinSize="Medium">
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="{DynamicResource Icon.RunUpdate.Image}" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.RunUpdate.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                                <ribbon:RibbonButton.CommandParameter>
+                                    <j:WindowOptionsModel
+                                        Title="Update"
+                                        Width="480"
+                                        Height="320"
+                                        ContentType="{x:Type v:UpdateView}" />
+                                </ribbon:RibbonButton.CommandParameter>
+                            </ribbon:RibbonButton>
+                        </ribbon:RibbonGroupBox>
+                        <ribbon:RibbonGroupBox Header="About">
+                            <ribbon:RibbonButton
+                                Command="{Binding OpenWindowCommand}"
+                                Content="About"
+                                MaxSize="Large"
+                                MinSize="Medium">
+                                <ribbon:RibbonButton.LargeIcon>
+                                    <Image Source="/Assets/Logo.ico" Width="32" Height="32" />
+                                </ribbon:RibbonButton.LargeIcon>
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="/Assets/Logo.ico" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                                <ribbon:RibbonButton.CommandParameter>
+                                    <j:WindowOptionsModel
+                                        Title="About Jaya File Manager"
+                                        Width="480"
+                                        Height="320"
+                                        ContentType="{x:Type v:AboutView}" />
+                                </ribbon:RibbonButton.CommandParameter>
+                            </ribbon:RibbonButton>
+                        </ribbon:RibbonGroupBox>
+                    </ribbon:RibbonTab.Groups>
+                </ribbon:RibbonTab>
+            </ribbon:Ribbon.Tabs>
+        </ribbon:Ribbon>
     </Panel>
 </UserControl>

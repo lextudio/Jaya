@@ -9,6 +9,7 @@ using Avalonia.Markup.Xaml;
 using Jaya.Shared.Controls;
 using Jaya.Ui.Helpers;
 using Jaya.Ui.Models;
+using Jaya.Ui.Views;
 using Jaya.Ui.ViewModels.Windows;
 using System;
 using System.ComponentModel;
@@ -18,6 +19,7 @@ namespace Jaya.Ui.Views.Windows
     public partial class MainView : StyledWindow
     {
         MainViewModel _viewModel;
+        MenuView _inlineMenu;
 
         public MainView()
         {
@@ -33,6 +35,7 @@ namespace Jaya.Ui.Views.Windows
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
+            _inlineMenu = this.FindControl<MenuView>("InlineMenu");
         }
 
         void OnDataContextChanged(object sender, EventArgs e)
@@ -45,6 +48,7 @@ namespace Jaya.Ui.Views.Windows
             UpdateNativeMenu();
             UpdateHeaderContent();
             UpdateHeaderVisibility();
+            UpdateInlineMenuVisibility();
         }
 
         void OnClosed(object sender, EventArgs e)
@@ -64,6 +68,7 @@ namespace Jaya.Ui.Views.Windows
 
             UpdateNativeMenu();
             UpdateHeaderContent();
+            UpdateInlineMenuVisibility();
         }
 
         void DetachFromViewModel()
@@ -82,6 +87,7 @@ namespace Jaya.Ui.Views.Windows
                 UpdateNativeMenu();
                 UpdateHeaderContent();
                 UpdateHeaderVisibility();
+                UpdateInlineMenuVisibility();
             }
         }
 
@@ -182,6 +188,16 @@ namespace Jaya.Ui.Views.Windows
             {
                 // ignore, don't crash on visual tree timing issues
             }
+        }
+
+        void UpdateInlineMenuVisibility()
+        {
+            if (_inlineMenu == null)
+                return;
+
+            var paneConfig = _viewModel?.PaneConfig;
+            var shouldShow = paneConfig != null && !paneConfig.IsRibbonVisible && !paneConfig.IsMenuHeaderVisible;
+            _inlineMenu.IsVisible = shouldShow;
         }
     }
 }

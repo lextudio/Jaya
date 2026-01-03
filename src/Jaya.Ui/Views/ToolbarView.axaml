@@ -15,7 +15,7 @@
             <j:MultiValueConverter x:Key="MultiValueConverter" />
         </WrapPanel.Resources>
 
-        <StackPanel IsVisible="{Binding ToolbarConfig.IsFileVisible, Mode=OneWay}">
+        <StackPanel IsVisible="{Binding ToolbarConfig.IsFileVisible, Mode=TwoWay}">
             <Border Classes="Thumb" />
 
             <Button ToolTip.Tip="New Folder">
@@ -40,7 +40,7 @@
             </Button>
         </StackPanel>
 
-        <StackPanel IsVisible="{Binding ToolbarConfig.IsEditVisible, Mode=OneWay}">
+        <StackPanel IsVisible="{Binding ToolbarConfig.IsEditVisible, Mode=TwoWay}">
             <Border Classes="Thumb" />
 
             <Button ToolTip.Tip="Cut">
@@ -74,26 +74,26 @@
             </Button>
         </StackPanel>
 
-        <StackPanel IsVisible="{Binding ToolbarConfig.IsViewVisible, Mode=OneWay}">
+        <StackPanel IsVisible="{Binding ToolbarConfig.IsViewVisible, Mode=TwoWay}">
             <Border Classes="Thumb" />
             <ToggleButton
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.TogglePaneNavigation}"
-                IsChecked="{Binding PaneConfig.IsNavigationPaneVisible, Mode=OneWay}"
+                IsChecked="{Binding PaneConfig.IsNavigationPaneVisible, Mode=TwoWay}"
                 ToolTip.Tip="Navigation Pane">
                 <Image Source="{DynamicResource Icon.NavigationPane.Image}" Width="16" Height="16" Stretch="Uniform" />
             </ToggleButton>
             <ToggleButton
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.TogglePanePreview}"
-                IsChecked="{Binding PaneConfig.IsPreviewPaneVisible, Mode=OneWay}"
+                IsChecked="{Binding PaneConfig.IsPreviewPaneVisible, Mode=TwoWay}"
                 ToolTip.Tip="Preview Pane">
                 <Image Source="{DynamicResource Icon.PreviewPane.Image}" Width="16" Height="16" Stretch="Uniform" />
             </ToggleButton>
             <ToggleButton
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.TogglePaneDetails}"
-                IsChecked="{Binding PaneConfig.IsDetailsPaneVisible, Mode=OneWay}"
+                IsChecked="{Binding PaneConfig.IsDetailsPaneVisible, Mode=TwoWay}"
                 ToolTip.Tip="Details Pane">
                 <Image Source="{DynamicResource Icon.DetailsPane.Image}" Width="16" Height="16" Stretch="Uniform" />
             </ToggleButton>
@@ -101,21 +101,21 @@
             <ToggleButton
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.ToggleItemCheckBoxes}"
-                IsChecked="{Binding ApplicationConfig.IsItemCheckBoxVisible, Mode=OneWay}"
+                IsChecked="{Binding ApplicationConfig.IsItemCheckBoxVisible, Mode=TwoWay}"
                 ToolTip.Tip="Item Check Boxes">
                 <Image Source="{DynamicResource Icon.CheckBox.Image}" Width="16" Height="16" Stretch="Uniform" />
             </ToggleButton>
             <ToggleButton
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.ToggleFileNameExtensions}"
-                IsChecked="{Binding ApplicationConfig.IsFileNameExtensionVisible, Mode=OneWay}"
+                IsChecked="{Binding ApplicationConfig.IsFileNameExtensionVisible, Mode=TwoWay}"
                 ToolTip.Tip="File Name Extensions">
                 <Image Source="{DynamicResource Icon.Extension.Image}" Width="16" Height="16" Stretch="Uniform" />
             </ToggleButton>
             <ToggleButton
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.ToggleHiddenItems}"
-                IsChecked="{Binding ApplicationConfig.IsHiddenItemVisible, Mode=OneWay}"
+                IsChecked="{Binding ApplicationConfig.IsHiddenItemVisible, Mode=TwoWay}"
                 ToolTip.Tip="Hidden Items">
                 <Image Source="{DynamicResource Icon.HiddenFiles.Image}" Width="16" Height="16" Stretch="Uniform" />
             </ToggleButton>
@@ -183,7 +183,7 @@
             </Button>
         </StackPanel>
 
-        <StackPanel IsVisible="{Binding ToolbarConfig.IsHelpVisible, Mode=OneWay}">
+        <StackPanel IsVisible="{Binding ToolbarConfig.IsHelpVisible, Mode=TwoWay}">
             <Border Classes="Thumb" />
 
             <Button ToolTip.Tip="View Help">

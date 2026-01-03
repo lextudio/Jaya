@@ -106,18 +106,18 @@
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.TogglePaneNavigation}"
                 Header="Navigation Pane">
-                <MenuItem.Icon>
-                    <ToggleButton IsChecked="{Binding PaneConfig.IsNavigationPaneVisible, Mode=OneWay}">
-                        <Image Source="{DynamicResource Icon.NavigationPane.Image}" Width="16" Height="16" />
-                    </ToggleButton>
-                </MenuItem.Icon>
+                        <MenuItem.Icon>
+                            <ToggleButton IsChecked="{Binding PaneConfig.IsNavigationPaneVisible, Mode=TwoWay}">
+                                <Image Source="{DynamicResource Icon.NavigationPane.Image}" Width="16" Height="16" />
+                            </ToggleButton>
+                        </MenuItem.Icon>
             </MenuItem>
             <MenuItem
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.TogglePanePreview}"
                 Header="Preview Pane">
                 <MenuItem.Icon>
-                    <ToggleButton IsChecked="{Binding PaneConfig.IsPreviewPaneVisible, Mode=OneWay}">
+                    <ToggleButton IsChecked="{Binding PaneConfig.IsPreviewPaneVisible, Mode=TwoWay}">
                         <Image Source="{DynamicResource Icon.PreviewPane.Image}" Width="16" Height="16" />
                     </ToggleButton>
                 </MenuItem.Icon>
@@ -127,7 +127,7 @@
                 CommandParameter="{x:Static local:CommandType.TogglePaneDetails}"
                 Header="Details Pane">
                 <MenuItem.Icon>
-                    <ToggleButton IsChecked="{Binding PaneConfig.IsDetailsPaneVisible, Mode=OneWay}">
+                    <ToggleButton IsChecked="{Binding PaneConfig.IsDetailsPaneVisible, Mode=TwoWay}">
                         <Image Source="{DynamicResource Icon.DetailsPane.Image}" Width="16" Height="16" />
                     </ToggleButton>
                 </MenuItem.Icon>
@@ -137,42 +137,42 @@
                     Command="{Binding SimpleCommand}"
                     CommandParameter="{x:Static local:CommandType.ToggleToolbars}"
                     Header="Show Toolbars">
-                    <MenuItem.Icon>
-                        <CheckBox IsChecked="{Binding ToolbarConfig.IsVisible, Mode=OneWay}" />
-                    </MenuItem.Icon>
+                        <MenuItem.Icon>
+                            <CheckBox IsChecked="{Binding ToolbarConfig.IsVisible, Mode=TwoWay}" />
+                        </MenuItem.Icon>
                 </MenuItem>
                 <Separator />
                 <MenuItem
                     Command="{Binding SimpleCommand}"
                     CommandParameter="{x:Static local:CommandType.ToggleToolbarFile}"
                     Header="File">
-                    <MenuItem.Icon>
-                        <CheckBox IsChecked="{Binding ToolbarConfig.IsFileVisible, Mode=OneWay}" />
-                    </MenuItem.Icon>
+                        <MenuItem.Icon>
+                            <CheckBox IsChecked="{Binding ToolbarConfig.IsFileVisible, Mode=TwoWay}" />
+                        </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
                     Command="{Binding SimpleCommand}"
                     CommandParameter="{x:Static local:CommandType.ToggleToolbarEdit}"
                     Header="Edit">
-                    <MenuItem.Icon>
-                        <CheckBox IsChecked="{Binding ToolbarConfig.IsEditVisible, Mode=OneWay}" />
-                    </MenuItem.Icon>
+                        <MenuItem.Icon>
+                            <CheckBox IsChecked="{Binding ToolbarConfig.IsEditVisible, Mode=TwoWay}" />
+                        </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
                     Command="{Binding SimpleCommand}"
                     CommandParameter="{x:Static local:CommandType.ToggleToolbarView}"
                     Header="View">
-                    <MenuItem.Icon>
-                        <CheckBox IsChecked="{Binding ToolbarConfig.IsViewVisible, Mode=OneWay}" />
-                    </MenuItem.Icon>
+                        <MenuItem.Icon>
+                            <CheckBox IsChecked="{Binding ToolbarConfig.IsViewVisible, Mode=TwoWay}" />
+                        </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
                     Command="{Binding SimpleCommand}"
                     CommandParameter="{x:Static local:CommandType.ToggleToolbarHelp}"
                     Header="Help">
-                    <MenuItem.Icon>
-                        <CheckBox IsChecked="{Binding ToolbarConfig.IsHelpVisible, Mode=OneWay}" />
-                    </MenuItem.Icon>
+                        <MenuItem.Icon>
+                            <CheckBox IsChecked="{Binding ToolbarConfig.IsHelpVisible, Mode=TwoWay}" />
+                        </MenuItem.Icon>
                 </MenuItem>
             </MenuItem>
             <Separator />
@@ -181,7 +181,7 @@
                 CommandParameter="{x:Static local:CommandType.ToggleItemCheckBoxes}"
                 Header="Item Check Boxes">
                 <MenuItem.Icon>
-                    <ToggleButton IsChecked="{Binding ApplicationConfig.IsItemCheckBoxVisible, Mode=OneWay}">
+                    <ToggleButton IsChecked="{Binding ApplicationConfig.IsItemCheckBoxVisible, Mode=TwoWay}">
                         <Image Source="{DynamicResource Icon.CheckBox.Image}" Width="16" Height="16" />
                     </ToggleButton>
                 </MenuItem.Icon>
@@ -191,7 +191,7 @@
                 CommandParameter="{x:Static local:CommandType.ToggleFileNameExtensions}"
                 Header="File Name Extensions">
                 <MenuItem.Icon>
-                    <ToggleButton IsChecked="{Binding ApplicationConfig.IsFileNameExtensionVisible, Mode=OneWay}">
+                    <ToggleButton IsChecked="{Binding ApplicationConfig.IsFileNameExtensionVisible, Mode=TwoWay}">
                         <Image Source="{DynamicResource Icon.Extension.Image}" Width="16" Height="16" />
                     </ToggleButton>
                 </MenuItem.Icon>
@@ -201,7 +201,7 @@
                 CommandParameter="{x:Static local:CommandType.ToggleHiddenItems}"
                 Header="Hidden Items">
                 <MenuItem.Icon>
-                    <ToggleButton IsChecked="{Binding ApplicationConfig.IsHiddenItemVisible, Mode=OneWay}">
+                    <ToggleButton IsChecked="{Binding ApplicationConfig.IsHiddenItemVisible, Mode=TwoWay}">
                         <Image Source="{DynamicResource Icon.HiddenFiles.Image}" Width="16" Height="16" />
                     </ToggleButton>
                 </MenuItem.Icon>

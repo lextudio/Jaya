@@ -59,7 +59,7 @@ namespace Jaya.Ui.Views
             }, Avalonia.Threading.DispatcherPriority.Background);
         }
 
-        private void OptionsView_AttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+        private void OptionsView_AttachedToVisualTree(object sender, VisualTreeAttachmentEventArgs e)
         {
             if (DataContext is OptionsViewModel vm)
                 vm.LogOpenState();

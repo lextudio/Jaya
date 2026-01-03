@@ -15,9 +15,9 @@
         <!-- HeaderContent is managed in code-behind to allow hiding the entire custom header when disabled -->
     <DockPanel>
         <v:MenuView
+            x:Name="InlineMenu"
             Classes="InlineMenuView"
-            DockPanel.Dock="Top"
-            IsVisible="{Binding IsInlineMenuVisible, Mode=OneWay}" />
+            DockPanel.Dock="Top" />
         <v:RibbonView Classes="RibbonView" DockPanel.Dock="Top" IsVisible="{Binding $parent[DockPanel].DataContext.PaneConfig.IsRibbonVisible, Mode=OneWay}" />
         <v:ToolbarView Classes="ToolbarView" DockPanel.Dock="Top" IsVisible="{Binding $parent[DockPanel].DataContext.IsToolbarVisible, Mode=OneWay}" />
         <v:AddressbarView Classes="AddressbarView" DockPanel.Dock="Top" />

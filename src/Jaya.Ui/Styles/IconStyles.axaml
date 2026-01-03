@@ -1129,13 +1129,19 @@
 
       <!-- DrawingImage aliases for toolbar/menu icons -->
       <DrawingImage x:Key="Icon.NewFolder.Image" Drawing="{StaticResource Icon.NewFolder}" />
+      <DrawingImage x:Key="Icon.NewItem.Image" Drawing="{StaticResource Icon.NewItem}" />
+      <DrawingImage x:Key="Icon.EasyAccess.Image" Drawing="{StaticResource Icon.EasyAccess}" />
       <DrawingImage x:Key="Icon.FileProperties.Image" Drawing="{StaticResource Icon.FileProperties}" />
       <DrawingImage x:Key="Icon.OpenFile.Image" Drawing="{StaticResource Icon.OpenFile}" />
       <DrawingImage x:Key="Icon.EditFile.Image" Drawing="{StaticResource Icon.EditFile}" />
       <DrawingImage x:Key="Icon.Close.Image" Drawing="{StaticResource Icon.Close}" />
       <DrawingImage x:Key="Icon.Cut.Image" Drawing="{StaticResource Icon.Cut}" />
       <DrawingImage x:Key="Icon.Copy.Image" Drawing="{StaticResource Icon.Copy}" />
+      <DrawingImage x:Key="Icon.CopyPath.Image" Drawing="{StaticResource Icon.CopyPath}" />
       <DrawingImage x:Key="Icon.Paste.Image" Drawing="{StaticResource Icon.Paste}" />
+      <DrawingImage x:Key="Icon.PasteShortcut.Image" Drawing="{StaticResource Icon.PasteShortcut}" />
+      <DrawingImage x:Key="Icon.MoveTo.Image" Drawing="{StaticResource Icon.MoveTo}" />
+      <DrawingImage x:Key="Icon.CopyTo.Image" Drawing="{StaticResource Icon.CopyTo}" />
       <DrawingImage x:Key="Icon.Delete.Image" Drawing="{StaticResource Icon.Delete}" />
       <DrawingImage x:Key="Icon.Rename.Image" Drawing="{StaticResource Icon.Rename}" />
       <DrawingImage x:Key="Icon.SelectAll.Image" Drawing="{StaticResource Icon.SelectAll}" />
@@ -1164,6 +1170,9 @@
       <DrawingImage x:Key="Icon.RunUpdate.Image" Drawing="{StaticResource Icon.RunUpdate}" />
       <DrawingImage x:Key="Icon.DetailsView.Image" Drawing="{StaticResource Icon.DetailsView}" />
       <DrawingImage x:Key="Icon.IconsView.Image" Drawing="{StaticResource Icon.IconsView}" />
+      <DrawingImage x:Key="Icon.ListView.Image" Drawing="{StaticResource Icon.ListView}" />
+      <DrawingImage x:Key="Icon.TilesView.Image" Drawing="{StaticResource Icon.TilesView}" />
+      <DrawingImage x:Key="Icon.ContentView.Image" Drawing="{StaticResource Icon.ContentView}" />
       <DrawingImage x:Key="Icon.Computer.Image" Drawing="{StaticResource Icon.Computer}" />
       <DrawingImage x:Key="Icon.Drive.Image" Drawing="{StaticResource Icon.Drive}" />
       <DrawingImage x:Key="Icon.Github.Image">

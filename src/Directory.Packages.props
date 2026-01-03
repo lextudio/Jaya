@@ -23,5 +23,7 @@
     <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.1" />
     <PackageVersion Include="SkiaSharp" Version="3.119.1" />
     <PackageVersion Include="System.Text.Json" Version="10.0.1" />
+    <PackageVersion Include="FluentAvalonia.BreadcrumbBar" Version="2.0.2" />
+    <PackageVersion Include="Avalonia.Controls.ItemsRepeater" Version="11.3.10" />
   </ItemGroup>
 </Project>
