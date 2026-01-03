@@ -16,5 +16,6 @@
     <PackageVersion Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageVersion Include="RestSharp" Version="106.11.7" />
     <PackageVersion Include="RestSharp.Serializers.NewtonsoftJson" Version="106.11.7" />
+    <PackageVersion Include="SkiaSharp" Version="2.88.9" />
   </ItemGroup>
 </Project>
