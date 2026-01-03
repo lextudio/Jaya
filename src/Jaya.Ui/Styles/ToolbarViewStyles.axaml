@@ -72,14 +72,14 @@
     <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentBrush}" />
   </Style>
 
-  <Style Selector="v|ToolbarView Button &gt; DrawingPresenter">
+  <!--Style Selector="v|ToolbarView Button &gt; DrawingPresenter">
     <Setter Property="Width" Value="16" />
     <Setter Property="Height" Value="16" />
-  </Style>
-  <Style Selector="v|ToolbarView ToggleButton &gt; DrawingPresenter">
+  </Style-->
+  <!--Style Selector="v|ToolbarView ToggleButton &gt; DrawingPresenter">
     <Setter Property="Width" Value="16" />
     <Setter Property="Height" Value="16" />
-  </Style>
+  </Style-->
 
   <Style Selector="v|ToolbarView Button &gt; Path">
     <Setter Property="Width" Value="16" />

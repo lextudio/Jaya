@@ -8,7 +8,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Jaya.Provider.Dropbox.Views
 {
-    public class ConfigurationView : UserControl
+    public partial class ConfigurationView : UserControl
     {
         public ConfigurationView()
         {

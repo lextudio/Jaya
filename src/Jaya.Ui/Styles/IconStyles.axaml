@@ -5,11 +5,11 @@
   <Design.PreviewWith>
     <StackPanel Orientation="Vertical">
       <StackPanel.Styles>
-        <Style Selector="DrawingPresenter">
+        <!--Style Selector="DrawingPresenter">
           <Setter Property="HorizontalAlignment" Value="Left"/>
           <Setter Property="Width" Value="{Binding Bounds.Height, RelativeSource={RelativeSource Mode=Self}}"/>
           <Setter Property="Drawing" Value="{DynamicResource Icon.TilesView}"/>
-        </Style>
+        </Style-->
       </StackPanel.Styles>
     <DrawingPresenter Height="16"/>
     <DrawingPresenter Height="24"/>

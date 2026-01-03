@@ -32,11 +32,11 @@ namespace Jaya.Shared.Controls
 
         Type IStyleable.StyleKey => typeof(Hyperlink);
 
-        protected override void OnTemplateApplied(TemplateAppliedEventArgs e)
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
         {
-            base.OnTemplateApplied(e);
+            base.OnAttachedToVisualTree(e);
 
-            _container = GetControl<ContentPresenter>(e, "PART_ContentPresenter");
+            _container = this.FindControl<ContentPresenter>("PART_ContentPresenter");
             _container.Tapped += delegate
             {
                 if (Url == null || Design.IsDesignMode)
@@ -44,11 +44,6 @@ namespace Jaya.Shared.Controls
 
                 ServiceLocator.Instance.GetService<PlatformService>().OpenBrowser(Url.ToString());
             };
-        }
-
-        T GetControl<T>(TemplateAppliedEventArgs e, string name) where T : Control
-        {
-            return e.NameScope.Find<T>(name);
         }
     }
 }

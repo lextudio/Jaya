@@ -32,7 +32,7 @@ namespace Jaya.Shared
             control.SetValue(AutoWireViewModelProperty, value);
         }
 
-        static void AutoWireViewModelChanged(Avalonia.IAvaloniaObject control, AvaloniaPropertyChangedEventArgs e)
+        static void AutoWireViewModelChanged(Avalonia.AvaloniaObject control, AvaloniaPropertyChangedEventArgs e)
         {
             if (Design.IsDesignMode)
                 return;

@@ -41,7 +41,7 @@
             </Grid.ColumnDefinitions>
             <ListBox
                 Grid.RowSpan="2"
-                Items="{Binding Accounts, Mode=OneWay}"
+                ItemsSource="{Binding Accounts, Mode=OneWay}"
                 SelectedItem="{Binding SelectedAccount, Mode=TwoWay}"
                 SelectionMode="Single">
                 <ListBox.ItemTemplate>

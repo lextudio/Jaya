@@ -22,7 +22,7 @@
         <ListBox
             Grid.RowSpan="2"
             Classes="InstalledPlugins"
-            Items="{Binding Plugins, Mode=OneWay}"
+            ItemsSource="{Binding Plugins, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             SelectedItem="{Binding SelectedPlugin, Mode=TwoWay}">
             <ListBox.ItemTemplate>
@@ -65,7 +65,7 @@
                 Text="{Binding SelectedPlugin.Description, Mode=OneWay}"
                 TextWrapping="Wrap" />
 
-            <!--  configuration editor  -->
+            <!--  configuration editor   -->
             <ContentControl
                 Grid.Row="2"
                 Grid.ColumnSpan="2"

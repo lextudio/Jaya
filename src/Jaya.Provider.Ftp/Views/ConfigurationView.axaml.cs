@@ -7,7 +7,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Jaya.Provider.Ftp.Views
 {
-    public class ConfigurationView : UserControl
+    public partial class ConfigurationView : UserControl
     {
         public ConfigurationView()
         {

@@ -20,19 +20,15 @@ namespace Jaya.Shared.Converters
             if (value == null)
                 return null;
 
-            if (value is string && targetType == typeof(IBitmap))
+            if (value is string strValue)
             {
-                var uri = new Uri((string)value, UriKind.RelativeOrAbsolute);
-                var scheme = uri.IsAbsoluteUri ? uri.Scheme : "file";
-
-                switch (scheme)
+                try
                 {
-                    case "file":
-                        return new Bitmap((string)value);
-
-                    default:
-                        var assets = AvaloniaLocator.Current.GetService<IAssetLoader>();
-                        return new Bitmap(assets.Open(uri));
+                    return new Bitmap(strValue);
+                }
+                catch
+                {
+                    return null;
                 }
             }
 

@@ -15,14 +15,14 @@
   <StyleInclude Source="avares://AvaloniaUI.Ribbon/Styles/RibbonGroupBox.xaml" />
   <StyleInclude Source="avares://AvaloniaUI.Ribbon/Styles/KeyTip.xaml" />
 
-  <Style Selector="v|RibbonView DrawingPresenter">
+  <!--Style Selector="v|RibbonView DrawingPresenter">
     <Setter Property="Width" Value="16"/>
     <Setter Property="Height" Value="16"/>
-  </Style>
-  <Style Selector="v|RibbonView DrawingPresenter.Large">
+  </Style-->
+  <!--Style Selector="v|RibbonView DrawingPresenter.Large">
     <Setter Property="Width" Value="32"/>
     <Setter Property="Height" Value="32"/>
-  </Style>
+  </Style-->
 
 
   <!-- ribbon -->
@@ -45,7 +45,7 @@
               <ToggleButton Name="ExpandCollapseToggleButton" Classes="RibbonToggleButton" Width="23" IsChecked="{Binding IsCollapsed, RelativeSource={RelativeSource Mode=TemplatedParent}, Mode=TwoWay}" Focusable="False" DockPanel.Dock="Right">
                 <Path Data="M 0 2.5 L 2.5 0 L 5 2.5" Classes="RibbonExpandCollapsePath" Stroke="{Binding Foreground, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ToggleButton}}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="5" Height="2.5" StrokeThickness="2"/>
               </ToggleButton>
-              <ItemsPresenter Name="PART_ItemsPresenter" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Items="{TemplateBinding Items}" ItemsPanel="{TemplateBinding ItemsPanel}" ItemTemplate="{TemplateBinding ItemTemplate}"/>
+              <ItemsPresenter Name="PART_ItemsPresenter" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" ItemsPanel="{TemplateBinding ItemsPanel}"/>
             </DockPanel>
           </Panel>
           <Panel DockPanel.Dock="Top">
@@ -57,7 +57,7 @@
             <Panel>
               <ContentPresenter Name="PART_SelectedContentHost" Content="{TemplateBinding SelectedContent}" ContentTemplate="{TemplateBinding SelectedContentTemplate}" IsVisible="False"/>
               <ContentControl Name="PART_GroupsPresenterHolder" HorizontalAlignment="Stretch">
-                <ItemsControl Name="PART_SelectedGroupsHost" Items="{TemplateBinding SelectedGroups}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Margin="5,0" TextBlock.Foreground="{TemplateBinding Foreground}" HorizontalAlignment="Stretch" MinWidth="100" Height="90">
+                <ItemsControl Name="PART_SelectedGroupsHost" ItemsPanel="{TemplateBinding ItemsPanel}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" Margin="5,0" TextBlock.Foreground="{TemplateBinding Foreground}" HorizontalAlignment="Stretch" MinWidth="100" Height="90">
                   <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                       <local:RibbonGroupsStackPanel x:Name="PART_ItemsPanel" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Orientation="Horizontal" Margin="0" Spacing="0"/>
@@ -193,8 +193,8 @@
                     <TextBlock Text="{TemplateBinding RightColumnHeader}" FontWeight="SemiBold" Margin="10,0" VerticalAlignment="Center"/>
                   </Grid>
                   <Panel>
-                    <ItemsPresenter x:Name="PART_RightColumnItemsPresenter" Items="{TemplateBinding RightColumnItems}" ItemsPanel="{TemplateBinding RightColumnItemsPanel}" ItemTemplate="{TemplateBinding RightColumnItemTemplate}" IsVisible="{Binding !HasSelectedItem, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>
-                    <ItemsPresenter x:Name="SelectedSubItemsPresenter" Items="{TemplateBinding SelectedSubItems}" IsVisible="{TemplateBinding HasSelectedItem}"/>
+                    <ItemsPresenter x:Name="PART_RightColumnItemsPresenter" ItemsPanel="{TemplateBinding RightColumnItemsPanel}" IsVisible="{Binding !HasSelectedItem, RelativeSource={RelativeSource Mode=TemplatedParent}}"/>
+                    <ItemsPresenter x:Name="SelectedSubItemsPresenter" IsVisible="{TemplateBinding HasSelectedItem}"/>
                   </Panel>
                   <!--ListBox Classes="RibbonMenuPlacesList" Items="{Binding MenuPlacesItems, RelativeSource={RelativeSource Mode=TemplatedParent}}"/-->
                 </DockPanel>
@@ -223,7 +223,7 @@
                             DockPanel.Dock="Top">
                       <Path Data="{DynamicResource Icon.BackArrow}" Stroke="{Binding $parent[ToggleButton].Foreground}" StrokeThickness="2" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                   </ToggleButton>
-                  <ItemsPresenter x:Name="PART_ItemsPresenter" Items="{TemplateBinding Items}"/>
+                  <ItemsPresenter x:Name="PART_ItemsPresenter"/>
                 </DockPanel>
               </DockPanel>
             </Border>
@@ -261,7 +261,7 @@
                 ColumnDefinitions="*,Auto"
                 RowDefinitions="*,15">
             <Rectangle Grid.Column="1" Grid.RowSpan="2" Margin="0,4" Width="1" HorizontalAlignment="Right" Fill="{DynamicResource Ribbon.SeparatorBrush}"/>
-            <ItemsPresenter Name="PART_ItemsPresenter" Items="{TemplateBinding Items}" ItemTemplate="{TemplateBinding ItemTemplate}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.ColumnSpan="2">
+            <ItemsPresenter Name="PART_ItemsPresenter" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Grid.ColumnSpan="2">
               <ItemsPresenter.ItemsPanel>
                 <ItemsPanelTemplate>
                   <local:RibbonGroupWrapPanel x:Name="PART_ItemsPanel" DisplayMode="{TemplateBinding DisplayMode}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>

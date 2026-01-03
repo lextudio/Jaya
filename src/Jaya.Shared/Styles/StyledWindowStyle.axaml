@@ -18,7 +18,7 @@
     <Setter Property="BorderThickness" Value="{DynamicResource ThemeBorderThickness}" />
     <Setter Property="Foreground" Value="{DynamicResource Window.ForegroundBrush}" />
     <Setter Property="FontSize" Value="{DynamicResource FontSizeNormal}" />
-    <Setter Property="HasSystemDecorations" Value="False" />
+    <!--Setter Property="HasSystemDecorations" Value="False" /-->
     <Setter Property="SizeToContent" Value="Manual" />
     <Setter Property="Template">
       <ControlTemplate>

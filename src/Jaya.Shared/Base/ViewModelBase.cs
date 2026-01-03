@@ -99,7 +99,7 @@ namespace Jaya.Shared.Base
             if (dispatcher.CheckAccess())
                 action.Invoke();
             else
-                dispatcher.InvokeAsync(action, DispatcherPriority.Layout);
+                dispatcher.InvokeAsync(action);
         }
 
         void SimpleCommandAction(byte type)

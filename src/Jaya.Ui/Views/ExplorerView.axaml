@@ -37,7 +37,7 @@
         </Style>
       </Grid.Styles>
 
-        <!--  details view  -->
+        <!--  details view   -->
         <DataGrid
             IsReadOnly="True"
             IsVisible="{Binding PaneConfig.IsDetailsView, Mode=OneWay}"
@@ -60,26 +60,26 @@
                                     Classes="Icon"
                                     IsVisible="{Binding IsService}"
                                     Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}, ConverterParameter=48}" />
-                                <DrawingPresenter
+                                <!-- <DrawingPresenter
                                     Classes="Icon"
                                     Drawing="{DynamicResource Icon.CloudFolder}"
-                                    IsVisible="{Binding IsAccount}" />
-                                <DrawingPresenter
+                                    IsVisible="{Binding IsAccount}" /> -->
+                                <!-- <DrawingPresenter
                                     Classes="Icon"
                                     Drawing="{DynamicResource Icon.Computer}"
-                                    IsVisible="{Binding IsComputer}" />
-                                <DrawingPresenter
+                                    IsVisible="{Binding IsComputer}" /> -->
+                                <!-- <DrawingPresenter
                                     Classes="Icon"
                                     Drawing="{DynamicResource Icon.Drive}"
-                                    IsVisible="{Binding IsDrive}" />
-                                <DrawingPresenter
+                                    IsVisible="{Binding IsDrive}" /> -->
+                                <!-- <DrawingPresenter
                                     Classes="Icon"
                                     Drawing="{DynamicResource Icon.Folder}"
-                                    IsVisible="{Binding IsDirectory}" />
-                                <DrawingPresenter
+                                    IsVisible="{Binding IsDirectory}" /> -->
+                                <!-- <DrawingPresenter
                                     Classes="Icon"
                                     Drawing="{DynamicResource Icon.TextFile}"
-                                    IsVisible="{Binding IsFile}" />
+                                    IsVisible="{Binding IsFile}" /> -->
                                 <TextBlock Width="220" Text="{Binding Label}" />
                             </StackPanel>
                         </DataTemplate>
@@ -97,7 +97,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <!--  icons view  -->
+        <!--  icons view   -->
         <ListBox Classes="IconsView"
             IsVisible="{Binding PaneConfig.IsThumbnailView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -120,26 +120,26 @@
                           Classes="Icon"
                           IsVisible="{Binding IsService}"
                           Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}, ConverterParameter=48}" />
-                      <DrawingPresenter
+                      <!-- <DrawingPresenter
                           Classes="Icon"
                           Drawing="{DynamicResource Icon.CloudFolder}"
-                          IsVisible="{Binding IsAccount}" />
-                      <DrawingPresenter
+                          IsVisible="{Binding IsAccount}" /> -->
+                      <!-- <DrawingPresenter
                           Classes="Icon"
                           Drawing="{DynamicResource Icon.Computer}"
-                          IsVisible="{Binding IsComputer}" />
-                      <DrawingPresenter
+                          IsVisible="{Binding IsComputer}" /> -->
+                      <!-- <DrawingPresenter
                           Classes="Icon"
                           Drawing="{DynamicResource Icon.Drive}"
-                          IsVisible="{Binding IsDrive}" />
-                      <DrawingPresenter
+                          IsVisible="{Binding IsDrive}" /> -->
+                      <!-- <DrawingPresenter
                           Classes="Icon"
                           Drawing="{DynamicResource Icon.Folder}"
-                          IsVisible="{Binding IsDirectory}" />
-                      <DrawingPresenter
+                          IsVisible="{Binding IsDirectory}" /> -->
+                      <!-- <DrawingPresenter
                           Classes="Icon"
                           Drawing="{DynamicResource Icon.TextFile}"
-                          IsVisible="{Binding IsFile}" />
+                          IsVisible="{Binding IsFile}" /> -->
                       <TextBlock
                           Width="54"
                           Text="{Binding Mode=OneWay, Path=Label}"
@@ -154,7 +154,7 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <!--  list view  -->
+        <!--  list view   -->
         <ListBox Classes="ListView"
             IsVisible="{Binding PaneConfig.IsListView, Mode=OneWay}"
             ScrollViewer.VerticalScrollBarVisibility="Disabled"
@@ -177,26 +177,26 @@
                       Classes="Icon"
                       IsVisible="{Binding IsService}"
                       Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}, ConverterParameter=16}" />
-                  <DrawingPresenter
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.CloudFolder}"
-                      IsVisible="{Binding IsAccount}" />
-                  <DrawingPresenter
+                      IsVisible="{Binding IsAccount}" /> -->
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.Computer}"
-                      IsVisible="{Binding IsComputer}" />
-                  <DrawingPresenter
+                      IsVisible="{Binding IsComputer}" /> -->
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.Drive}"
-                      IsVisible="{Binding IsDrive}" />
-                  <DrawingPresenter
+                      IsVisible="{Binding IsDrive}" /> -->
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.Folder}"
-                      IsVisible="{Binding IsDirectory}" />
-                  <DrawingPresenter
+                      IsVisible="{Binding IsDirectory}" /> -->
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.TextFile}"
-                      IsVisible="{Binding IsFile}" />
+                      IsVisible="{Binding IsFile}" /> -->
                   <TextBlock
                       Height="16"
                       Text="{Binding Mode=OneWay, Path=Label}"
@@ -211,7 +211,7 @@
           </ListBox.ItemTemplate>
         </ListBox>
 
-        <!--  tiles view  -->
+        <!--  tiles view   -->
         <ListBox Classes="TilesView"
             IsVisible="{Binding PaneConfig.IsTilesView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
@@ -234,26 +234,26 @@
                       Classes="Icon"
                       IsVisible="{Binding IsService}"
                       Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}, ConverterParameter=48}" />
-                  <DrawingPresenter
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.CloudFolder}"
-                      IsVisible="{Binding IsAccount}" />
-                  <DrawingPresenter
+                      IsVisible="{Binding IsAccount}" /> -->
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.Computer}"
-                      IsVisible="{Binding IsComputer}" />
-                  <DrawingPresenter
+                      IsVisible="{Binding IsComputer}" /> -->
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.Drive}"
-                      IsVisible="{Binding IsDrive}" />
-                  <DrawingPresenter
+                      IsVisible="{Binding IsDrive}" /> -->
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.Folder}"
-                      IsVisible="{Binding IsDirectory}" />
-                  <DrawingPresenter
+                      IsVisible="{Binding IsDirectory}" /> -->
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.TextFile}"
-                      IsVisible="{Binding IsFile}" />
+                      IsVisible="{Binding IsFile}" /> -->
                   <UniformGrid Columns="1">
                     <TextBlock
                         Text="{Binding Mode=OneWay, Path=Label}"
@@ -300,26 +300,26 @@
                       Classes="Icon"
                       IsVisible="{Binding IsService}"
                       Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}, ConverterParameter=32}" />
-                  <DrawingPresenter
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.CloudFolder}"
-                      IsVisible="{Binding IsAccount}" />
-                  <DrawingPresenter
+                      IsVisible="{Binding IsAccount}" /> -->
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.Computer}"
-                      IsVisible="{Binding IsComputer}" />
-                  <DrawingPresenter
+                      IsVisible="{Binding IsComputer}" /> -->
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.Drive}"
-                      IsVisible="{Binding IsDrive}" />
-                  <DrawingPresenter
+                      IsVisible="{Binding IsDrive}" /> -->
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.Folder}"
-                      IsVisible="{Binding IsDirectory}" />
-                  <DrawingPresenter
+                      IsVisible="{Binding IsDirectory}" /> -->
+                  <!-- <DrawingPresenter
                       Classes="Icon"
                       Drawing="{DynamicResource Icon.TextFile}"
-                      IsVisible="{Binding IsFile}" />
+                      IsVisible="{Binding IsFile}" /> -->
                 </Panel>
                 <UniformGrid Rows="2">
                   <TextBlock Text="{Binding Mode=OneWay, Path=Label}" TextAlignment="Left" Classes="ContentViewFileName"/>
@@ -356,7 +356,7 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Orientation="Horizontal">
-                <DrawingPresenter Classes="Spinner" Drawing="{DynamicResource Icon.Refresh}" />
+                <!-- DrawingPresenter Classes="Spinner" Drawing="{DynamicResource Icon.Refresh}"    -->
                 <TextBlock Margin="4,0,0,0" Text="Working, please wait..." />
             </StackPanel>
         </Border>

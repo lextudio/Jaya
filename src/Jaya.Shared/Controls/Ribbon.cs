@@ -42,11 +42,11 @@ namespace Jaya.Shared.Controls
             set => SetAndRaise(HelpButtonCommandProperty, ref _helpCommand, value);
         }
 
-        protected override void OnPropertyChanged<T>(AvaloniaPropertyChangedEventArgs<T> e)
+        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs e)
         {
             if (e.Property == SelectedItemProperty)
             {
-                object newValue = e.NewValue as object;
+                object newValue = e.NewValue;
                 if (newValue == null || IsExpanded)
                 {
                     // no-op
@@ -57,16 +57,16 @@ namespace Jaya.Shared.Controls
                 }
             }
 
-            base.OnPropertyChanged<T>(e);
+            base.OnPropertyChanged(e);
         }
 
         Type IStyleable.StyleKey => typeof(Ribbon);
 
-        protected override void OnTemplateApplied(TemplateAppliedEventArgs e)
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
         {
-            base.OnTemplateApplied(e);
+            base.OnAttachedToVisualTree(e);
 
-            _toggleButton = GetControl<Button>(e, "PART_ToggleButton");
+            _toggleButton = this.FindControl<Button>("PART_ToggleButton");
             _toggleButton.Click += delegate
             {
                 IsExpanded = !IsExpanded;
@@ -88,11 +88,6 @@ namespace Jaya.Shared.Controls
                     }
                 }
             };
-        }
-
-        T GetControl<T>(TemplateAppliedEventArgs e, string name) where T : Control
-        {
-            return e.NameScope.Find<T>(name);
         }
     }
 }

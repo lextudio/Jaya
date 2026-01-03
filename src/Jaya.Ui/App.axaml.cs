@@ -11,7 +11,7 @@ using Jaya.Ui.Views.Windows;
 
 namespace Jaya.Ui
 {
-    public class App : Application
+    public partial class App : Application
     {
         SharedService _shared;
 

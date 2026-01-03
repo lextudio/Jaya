@@ -8,7 +8,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Jaya.Ui.Views
 {
-    public class RibbonView : UserControl
+    public partial class RibbonView : UserControl
     {
         public static StyledProperty<bool> IsRibbonExpandedProperty;
 

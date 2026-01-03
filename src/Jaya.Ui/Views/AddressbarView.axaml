@@ -64,22 +64,22 @@
                         Classes="Icon"
                         IsVisible="{Binding IsService}"
                         Source="{Binding ImagePath, Mode=OneWay, Converter={StaticResource BitmapValueConverter}}" />
-                    <DrawingPresenter
+                    <!-- <DrawingPresenter
                         Classes="Icon"
                         Drawing="{DynamicResource Icon.CloudFolder}"
-                        IsVisible="{Binding IsAccount}" />
-                    <DrawingPresenter
+                        IsVisible="{Binding IsAccount}" /> -->
+                    <!-- <DrawingPresenter
                         Classes="Icon"
                         Drawing="{DynamicResource Icon.Computer}"
-                        IsVisible="{Binding IsComputer}" />
-                    <DrawingPresenter
+                        IsVisible="{Binding IsComputer}" /> -->
+                    <!-- <DrawingPresenter
                         Classes="Icon"
                         Drawing="{DynamicResource Icon.Drive}"
-                        IsVisible="{Binding IsDrive}" />
-                    <DrawingPresenter
+                        IsVisible="{Binding IsDrive}" /> -->
+                    <!-- <DrawingPresenter
                         Classes="Icon"
                         Drawing="{DynamicResource Icon.Folder}"
-                        IsVisible="{Binding IsDirectory}" />
+                        IsVisible="{Binding IsDirectory}" /> -->
                     <Path
                         Margin="6,0"
                         HorizontalAlignment="Center"
@@ -89,7 +89,7 @@
                     <ItemsControl
                         Margin="0,0,16,0"
                         Padding="0"
-                        Items="{Binding PathParts, Mode=OneWay}">
+                        ItemsSource="{Binding PathParts, Mode=OneWay}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel Orientation="Horizontal" />

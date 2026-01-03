@@ -56,7 +56,7 @@
                 <Path Data="{StaticResource Icon.Github}" />
             </Button>
             <Button ToolTip.Tip="View License">
-                <DrawingPresenter Drawing="{StaticResource Icon.CertificateWarning}" />
+                <!-- DrawingPresenter Drawing="{StaticResource Icon.CertificateWarning}"    -->
             </Button>
             <Button ToolTip.Tip="Make a Donation">
                 <Path Data="{StaticResource Icon.Donate}" />

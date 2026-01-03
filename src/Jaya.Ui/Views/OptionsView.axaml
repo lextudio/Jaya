@@ -26,7 +26,7 @@
         <TextBlock Text="Color Theme:" />
         <ComboBox
             Grid.Column="1"
-            Items="{Binding Themes, Mode=OneWay}"
+            ItemsSource="{Binding Themes, Mode=OneWay}"
             SelectedItem="{Binding ApplicationConfig.Theme, Mode=TwoWay}">
             <ComboBox.ItemTemplate>
                 <DataTemplate>

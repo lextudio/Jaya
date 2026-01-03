@@ -35,11 +35,10 @@ namespace Jaya.Ui.Converters
                 iconSize = int.Parse(parameter as string);
 
             Uri uri;
-            var assets = AvaloniaLocator.Current.GetService<IAssetLoader>();
             switch (fso.Type)
             {
                 case FileSystemObjectType.Drive:
-                    uri = new Uri(Constants.GetImageUrl(string.Format("Hdd-{0}.png", iconSize)), UriKind.RelativeOrAbsolute); ;
+                    uri = new Uri(Constants.GetImageUrl(string.Format("Hdd-{0}.png", iconSize)), UriKind.RelativeOrAbsolute);
                     break;
 
                 case FileSystemObjectType.Directory:
@@ -47,14 +46,20 @@ namespace Jaya.Ui.Converters
                     break;
 
                 case FileSystemObjectType.File:
-                    return GetFileImage(fso as FileModel, iconSize, assets);
+                    return GetFileImage(fso as FileModel, iconSize);
 
                 default:
                     return null;
             }
 
-
-            return new Bitmap(assets.Open(uri));
+            try
+            {
+                return new Bitmap(uri.ToString());
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -62,18 +67,18 @@ namespace Jaya.Ui.Converters
             throw new NotImplementedException();
         }
 
-        Bitmap AddOrGetFromCache(Uri uri, IAssetLoader assets, Uri fallbackUri = null)
+        Bitmap AddOrGetFromCache(Uri uri, Uri fallbackUri = null)
         {
             if (_cache.TryGetValue(uri, out Bitmap image))
                 return image;
 
             try
             {
-                image = new Bitmap(assets.Open(uri));
+                image = new Bitmap(uri.ToString());
                 _cache.Set(uri, image);
 
             }
-            catch (FileNotFoundException)
+            catch (Exception)
             {
                 if (fallbackUri == null)
                     return null;
@@ -84,24 +89,24 @@ namespace Jaya.Ui.Converters
                     return image;
                 }
 
-                image = new Bitmap(assets.Open(fallbackUri));
+                image = new Bitmap(fallbackUri.ToString());
                 _cache.Set(fallbackUri, image);
             }
 
             return image;
         }
 
-        Bitmap GetFileImage(FileModel fso, int iconSize, IAssetLoader assets)
+        Bitmap GetFileImage(FileModel fso, int iconSize)
         {
             var fallbackUri = new Uri(Constants.GetImageUrl(string.Format("File-{0}.png", iconSize)), UriKind.RelativeOrAbsolute);
 
             if (string.IsNullOrEmpty(fso.Extension))
-                return AddOrGetFromCache(fallbackUri, assets);
+                return AddOrGetFromCache(fallbackUri);
 
             var extensionImageFile = Constants.GetImageUrl(string.Format("FileExtensions/{0}-{1}.png", fso.Extension, iconSize));
             var uri = new Uri(extensionImageFile, UriKind.RelativeOrAbsolute);
 
-            return AddOrGetFromCache(uri, assets, fallbackUri);
+            return AddOrGetFromCache(uri, fallbackUri);
         }
     }
 }

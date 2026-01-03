@@ -218,10 +218,10 @@
     <Setter Property="Width" Value="16" />
     <Setter Property="Height" Value="16" />
   </Style>
-  <Style Selector="v|AddressbarView DrawingPresenter[IsVisible=True].Icon">
+  <!--Style Selector="v|AddressbarView DrawingPresenter[IsVisible=True].Icon">
     <Setter Property="Width" Value="14" />
     <Setter Property="Height" Value="14" />
-  </Style>
+  </Style-->
   <Style Selector="v|AddressbarView Path[IsVisible=True].Icon">
     <Setter Property="Width" Value="14" />
     <Setter Property="Height" Value="14" />

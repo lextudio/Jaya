@@ -8,7 +8,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Jaya.Ui.Views
 {
-    public class ManagePluginsView : UserControl
+    public partial class ManagePluginsView : UserControl
     {
         public ManagePluginsView()
         {

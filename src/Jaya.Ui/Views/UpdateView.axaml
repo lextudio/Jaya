@@ -25,12 +25,12 @@
             <RowDefinition Height="*" MinHeight="16" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <DrawingPresenter
+        <Image
             Grid.RowSpan="2"
             Width="42"
             Height="42"
             Margin="0,0,8,0"
-            Drawing="{DynamicResource Icon.RunUpdate}" />
+            Source="{DynamicResource Icon.RunUpdate}" />
         <TextBlock
             Grid.Column="1"
             Grid.ColumnSpan="2"

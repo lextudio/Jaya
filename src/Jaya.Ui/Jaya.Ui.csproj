@@ -18,14 +18,15 @@
     <PackageReference Include="Avalonia.Controls.DataGrid" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.ReactiveUI" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Avalonia.Xaml.Behaviors" />
-    <PackageReference Include="AvaloniaUIRibbon" />
     <PackageReference Include="RestSharp" />
     <PackageReference Include="RestSharp.Serializers.NewtonsoftJson" />
     <PackageReference Include="SkiaSharp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Jaya.Shared\Jaya.Shared.csproj" />
+    <ProjectReference Include="..\..\Avalonia.Ribbon\AvaloniaUI.Ribbon\AvaloniaUI.Ribbon.csproj" />
   </ItemGroup>
 
   <!--enter plugin entries below for debugging-->

@@ -8,7 +8,7 @@ using Avalonia.Markup.Xaml;
 
 namespace Jaya.Ui.Views
 {
-    public class StatusbarView : UserControl
+    public partial class StatusbarView : UserControl
     {
         public StatusbarView()
         {

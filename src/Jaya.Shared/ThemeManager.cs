@@ -27,11 +27,11 @@ namespace Jaya.Shared
             _themes = new List<ThemeModel>
             {
                 new ThemeModel("Light",
-                    new Uri("avares://Avalonia.Themes.Default/Accents/BaseLight.xaml"),
-                    new Uri("avares://Jaya.Shared/Styles/Accents/BaseLight.xaml")),
+                    new Uri("avares://Avalonia.Themes.Default/Accents/BaseLight.axaml"),
+                    new Uri("avares://Jaya.Shared/Styles/Accents/BaseLight.axaml")),
                 new ThemeModel("Dark",
-                    new Uri("avares://Avalonia.Themes.Default/Accents/BaseDark.xaml"),
-                    new Uri("avares://Jaya.Shared/Styles/Accents/BaseDark.xaml"))
+                    new Uri("avares://Avalonia.Themes.Default/Accents/BaseDark.axaml"),
+                    new Uri("avares://Jaya.Shared/Styles/Accents/BaseDark.axaml"))
             };
 
             SelectedTheme = _themes[0];

@@ -26,7 +26,7 @@
     <TreeView
         Padding="0"
         BorderThickness="0"
-        Items="{Binding Node.Children, Mode=OneWay}"
+        ItemsSource="{Binding Node.Children, Mode=OneWay}"
         SelectedItem="{Binding SelectedNode, Mode=OneWayToSource}"
         SelectionMode="Single">
         <TreeView.ItemTemplate>
@@ -36,32 +36,32 @@
                         Classes="Icon"
                         IsVisible="{Binding IsService}"
                         Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}}" />
-                    <DrawingPresenter
+                    <!-- <DrawingPresenter
                         Classes="Icon"
                         Drawing="{DynamicResource Icon.CloudFolder}"
-                        IsVisible="{Binding IsAccount}" />
-                    <DrawingPresenter
+                        IsVisible="{Binding IsAccount}" /> -->
+                    <!-- <DrawingPresenter
                         Classes="Icon"
                         Drawing="{DynamicResource Icon.Computer}"
-                        IsVisible="{Binding IsComputer}" />
-                  <DrawingPresenter
+                        IsVisible="{Binding IsComputer}" /> -->
+                  <!-- <DrawingPresenter
                         Classes="Icon"
                         Drawing="{DynamicResource Icon.Drive}"
-                        IsVisible="{Binding IsDrive}" />
+                        IsVisible="{Binding IsDrive}" /> -->
                     <StackPanel IsVisible="{Binding IsDirectory}" Orientation="Horizontal">
-                        <DrawingPresenter
+                        <!-- <DrawingPresenter
                             Classes="Icon"
                             Drawing="{DynamicResource Icon.Folder}"
-                            IsVisible="{Binding !IsExpanded}" />
-                        <DrawingPresenter
+                            IsVisible="{Binding !IsExpanded}" /> -->
+                        <!-- <DrawingPresenter
                             Classes="Icon"
                             Drawing="{DynamicResource Icon.FolderOpen}"
-                            IsVisible="{Binding IsExpanded}" />
+                            IsVisible="{Binding IsExpanded}" /> -->
                     </StackPanel>
-                    <DrawingPresenter
+                    <!-- <DrawingPresenter
                         Classes="Spinner"
                         Drawing="{DynamicResource Icon.Refresh}"
-                        IsVisible="{Binding IsDummy}" />
+                        IsVisible="{Binding IsDummy}" /> -->
                     <TextBlock Text="{Binding Label}" />
                 </StackPanel>
             </TreeDataTemplate>

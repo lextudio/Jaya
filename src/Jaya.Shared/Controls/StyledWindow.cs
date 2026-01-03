@@ -30,37 +30,41 @@ namespace Jaya.Shared.Controls
             IsModalProperty = AvaloniaProperty.Register<StyledWindow, bool>(nameof(IsModal));
         }
 
-        protected override void OnTemplateApplied(TemplateAppliedEventArgs e)
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
         {
-            base.OnTemplateApplied(e);
+            base.OnAttachedToVisualTree(e);
 
-            SetupSide("TopLeft", StandardCursorType.TopLeftCorner, WindowEdge.NorthWest, ref e);
-            SetupSide("TopCenter", StandardCursorType.TopSide, WindowEdge.North, ref e);
-            SetupSide("TopRight", StandardCursorType.TopRightCorner, WindowEdge.NorthEast, ref e);
-            SetupSide("MiddleRight", StandardCursorType.RightSide, WindowEdge.East, ref e);
-            SetupSide("BottomRight", StandardCursorType.BottomRightCorner, WindowEdge.SouthEast, ref e);
-            SetupSide("BottomCenter", StandardCursorType.BottomSide, WindowEdge.South, ref e);
-            SetupSide("BottomLeft", StandardCursorType.BottomLeftCorner, WindowEdge.SouthWest, ref e);
-            SetupSide("MiddleLeft", StandardCursorType.LeftSide, WindowEdge.West, ref e);
+            SetupSide("TopLeft", StandardCursorType.TopLeftCorner, WindowEdge.NorthWest);
+            SetupSide("TopCenter", StandardCursorType.TopSide, WindowEdge.North);
+            SetupSide("TopRight", StandardCursorType.TopRightCorner, WindowEdge.NorthEast);
+            SetupSide("MiddleRight", StandardCursorType.RightSide, WindowEdge.East);
+            SetupSide("BottomRight", StandardCursorType.BottomRightCorner, WindowEdge.SouthEast);
+            SetupSide("BottomCenter", StandardCursorType.BottomSide, WindowEdge.South);
+            SetupSide("BottomLeft", StandardCursorType.BottomLeftCorner, WindowEdge.SouthWest);
+            SetupSide("MiddleLeft", StandardCursorType.LeftSide, WindowEdge.West);
 
-            Border titlebar = GetControl<Border>(e, "PART_TitleBar");
-            titlebar.PointerPressed += (sender, args) => PlatformImpl?.BeginMoveDrag(args);
+            Border titlebar = this.FindControl<Border>("PART_TitleBar");
+            titlebar.PointerPressed += (sender, args) => 
+            {
+                if (args.ClickCount == 1)
+                    BeginMoveDrag(args);
+            };
             titlebar.DoubleTapped += (sneder, args) =>
             {
                 if (CanResize && (!IsModal))
                     WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
             };
 
-            _closeButton = GetControl<Button>(e, "PART_Close");
+            _closeButton = this.FindControl<Button>("PART_Close");
             _closeButton.Click += (object sender, RoutedEventArgs arg) => Close();
 
             var isNotModal = !IsModal;
 
-            _minimizeButton = GetControl<Button>(e, "PART_Minimize");
+            _minimizeButton = this.FindControl<Button>("PART_Minimize");
             _minimizeButton.IsVisible = isNotModal;
             _minimizeButton.Click += (sneder, args) => WindowState = WindowState.Minimized;
 
-            _maximizeButton = GetControl<Button>(e, "PART_Maximize");
+            _maximizeButton = this.FindControl<Button>("PART_Maximize");
             _maximizeButton.IsVisible = isNotModal;
             _maximizeButton.Click += (sneder, args) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
@@ -95,16 +99,11 @@ namespace Jaya.Shared.Controls
 
         Type IStyleable.StyleKey => typeof(StyledWindow);
 
-        void SetupSide(string name, StandardCursorType cursor, WindowEdge edge, ref TemplateAppliedEventArgs e)
+        void SetupSide(string name, StandardCursorType cursor, WindowEdge edge)
         {
-            var control = e.NameScope.Get<Control>("PART_" + name + "Edge");
+            var control = this.FindControl<Control>("PART_" + name + "Edge");
             control.Cursor = new Cursor(cursor);
             control.PointerPressed += (sender, ep) => BeginResizeDrag(edge, ep);
-        }
-
-        T GetControl<T>(TemplateAppliedEventArgs e, string name) where T : Control
-        {
-            return e.NameScope.Find<T>(name);
         }
     }
 }

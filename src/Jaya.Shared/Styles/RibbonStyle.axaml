@@ -121,14 +121,14 @@
         <Setter Property="Orientation" Value="Horizontal" />
     </Style>
 
-    <Style Selector="c|RibbonGroup Button.Large &gt; StackPanel &gt; DrawingPresenter">
+    <!--Style Selector="c|RibbonGroup Button.Large > StackPanel > DrawingPresenter">
         <Setter Property="Width" Value="32" />
         <Setter Property="Height" Value="32" />
-    </Style>
-    <Style Selector="c|RibbonGroup Button.Small &gt; StackPanel &gt; DrawingPresenter">
+    </Style-->
+    <!--Style Selector="c|RibbonGroup Button.Small > StackPanel > DrawingPresenter">
         <Setter Property="Width" Value="16" />
         <Setter Property="Height" Value="16" />
-    </Style>
+    </Style-->
     <Style Selector="c|RibbonGroup Button.Large &gt; StackPanel &gt; Image">
         <Setter Property="Width" Value="32" />
         <Setter Property="Height" Value="32" />
@@ -205,14 +205,14 @@
         <Setter Property="Orientation" Value="Horizontal" />
     </Style>
 
-    <Style Selector="c|RibbonGroup ToggleButton.Large &gt; StackPanel &gt; DrawingPresenter">
+    <!--Style Selector="c|RibbonGroup ToggleButton.Large > StackPanel > DrawingPresenter">
         <Setter Property="Width" Value="32" />
         <Setter Property="Height" Value="32" />
-    </Style>
-    <Style Selector="c|RibbonGroup ToggleButton.Small &gt; StackPanel &gt; DrawingPresenter">
+    </Style-->
+    <!--Style Selector="c|RibbonGroup ToggleButton.Small > StackPanel > DrawingPresenter">
         <Setter Property="Width" Value="16" />
         <Setter Property="Height" Value="16" />
-    </Style>
+    </Style-->
     <Style Selector="c|RibbonGroup ToggleButton.Large &gt; StackPanel &gt; Image">
         <Setter Property="Width" Value="32" />
         <Setter Property="Height" Value="32" />
@@ -264,9 +264,7 @@
                     <Border Margin="2">
                         <ItemsPresenter
                             Name="PART_Container"
-                            Margin="{TemplateBinding Padding}"
-                            ItemTemplate="{TemplateBinding ItemTemplate}"
-                            Items="{TemplateBinding Items}" />
+                            Margin="{TemplateBinding Padding}" />
                     </Border>
                     <TextBlock
                         Grid.Row="1"
@@ -310,8 +308,6 @@
                         <Rectangle Classes="UpwardShadow" VerticalAlignment="Bottom" IsVisible="{TemplateBinding IsExpanded, Mode=OneWay}"/>
                         <ItemsPresenter
                             Name="PART_ItemsPresenter"
-                            ItemTemplate="{TemplateBinding ItemTemplate}"
-                            Items="{TemplateBinding Items}"
                             ItemsPanel="{TemplateBinding ItemsPanel}"
                             ZIndex="98">
                         </ItemsPresenter>
