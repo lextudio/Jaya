@@ -19,24 +19,24 @@
             <Border Classes="Thumb" />
 
             <Button ToolTip.Tip="New Folder">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.NewFolder}"    -->
+                <Image Source="{DynamicResource Icon.NewFolder.Image}" />
             </Button>
             <Border Classes="Separator" />
             <Button ToolTip.Tip="Properties">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.FileProperties}"    -->
+                <Image Source="{DynamicResource Icon.FileProperties.Image}" />
             </Button>
             <Button ToolTip.Tip="Open">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.OpenFile}"    -->
+                <Image Source="{DynamicResource Icon.OpenFile.Image}" />
             </Button>
             <Button ToolTip.Tip="Edit">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.EditFile}"    -->
+                <Image Source="{DynamicResource Icon.EditFile.Image}" />
             </Button>
             <Border Classes="Separator" />
             <Button
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.Exit}"
                 ToolTip.Tip="Exit">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Close}"    -->
+                <Image Source="{DynamicResource Icon.Close.Image}" />
             </Button>
         </StackPanel>
 
@@ -44,33 +44,33 @@
             <Border Classes="Thumb" />
 
             <Button ToolTip.Tip="Cut">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Cut}"    -->
+                <Image Source="{DynamicResource Icon.Cut.Image}" />
             </Button>
             <Button ToolTip.Tip="Copy">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Copy}"    -->
+                <Image Source="{DynamicResource Icon.Copy.Image}" />
             </Button>
             <Button ToolTip.Tip="Paste">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Paste}"    -->
+                <Image Source="{DynamicResource Icon.Paste.Image}" />
             </Button>
             <Border Classes="Separator" />
             <Button ToolTip.Tip="Delete">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Delete}"    -->
+                <Image Source="{DynamicResource Icon.Delete.Image}" />
             </Button>
             <Button ToolTip.Tip="Rename">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Rename}"    -->
+                <Image Source="{DynamicResource Icon.Rename.Image}" />
             </Button>
             <Button ToolTip.Tip="Format">
                 <Path Data="{DynamicResource Icon.DiscClean}" />
             </Button>
             <Border Classes="Separator" />
             <Button ToolTip.Tip="Select All">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.SelectAll}"    -->
+                <Image Source="{DynamicResource Icon.SelectAll.Image}" />
             </Button>
             <Button ToolTip.Tip="Select None">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.SelectNone}"    -->
+                <Image Source="{DynamicResource Icon.SelectNone.Image}" />
             </Button>
             <Button ToolTip.Tip="Invert Selection">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.InvertSelection}"    -->
+                <Image Source="{DynamicResource Icon.InvertSelection.Image}" />
             </Button>
         </StackPanel>
 
@@ -81,21 +81,21 @@
                 CommandParameter="{x:Static local:CommandType.TogglePaneNavigation}"
                 IsChecked="{Binding PaneConfig.IsNavigationPaneVisible, Mode=OneWay}"
                 ToolTip.Tip="Navigation Pane">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.NavigationPane}"    -->
+                <Image Source="{DynamicResource Icon.NavigationPane.Image}" />
             </ToggleButton>
             <ToggleButton
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.TogglePanePreview}"
                 IsChecked="{Binding PaneConfig.IsPreviewPaneVisible, Mode=OneWay}"
                 ToolTip.Tip="Preview Pane">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.PreviewPane}"    -->
+                <Image Source="{DynamicResource Icon.PreviewPane.Image}" />
             </ToggleButton>
             <ToggleButton
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.TogglePaneDetails}"
                 IsChecked="{Binding PaneConfig.IsDetailsPaneVisible, Mode=OneWay}"
                 ToolTip.Tip="Details Pane">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.DetailsPane}"    -->
+                <Image Source="{DynamicResource Icon.DetailsPane.Image}" />
             </ToggleButton>
             <Border Classes="Separator" />
             <ToggleButton
@@ -103,21 +103,21 @@
                 CommandParameter="{x:Static local:CommandType.ToggleItemCheckBoxes}"
                 IsChecked="{Binding ApplicationConfig.IsItemCheckBoxVisible, Mode=OneWay}"
                 ToolTip.Tip="Item Check Boxes">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.CheckBox}"    -->
+                <Image Source="{DynamicResource Icon.CheckBox.Image}" />
             </ToggleButton>
             <ToggleButton
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.ToggleFileNameExtensions}"
                 IsChecked="{Binding ApplicationConfig.IsFileNameExtensionVisible, Mode=OneWay}"
                 ToolTip.Tip="File Name Extensions">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Extension}"    -->
+                <Image Source="{DynamicResource Icon.Extension.Image}" />
             </ToggleButton>
             <ToggleButton
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.ToggleHiddenItems}"
                 IsChecked="{Binding ApplicationConfig.IsHiddenItemVisible, Mode=OneWay}"
                 ToolTip.Tip="Hidden Items">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.HiddenFiles}"    -->
+                <Image Source="{DynamicResource Icon.HiddenFiles.Image}" />
             </ToggleButton>
             <Border Classes="Separator" />
             <Button Command="{Binding OpenWindowCommand}" ToolTip.Tip="Plugins...">
@@ -128,7 +128,7 @@
                         Height="480"
                         ContentType="{x:Type v:ManagePluginsView}" />
                 </Button.CommandParameter>
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Plugin}"    -->
+                <Image Source="{DynamicResource Icon.Plugin.Image}" />
             </Button>
             <Button Command="{Binding OpenWindowCommand}" ToolTip.Tip="Options...">
                 <Button.CommandParameter>
@@ -138,7 +138,7 @@
                         Height="480"
                         ContentType="{x:Type v:OptionsView}" />
                 </Button.CommandParameter>
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Property}"    -->
+                <Image Source="{DynamicResource Icon.Property.Image}" />
             </Button>
         </StackPanel>
 
@@ -146,40 +146,40 @@
             <Border Classes="Thumb" />
 
             <ToggleButton ToolTip.Tip="Search Current Folder">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Folder}"    -->
+                <Image Source="{DynamicResource Icon.Folder.Image}" />
             </ToggleButton>
             <ToggleButton ToolTip.Tip="Search All Subfolders">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.SubFolders}"    -->
+                <Image Source="{DynamicResource Icon.SubFolders.Image}" />
             </ToggleButton>
             <Button ToolTip.Tip="Search Again In">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.FindInFiles}"    -->
+                <Image Source="{DynamicResource Icon.FindInFiles.Image}" />
             </Button>
             <Border Classes="Separator" />
             <Button ToolTip.Tip="Date Modified">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Calendar}"    -->
+                <Image Source="{DynamicResource Icon.Calendar.Image}" />
             </Button>
             <Button ToolTip.Tip="Kind">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.ContentType}"    -->
+                <Image Source="{DynamicResource Icon.ContentType.Image}" />
             </Button>
             <Button ToolTip.Tip="Size">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.CodeFile}"    -->
+                <Image Source="{DynamicResource Icon.CodeFile.Image}" />
             </Button>
             <Button ToolTip.Tip="Other Properties">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.FileProperties}"    -->
+                <Image Source="{DynamicResource Icon.FileProperties.Image}" />
             </Button>
             <Border Classes="Separator" />
             <Button ToolTip.Tip="Recent Searches">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.History}"    -->
+                <Image Source="{DynamicResource Icon.History.Image}" />
             </Button>
             <Button ToolTip.Tip="Advanced Options">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Property}"    -->
+                <Image Source="{DynamicResource Icon.Property.Image}" />
             </Button>
             <Button ToolTip.Tip="Save Search">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Save}"    -->
+                <Image Source="{DynamicResource Icon.Save.Image}" />
             </Button>
             <Border Classes="Separator" />
             <Button ToolTip.Tip="Close Search">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Close}"    -->
+                <Image Source="{DynamicResource Icon.Close.Image}" />
             </Button>
         </StackPanel>
 
@@ -187,23 +187,23 @@
             <Border Classes="Thumb" />
 
             <Button ToolTip.Tip="View Help">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.Help}"    -->
+                <Image Source="{DynamicResource Icon.Help.Image}" />
             </Button>
             <Button ToolTip.Tip="Project URL">
                 <Path Data="{DynamicResource Icon.Github}" />
             </Button>
             <Button ToolTip.Tip="View License">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.CertificateWarning}"    -->
+                <Image Source="{DynamicResource Icon.CertificateWarning.Image}" />
             </Button>
             <Button ToolTip.Tip="Make a Donation">
                 <Path Data="{DynamicResource Icon.Donate}" />
             </Button>
             <Border Classes="Separator" />
             <Button ToolTip.Tip="Send Feedback...">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.SendMail}"    -->
+                <Image Source="{DynamicResource Icon.SendMail.Image}" />
             </Button>
             <Button ToolTip.Tip="Check For Update...">
-                <!-- DrawingPresenter Drawing="{DynamicResource Icon.RunUpdate}"    -->
+                <Image Source="{DynamicResource Icon.RunUpdate.Image}" />
             </Button>
             <Border Classes="Separator" />
             <Button Command="{Binding OpenWindowCommand}" ToolTip.Tip="About Jaya File Manager">

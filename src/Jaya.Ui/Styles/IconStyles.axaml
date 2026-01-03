@@ -1109,6 +1109,41 @@
       <Geometry x:Key="Icon.DownChevron">M 0 0 L 3.5 3.5 L 7 0</Geometry>
 
       <Geometry x:Key="Icon.RightChevronSmall">M 0 0 L 2.5 2.5 L 0 5</Geometry>
+
+      <!-- DrawingImage aliases for toolbar/menu icons -->
+      <DrawingImage x:Key="Icon.NewFolder.Image" Drawing="{StaticResource Icon.NewFolder}" />
+      <DrawingImage x:Key="Icon.FileProperties.Image" Drawing="{StaticResource Icon.FileProperties}" />
+      <DrawingImage x:Key="Icon.OpenFile.Image" Drawing="{StaticResource Icon.OpenFile}" />
+      <DrawingImage x:Key="Icon.EditFile.Image" Drawing="{StaticResource Icon.EditFile}" />
+      <DrawingImage x:Key="Icon.Close.Image" Drawing="{StaticResource Icon.Close}" />
+      <DrawingImage x:Key="Icon.Cut.Image" Drawing="{StaticResource Icon.Cut}" />
+      <DrawingImage x:Key="Icon.Copy.Image" Drawing="{StaticResource Icon.Copy}" />
+      <DrawingImage x:Key="Icon.Paste.Image" Drawing="{StaticResource Icon.Paste}" />
+      <DrawingImage x:Key="Icon.Delete.Image" Drawing="{StaticResource Icon.Delete}" />
+      <DrawingImage x:Key="Icon.Rename.Image" Drawing="{StaticResource Icon.Rename}" />
+      <DrawingImage x:Key="Icon.SelectAll.Image" Drawing="{StaticResource Icon.SelectAll}" />
+      <DrawingImage x:Key="Icon.SelectNone.Image" Drawing="{StaticResource Icon.SelectNone}" />
+      <DrawingImage x:Key="Icon.InvertSelection.Image" Drawing="{StaticResource Icon.InvertSelection}" />
+      <DrawingImage x:Key="Icon.NavigationPane.Image" Drawing="{StaticResource Icon.NavigationPane}" />
+      <DrawingImage x:Key="Icon.PreviewPane.Image" Drawing="{StaticResource Icon.PreviewPane}" />
+      <DrawingImage x:Key="Icon.DetailsPane.Image" Drawing="{StaticResource Icon.DetailsPane}" />
+      <DrawingImage x:Key="Icon.CheckBox.Image" Drawing="{StaticResource Icon.CheckBox}" />
+      <DrawingImage x:Key="Icon.Extension.Image" Drawing="{StaticResource Icon.Extension}" />
+      <DrawingImage x:Key="Icon.HiddenFiles.Image" Drawing="{StaticResource Icon.HiddenFiles}" />
+      <DrawingImage x:Key="Icon.Plugin.Image" Drawing="{StaticResource Icon.Plugin}" />
+      <DrawingImage x:Key="Icon.Property.Image" Drawing="{StaticResource Icon.Property}" />
+      <DrawingImage x:Key="Icon.Folder.Image" Drawing="{StaticResource Icon.Folder}" />
+      <DrawingImage x:Key="Icon.SubFolders.Image" Drawing="{StaticResource Icon.SubFolders}" />
+      <DrawingImage x:Key="Icon.FindInFiles.Image" Drawing="{StaticResource Icon.FindInFiles}" />
+      <DrawingImage x:Key="Icon.Calendar.Image" Drawing="{StaticResource Icon.Calendar}" />
+      <DrawingImage x:Key="Icon.ContentType.Image" Drawing="{StaticResource Icon.ContentType}" />
+      <DrawingImage x:Key="Icon.CodeFile.Image" Drawing="{StaticResource Icon.CodeFile}" />
+      <DrawingImage x:Key="Icon.History.Image" Drawing="{StaticResource Icon.History}" />
+      <DrawingImage x:Key="Icon.Save.Image" Drawing="{StaticResource Icon.Save}" />
+      <DrawingImage x:Key="Icon.Help.Image" Drawing="{StaticResource Icon.Help}" />
+      <DrawingImage x:Key="Icon.CertificateWarning.Image" Drawing="{StaticResource Icon.CertificateWarning}" />
+      <DrawingImage x:Key="Icon.SendMail.Image" Drawing="{StaticResource Icon.SendMail}" />
+      <DrawingImage x:Key="Icon.RunUpdate.Image" Drawing="{StaticResource Icon.RunUpdate}" />
     </Style.Resources>
   </Style>
 </Styles>
