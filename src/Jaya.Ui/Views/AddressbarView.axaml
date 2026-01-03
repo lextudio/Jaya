@@ -64,22 +64,10 @@
                         Classes="Icon"
                         IsVisible="{Binding IsService}"
                         Source="{Binding ImagePath, Mode=OneWay, Converter={StaticResource BitmapValueConverter}}" />
-                    <!-- <DrawingPresenter
-                        Classes="Icon"
-                        Drawing="{DynamicResource Icon.CloudFolder}"
-                        IsVisible="{Binding IsAccount}" /> -->
-                    <!-- <DrawingPresenter
-                        Classes="Icon"
-                        Drawing="{DynamicResource Icon.Computer}"
-                        IsVisible="{Binding IsComputer}" /> -->
-                    <!-- <DrawingPresenter
-                        Classes="Icon"
-                        Drawing="{DynamicResource Icon.Drive}"
-                        IsVisible="{Binding IsDrive}" /> -->
-                    <!-- <DrawingPresenter
-                        Classes="Icon"
-                        Drawing="{DynamicResource Icon.Folder}"
-                        IsVisible="{Binding IsDirectory}" /> -->
+                    <Image Classes="Icon" Source="{DynamicResource Icon.CloudFolder.Image}" IsVisible="{Binding IsAccount}" Width="16" Height="16" Stretch="Uniform" />
+                    <Image Classes="Icon" Source="{DynamicResource Icon.Computer.Image}" IsVisible="{Binding IsComputer}" Width="16" Height="16" Stretch="Uniform" />
+                    <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="16" Height="16" Stretch="Uniform" />
+                    <Image Classes="Icon" Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IsDirectory}" Width="16" Height="16" Stretch="Uniform" />
                     <Path
                         Margin="6,0"
                         HorizontalAlignment="Center"
