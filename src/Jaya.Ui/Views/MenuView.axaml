@@ -17,23 +17,23 @@
         <MenuItem Header="_File">
             <MenuItem Header="New Folder">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.NewFolder}"    -->
+                    <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <Separator />
             <MenuItem Header="Properties">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.FileProperties}"    -->
+                    <Image Source="{DynamicResource Icon.FileProperties.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Open">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.OpenFile}"    -->
+                    <Image Source="{DynamicResource Icon.OpenFile.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Edit">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.EditFile}"    -->
+                    <Image Source="{DynamicResource Icon.EditFile.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <Separator />
@@ -42,7 +42,7 @@
                 CommandParameter="{x:Static local:CommandType.Exit}"
                 Header="Exit">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Close}"    -->
+                    <Image Source="{DynamicResource Icon.Close.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
         </MenuItem>
@@ -50,17 +50,17 @@
         <MenuItem Header="_Edit">
             <MenuItem Header="Cut">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Cut}"    -->
+                    <Image Source="{DynamicResource Icon.Cut.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Copy">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Copy}"    -->
+                    <Image Source="{DynamicResource Icon.Copy.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Paste">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Paste}"    -->
+                    <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <Separator />
@@ -69,12 +69,12 @@
             <Separator />
             <MenuItem Header="Delete">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Delete}"    -->
+                    <Image Source="{DynamicResource Icon.Delete.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Rename">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Rename}"    -->
+                    <Image Source="{DynamicResource Icon.Rename.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Format">
@@ -85,17 +85,17 @@
             <Separator />
             <MenuItem Header="Select All">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.SelectAll}"    -->
+                    <Image Source="{DynamicResource Icon.SelectAll.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Select None">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.SelectNone}"    -->
+                    <Image Source="{DynamicResource Icon.SelectNone.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Invert Selection">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.InvertSelection}"    -->
+                    <Image Source="{DynamicResource Icon.InvertSelection.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
         </MenuItem>
@@ -107,7 +107,7 @@
                 Header="Navigation Pane">
                 <MenuItem.Icon>
                     <ToggleButton IsChecked="{Binding PaneConfig.IsNavigationPaneVisible, Mode=OneWay}">
-                        <!-- DrawingPresenter Drawing="{DynamicResource Icon.NavigationPane}"    -->
+                        <Image Source="{DynamicResource Icon.NavigationPane.Image}" Width="16" Height="16" />
                     </ToggleButton>
                 </MenuItem.Icon>
             </MenuItem>
@@ -117,7 +117,7 @@
                 Header="Preview Pane">
                 <MenuItem.Icon>
                     <ToggleButton IsChecked="{Binding PaneConfig.IsPreviewPaneVisible, Mode=OneWay}">
-                        <!-- DrawingPresenter Drawing="{DynamicResource Icon.PreviewPane}"    -->
+                        <Image Source="{DynamicResource Icon.PreviewPane.Image}" Width="16" Height="16" />
                     </ToggleButton>
                 </MenuItem.Icon>
             </MenuItem>
@@ -127,7 +127,7 @@
                 Header="Details Pane">
                 <MenuItem.Icon>
                     <ToggleButton IsChecked="{Binding PaneConfig.IsDetailsPaneVisible, Mode=OneWay}">
-                        <!-- DrawingPresenter Drawing="{DynamicResource Icon.DetailsPane}"    -->
+                        <Image Source="{DynamicResource Icon.DetailsPane.Image}" Width="16" Height="16" />
                     </ToggleButton>
                 </MenuItem.Icon>
             </MenuItem>
@@ -181,7 +181,7 @@
                 Header="Item Check Boxes">
                 <MenuItem.Icon>
                     <ToggleButton IsChecked="{Binding ApplicationConfig.IsItemCheckBoxVisible, Mode=OneWay}">
-                        <!-- DrawingPresenter Drawing="{DynamicResource Icon.CheckBox}"    -->
+                        <Image Source="{DynamicResource Icon.CheckBox.Image}" Width="16" Height="16" />
                     </ToggleButton>
                 </MenuItem.Icon>
             </MenuItem>
@@ -191,7 +191,7 @@
                 Header="File Name Extensions">
                 <MenuItem.Icon>
                     <ToggleButton IsChecked="{Binding ApplicationConfig.IsFileNameExtensionVisible, Mode=OneWay}">
-                        <!-- DrawingPresenter Drawing="{DynamicResource Icon.Extension}"    -->
+                        <Image Source="{DynamicResource Icon.Extension.Image}" Width="16" Height="16" />
                     </ToggleButton>
                 </MenuItem.Icon>
             </MenuItem>
@@ -201,19 +201,19 @@
                 Header="Hidden Items">
                 <MenuItem.Icon>
                     <ToggleButton IsChecked="{Binding ApplicationConfig.IsHiddenItemVisible, Mode=OneWay}">
-                        <!-- DrawingPresenter Drawing="{DynamicResource Icon.HiddenFiles}"    -->
+                        <Image Source="{DynamicResource Icon.HiddenFiles.Image}" Width="16" Height="16" />
                     </ToggleButton>
                 </MenuItem.Icon>
             </MenuItem>
             <Separator />
             <MenuItem Header="Plugins...">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Plugin}"    -->
+                    <Image Source="{DynamicResource Icon.Plugin.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Options...">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Property}"    -->
+                    <Image Source="{DynamicResource Icon.Property.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
         </MenuItem>
@@ -221,60 +221,60 @@
         <MenuItem Header="Search">
             <MenuItem Header="Current Folder">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Folder}"    -->
+                    <Image Source="{DynamicResource Icon.Folder.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="All Subfolders">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.SubFolders}"    -->
+                    <Image Source="{DynamicResource Icon.SubFolders.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Search Again In">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.FindInFiles}"    -->
+                    <Image Source="{DynamicResource Icon.FindInFiles.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <Separator />
             <MenuItem Header="Date Modified">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Calendar}"    -->
+                    <Image Source="{DynamicResource Icon.Calendar.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Kind">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.ContentType}"    -->
+                    <Image Source="{DynamicResource Icon.ContentType.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Size">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.CodeFile}"    -->
+                    <Image Source="{DynamicResource Icon.CodeFile.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Other Properties">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.FileProperties}"    -->
+                    <Image Source="{DynamicResource Icon.FileProperties.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <Separator />
             <MenuItem Header="Recent Searches">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.History}"    -->
+                    <Image Source="{DynamicResource Icon.History.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Advanced Options">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Property}"    -->
+                    <Image Source="{DynamicResource Icon.Property.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Save Search">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Save}"    -->
+                    <Image Source="{DynamicResource Icon.Save.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <Separator />
             <MenuItem Header="Close Search">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Close}"    -->
+                    <Image Source="{DynamicResource Icon.Close.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
         </MenuItem>
@@ -282,7 +282,7 @@
         <MenuItem Header="_Help">
             <MenuItem Header="View Help">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.Help}"    -->
+                    <Image Source="{DynamicResource Icon.Help.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Project URL">
@@ -292,7 +292,7 @@
             </MenuItem>
             <MenuItem Header="View License">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.CertificateWarning}"    -->
+                    <Image Source="{DynamicResource Icon.CertificateWarning.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Donate">
@@ -303,12 +303,12 @@
             <Separator />
             <MenuItem Header="Send Feedback...">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.SendMail}"    -->
+                    <Image Source="{DynamicResource Icon.SendMail.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="Check For Update...">
                 <MenuItem.Icon>
-                    <!-- DrawingPresenter Drawing="{DynamicResource Icon.RunUpdate}"    -->
+                    <Image Source="{DynamicResource Icon.RunUpdate.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
             <Separator />

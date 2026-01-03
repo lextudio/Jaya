@@ -23,48 +23,48 @@
         </Style>
     </UserControl.Styles>
 
-    <TreeView
+        <TreeView
         Padding="0"
         BorderThickness="0"
         ItemsSource="{Binding Node.Children, Mode=OneWay}"
         SelectedItem="{Binding SelectedNode, Mode=OneWayToSource}"
         SelectionMode="Single">
-        <TreeView.ItemTemplate>
-            <TreeDataTemplate ItemsSource="{Binding Children}">
-                <StackPanel Orientation="Horizontal">
-                    <Image
-                        Classes="Icon"
-                        IsVisible="{Binding IsService}"
-                        Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}}" />
-                    <!-- <DrawingPresenter
-                        Classes="Icon"
-                        Drawing="{DynamicResource Icon.CloudFolder}"
-                        IsVisible="{Binding IsAccount}" /> -->
-                    <!-- <DrawingPresenter
-                        Classes="Icon"
-                        Drawing="{DynamicResource Icon.Computer}"
-                        IsVisible="{Binding IsComputer}" /> -->
-                  <!-- <DrawingPresenter
-                        Classes="Icon"
-                        Drawing="{DynamicResource Icon.Drive}"
-                        IsVisible="{Binding IsDrive}" /> -->
-                    <StackPanel IsVisible="{Binding IsDirectory}" Orientation="Horizontal">
-                        <!-- <DrawingPresenter
+            <TreeView.ItemTemplate>
+                <TreeDataTemplate DataType="{x:Type m:TreeNodeModel}" ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image
                             Classes="Icon"
-                            Drawing="{DynamicResource Icon.Folder}"
-                            IsVisible="{Binding !IsExpanded}" /> -->
-                        <!-- <DrawingPresenter
+                            IsVisible="{Binding IsService}"
+                            Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}}" />
+                        <Image
                             Classes="Icon"
-                            Drawing="{DynamicResource Icon.FolderOpen}"
-                            IsVisible="{Binding IsExpanded}" /> -->
+                            Source="{DynamicResource Icon.CloudFolder.Image}"
+                            IsVisible="{Binding IsAccount}" />
+                        <Image
+                            Classes="Icon"
+                            Source="{DynamicResource Icon.Computer.Image}"
+                            IsVisible="{Binding IsComputer}" />
+                        <Image
+                            Classes="Icon"
+                            Source="{DynamicResource Icon.Drive.Image}"
+                            IsVisible="{Binding IsDrive}" />
+                        <StackPanel IsVisible="{Binding IsDirectory}" Orientation="Horizontal">
+                            <Image
+                                Classes="Icon"
+                                Source="{DynamicResource Icon.Folder.Image}"
+                                IsVisible="{Binding !IsExpanded}" />
+                            <Image
+                                Classes="Icon"
+                                Source="{DynamicResource Icon.FolderOpen.Image}"
+                                IsVisible="{Binding IsExpanded}" />
+                        </StackPanel>
+                        <Image
+                            Classes="Spinner"
+                            Source="{DynamicResource Icon.Refresh.Image}"
+                            IsVisible="{Binding IsDummy}" />
+                        <TextBlock Text="{Binding Label}" />
                     </StackPanel>
-                    <!-- <DrawingPresenter
-                        Classes="Spinner"
-                        Drawing="{DynamicResource Icon.Refresh}"
-                        IsVisible="{Binding IsDummy}" /> -->
-                    <TextBlock Text="{Binding Label}" />
-                </StackPanel>
-            </TreeDataTemplate>
-        </TreeView.ItemTemplate>
-    </TreeView>
+                </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
 </UserControl>

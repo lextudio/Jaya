@@ -190,13 +190,13 @@
                 <Image Source="{DynamicResource Icon.Help.Image}" />
             </Button>
             <Button ToolTip.Tip="Project URL">
-                <Path Data="{DynamicResource Icon.Github}" />
+                <Image Source="{DynamicResource Icon.Github.Image}" />
             </Button>
             <Button ToolTip.Tip="View License">
                 <Image Source="{DynamicResource Icon.CertificateWarning.Image}" />
             </Button>
             <Button ToolTip.Tip="Make a Donation">
-                <Path Data="{DynamicResource Icon.Donate}" />
+                <Image Source="{DynamicResource Icon.Donate.Image}" />
             </Button>
             <Border Classes="Separator" />
             <Button ToolTip.Tip="Send Feedback...">

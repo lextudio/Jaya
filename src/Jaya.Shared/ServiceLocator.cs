@@ -69,7 +69,7 @@ namespace Jaya.Shared
 
             var assemblies = new List<Assembly>();
 
-            foreach (var fileName in Directory.GetFiles(Environment.CurrentDirectory, "Jaya.Provider.*.dll", SearchOption.TopDirectoryOnly))
+            foreach (var fileName in GetProviderDllPaths())
             {
                 var assembly = Assembly.LoadFrom(fileName);
                 assemblies.Add(assembly);
@@ -105,6 +105,24 @@ namespace Jaya.Shared
             }
 
             UnregisterServices();
+        }
+
+        IEnumerable<string> GetProviderDllPaths()
+        {
+            var searchPatterns = new[] { Environment.CurrentDirectory, AppContext.BaseDirectory };
+            var seen = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var root in searchPatterns)
+            {
+                if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
+                    continue;
+
+                foreach (var file in Directory.GetFiles(root, "Jaya.Provider.*.dll", SearchOption.TopDirectoryOnly))
+                {
+                    if (seen.Add(file))
+                        yield return file;
+                }
+            }
         }
 
         void AddToContainer(ServiceCollection collection, Assembly assembly)
