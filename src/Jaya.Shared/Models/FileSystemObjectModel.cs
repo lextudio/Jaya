@@ -100,6 +100,12 @@ namespace Jaya.Shared.Models
             set => Set(value);
         }
 
+        public bool IsExternalDrive
+        {
+            get => Get<bool>();
+            set => Set(value);
+        }
+
         #endregion
 
         public override string ToString()

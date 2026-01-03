@@ -10,17 +10,31 @@ using Jaya.Shared.Models;
 using Jaya.Shared.Services;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using Serilog;
+using System.IO.Pipelines;
 
 namespace Jaya.Provider.FileSystem.Services
 {
     public class FileSystemService : ProviderServiceBase, IProviderService
     {
+        readonly INativeFileSystemService _impl;
 
         public FileSystemService()
         {
+            // Detect platform and instantiate the appropriate implementation
+            if (OperatingSystem.IsMacOS())
+                _impl = new FileSystemServiceMac();
+            else if (OperatingSystem.IsWindows())
+                _impl = new FileSystemServiceWindows();
+            else
+                _impl = new FileSystemServiceLinux();
+
             Name = "File System";
             ImagePath = "avares://Jaya.Provider.FileSystem/Assets/Images/Computer-32.png";
             Description = "View your local drives, inspect their properties and play with directories & files stored within them.";
@@ -34,133 +48,9 @@ namespace Jaya.Provider.FileSystem.Services
             if (model != null)
                 return model;
 
-            return await Task.Run(() =>
-            {
-                model = new DirectoryModel();
-
-                if (string.IsNullOrEmpty(directory.Path))
-                {
-                    model.Directories = new List<DirectoryModel>();
-                    var platform = ServiceLocator.Instance.GetService<IPlatformService>().GetPlatform();
-                    if (platform == OSPlatform.Linux || platform == OSPlatform.OSX)
-                    {
-                        try
-                        {
-                            var rootDir = new DirectoryModel();
-                            rootDir.Name = "/";
-                            rootDir.Path = Path.GetPathRoot("/");
-
-                            rootDir = GetDirectoryAsync(account, rootDir).Result;
-                            if (rootDir != null)
-                            {
-                                model.Directories = rootDir.Directories;
-                                model.Files = rootDir.Files;
-                            }
-                        }
-                        catch (UnauthorizedAccessException)
-                        {
-
-                        }
-                    }
-                    else
-                    {
-                        try
-                        {
-                            foreach (var driveInfo in DriveInfo.GetDrives())
-                            {
-                                try
-                                {
-                                    if (!driveInfo.IsReady)
-                                        continue;
-
-                                    var drive = new DirectoryModel(true);
-                                    drive.Name = driveInfo.Name;
-                                    drive.Path = driveInfo.RootDirectory.FullName;
-                                    drive.Size = driveInfo.TotalSize;
-                                    model.Directories.Add(drive);
-                                }
-                                catch (Exception)
-                                {
-                                    // Defensive: skip problematic drives during enumeration in environments
-                                    // where native calls may fault. This avoids crashing the app while
-                                    // we validate UI rendering. Specific exceptions can be handled
-                                    // more precisely if needed.
-                                    continue;
-                                }
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            // If DriveInfo.GetDrives throws at the native layer, swallow
-                            // the exception for now to allow UI testing. In production we
-                            // may want to surface or log this.
-                        }
-                    }
-                    AddToCache(account, model);
-                    return model;
-                }
-
-                DirectoryInfo info = new DirectoryInfo(directory.Path);
-                model.Name = string.IsNullOrEmpty(info.Name) ? info.FullName : info.Name;
-                model.Path = info.FullName;
-                model.Created = info.CreationTime;
-                model.Modified = info.LastWriteTime;
-                model.Accessed = info.LastAccessTime;
-                model.IsHidden = info.Attributes.HasFlag(FileAttributes.Hidden);
-                model.IsSystem = info.Attributes.HasFlag(FileAttributes.System);
-
-                model.Files = new List<FileModel>();
-                try
-                {
-                    foreach (var fileInfo in info.GetFiles())
-                    {
-                        var file = new FileModel();
-                        if (string.IsNullOrEmpty(fileInfo.Extension))
-                            file.Name = fileInfo.Name;
-                        else
-                        {
-                            file.Name = fileInfo.Name.Replace(fileInfo.Extension, string.Empty);
-                            file.Extension = fileInfo.Extension.Substring(1).ToLowerInvariant();
-                        }
-                        file.Path = fileInfo.FullName;
-                        file.Size = fileInfo.Length;
-                        file.Created = fileInfo.CreationTime;
-                        file.Modified = fileInfo.LastWriteTime;
-                        file.Accessed = fileInfo.LastAccessTime;
-                        file.IsHidden = fileInfo.Attributes.HasFlag(FileAttributes.Hidden);
-                        file.IsSystem = fileInfo.Attributes.HasFlag(FileAttributes.System);
-                        model.Files.Add(file);
-                    }
-                }
-                catch (UnauthorizedAccessException)
-                {
-
-                }
-
-                model.Directories = new List<DirectoryModel>();
-                try
-                {
-                    foreach (var directoryInfo in info.GetDirectories())
-                    {
-                        var dir = new DirectoryModel();
-                        dir.Name = directoryInfo.Name;
-                        dir.Path = directoryInfo.FullName;
-                        dir.Created = directoryInfo.CreationTime;
-                        dir.Modified = directoryInfo.LastWriteTime;
-                        dir.Accessed = directoryInfo.LastAccessTime;
-                        dir.IsHidden = directoryInfo.Attributes.HasFlag(FileAttributes.Hidden);
-                        dir.IsSystem = directoryInfo.Attributes.HasFlag(FileAttributes.System);
-                        model.Directories.Add(dir);
-                    }
-                }
-                catch (UnauthorizedAccessException)
-                {
-
-                }
-
-                AddToCache(account, model);
-                return model;
-            });
+            var result = await _impl.GetDirectoryAsync(account, directory);
+            this.AddToCache(account, result);
+            return result;
         }
 
         protected override Task<AccountModelBase> AddAccountAsync(AccountModelBase account = null)

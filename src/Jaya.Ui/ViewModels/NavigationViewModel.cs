@@ -3,6 +3,8 @@
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
 using Jaya.Shared;
+using Serilog;
+using System.Linq;
 using Jaya.Shared.Base;
 using Jaya.Shared.Models;
 using Jaya.Ui.Models;
@@ -15,6 +17,7 @@ namespace Jaya.Ui.ViewModels
     public class NavigationViewModel : ViewModelBase
     {
         readonly SharedService _shared;
+        static readonly ILogger Logger = Log.ForContext<NavigationViewModel>();
         ICommand _populateCommand;
         TreeNodeModel _selectedNode;
 
@@ -106,6 +109,25 @@ namespace Jaya.Ui.ViewModels
 
                     serviceInstance.AccountAdded += (AccountModelBase account) => OnAccountAction(account, AccountAction.Added, serviceNode);
                     serviceInstance.AccountRemoved += (AccountModelBase account) => OnAccountAction(account, AccountAction.Removed, serviceNode);
+                }
+
+                // Log the top-tier nodes (services) for diagnostics with richer info
+                try
+                {
+                    var topNodesDetailed = Node.Children.Select(n => new
+                    {
+                        Label = n.Label ?? n.ToString(),
+                        ItemType = n.NodeType.ToString(),
+                        ServiceType = n.Service?.GetType().FullName,
+                        Assembly = n.Service?.GetType().Assembly.GetName().Name,
+                        ProviderHash = n.Service?.GetHashCode()
+                    }).ToArray();
+
+                    Logger.Information("Navigation top-tier nodes detailed: {@Nodes}", topNodesDetailed);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Verbose(ex, "Failed to log detailed navigation top-tier nodes");
                 }
             }
             else if (node.Account == null)

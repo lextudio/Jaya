@@ -91,7 +91,26 @@ namespace Jaya.Ui.Models
         public FileSystemObjectModel FileSystemObject
         {
             get => Get<FileSystemObjectModel>();
-            set => Set(value);
+            set
+            {
+                if (Set(value))
+                {
+                    RaisePropertyChanged(nameof(IsDriveIconVisible));
+                    RaisePropertyChanged(nameof(IsExternalDriveIconVisible));
+                }
+            }
+        }
+
+        public bool IsDriveIconVisible => IsDrive && !NodeRepresentsExternalDrive();
+
+        public bool IsExternalDriveIconVisible => IsDrive && NodeRepresentsExternalDrive();
+
+        bool NodeRepresentsExternalDrive()
+        {
+            if (FileSystemObject is DirectoryModel directoryModel)
+                return directoryModel.IsExternalDrive;
+
+            return false;
         }
 
         private void OnApplicationConfigChanged(object sender, PropertyChangedEventArgs e)

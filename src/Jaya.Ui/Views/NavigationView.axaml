@@ -60,7 +60,14 @@
                             Height="16"
                             Stretch="Uniform"
                             Source="{DynamicResource Icon.Drive.Image}"
-                            IsVisible="{Binding IsDrive}" />
+                            IsVisible="{Binding IsDriveIconVisible}" />
+                        <Image
+                            Classes="Icon"
+                            Width="16"
+                            Height="16"
+                            Stretch="Uniform"
+                            Source="{DynamicResource Icon.ExternalDrive.Image}"
+                            IsVisible="{Binding IsExternalDriveIconVisible}" />
                         <StackPanel IsVisible="{Binding IsDirectory}" Orientation="Horizontal">
                             <Image
                                 Classes="Icon"

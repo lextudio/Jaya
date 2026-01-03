@@ -18,6 +18,7 @@ namespace Jaya.Ui.ViewModels
         public OptionsViewModel()
         {
             _shared = GetService<SharedService>();
+            EnsureThemeLoaded();
         }
 
         public IEnumerable<ThemeModel> Themes => ThemeManager.Instance.Themes;
@@ -25,5 +26,22 @@ namespace Jaya.Ui.ViewModels
         public ApplicationConfigModel ApplicationConfig => _shared.ApplicationConfiguration;
 
         public PaneConfigModel PaneConfig => _shared.PaneConfiguration;
+
+        void EnsureThemeLoaded()
+        {
+            if (_shared.ApplicationConfiguration == null)
+                return;
+
+            var currentTheme = _shared.ApplicationConfiguration.Theme;
+            if (currentTheme == null)
+            {
+                currentTheme = ThemeManager.Instance.SelectedTheme;
+                _shared.ApplicationConfiguration.Theme = currentTheme;
+            }
+            else
+            {
+                ThemeManager.Instance.SelectedTheme = currentTheme;
+            }
+        }
     }
 }

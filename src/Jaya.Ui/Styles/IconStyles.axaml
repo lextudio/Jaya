@@ -1096,6 +1096,27 @@
           </GeometryDrawing.Brush>
         </GeometryDrawing>
       </DrawingGroup>
+      <DrawingGroup x:Key="Icon.ExternalDrive">
+        <GeometryDrawing Geometry="M 0 0 L 32 0 L 32 32 L 0 32 Z"/>
+        <GeometryDrawing Geometry="M 4 0 L 28 0 L 28 32 L 4 32 Z">
+           <GeometryDrawing.Brush>
+             <StaticResource ResourceKey="IconRes.BlueBrush" />
+           </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M 10 13 L 22 13 22 25 10 25 Z">
+           <GeometryDrawing.Brush>
+             <StaticResource ResourceKey="IconRes.DarkGreyBrush" />
+           </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing>
+          <GeometryDrawing.Geometry>
+            <EllipseGeometry Rect="12,15,8,8"/>
+          </GeometryDrawing.Geometry>
+          <GeometryDrawing.Brush>
+            <StaticResource ResourceKey="IconRes.WhiteBrush" />
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+      </DrawingGroup>
 
       <Geometry x:Key="Icon.BackArrow">M 5 0 L 0 5 L 5 10 M 0 5 L 12 5</Geometry>
       <Geometry x:Key="Icon.UpArrow">M 0 5 L 5 0 L 10 5 M 5 0 L 5 12</Geometry>
@@ -1123,6 +1144,7 @@
       <DrawingImage x:Key="Icon.NavigationPane.Image" Drawing="{StaticResource Icon.NavigationPane}" />
       <DrawingImage x:Key="Icon.PreviewPane.Image" Drawing="{StaticResource Icon.PreviewPane}" />
       <DrawingImage x:Key="Icon.DetailsPane.Image" Drawing="{StaticResource Icon.DetailsPane}" />
+      <DrawingImage x:Key="Icon.ExternalDrive.Image" Drawing="{StaticResource Icon.ExternalDrive}" />
       <DrawingImage x:Key="Icon.CheckBox.Image" Drawing="{StaticResource Icon.CheckBox}" />
       <DrawingImage x:Key="Icon.Extension.Image" Drawing="{StaticResource Icon.Extension}" />
       <DrawingImage x:Key="Icon.HiddenFiles.Image" Drawing="{StaticResource Icon.HiddenFiles}" />

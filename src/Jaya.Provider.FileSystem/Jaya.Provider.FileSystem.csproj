@@ -13,6 +13,7 @@
   <ItemGroup>
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Serilog" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Jaya.Shared\Jaya.Shared.csproj" />
