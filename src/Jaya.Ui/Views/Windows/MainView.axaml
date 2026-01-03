@@ -12,9 +12,7 @@
     Height="600"
     Icon="avares://Jaya.Ui/Assets/Logo.ico"
     mc:Ignorable="d" j:ViewModelLocator.AutoWireViewModel="True">
-    <StyledWindow.HeaderContent>
-      <v:MenuView x:Name="TitleMenu" IsVisible="{Binding IsMenuVisible, Mode=OneWay}" />
-    </StyledWindow.HeaderContent>
+        <!-- HeaderContent is managed in code-behind to allow hiding the entire custom header when disabled -->
     <DockPanel>
         <v:MenuView
             Classes="InlineMenuView"

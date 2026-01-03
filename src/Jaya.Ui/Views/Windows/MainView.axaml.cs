@@ -4,6 +4,7 @@
 //
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Diagnostics;
 using Avalonia.Markup.Xaml;
 using Jaya.Shared.Controls;
 using Jaya.Ui.Helpers;
@@ -23,6 +24,7 @@ namespace Jaya.Ui.Views.Windows
             InitializeComponent();
 #if DEBUG
 #endif
+            this.AttachDevTools();
             DataContextChanged += OnDataContextChanged;
             Opened += OnOpened;
             Closed += OnClosed;
@@ -41,6 +43,8 @@ namespace Jaya.Ui.Views.Windows
         void OnOpened(object sender, EventArgs e)
         {
             UpdateNativeMenu();
+            UpdateHeaderContent();
+            UpdateHeaderVisibility();
         }
 
         void OnClosed(object sender, EventArgs e)
@@ -59,6 +63,7 @@ namespace Jaya.Ui.Views.Windows
                 _viewModel.PaneConfig.PropertyChanged += PaneConfig_PropertyChanged;
 
             UpdateNativeMenu();
+            UpdateHeaderContent();
         }
 
         void DetachFromViewModel()
@@ -75,12 +80,15 @@ namespace Jaya.Ui.Views.Windows
                 e.PropertyName == nameof(PaneConfigModel.IsRibbonVisible))
             {
                 UpdateNativeMenu();
+                UpdateHeaderContent();
+                UpdateHeaderVisibility();
             }
         }
 
         void UpdateNativeMenu()
         {
-            if (!OperatingSystem.IsMacOS() || TitleMenu == null || TitleMenu.MenuControl == null)
+            var titleMenuCtrl = this.FindControl<MenuView>("TitleMenu");
+            if (!OperatingSystem.IsMacOS() || titleMenuCtrl == null || titleMenuCtrl.MenuControl == null)
             {
                 NativeMenu.SetMenu(this, null);
                 return;
@@ -95,11 +103,84 @@ namespace Jaya.Ui.Views.Windows
 
             if (!paneConfig.IsMenuHeaderVisible && !paneConfig.IsRibbonVisible)
             {
-                NativeMenu.SetMenu(this, NativeMenuHelper.BuildNativeMenu(TitleMenu.MenuControl));
+                NativeMenu.SetMenu(this, NativeMenuHelper.BuildNativeMenu(titleMenuCtrl.MenuControl));
             }
             else
             {
                 NativeMenu.SetMenu(this, null);
+            }
+        }
+
+        void UpdateHeaderContent()
+        {
+            // TitleMenu is declared in XAML and will be part of the visual tree.
+            // We only want to set the HeaderContent when the custom header is enabled
+            // and hide it otherwise so the system/title bar is shown.
+            try
+            {
+                var paneConfig = _viewModel?.PaneConfig;
+                if (paneConfig == null)
+                {
+                    HeaderContent = null;
+                    return;
+                }
+
+                // Find the TitleMenu control in the visual tree
+                var titleMenu = this.FindControl<MenuView>("TitleMenu");
+
+                if (titleMenu == null)
+                {
+                    HeaderContent = null;
+                    return;
+                }
+
+                if (paneConfig.IsMenuHeaderVisible && !paneConfig.IsRibbonVisible)
+                    HeaderContent = titleMenu;
+                else
+                    HeaderContent = null;
+            }
+            catch
+            {
+                // Swallow errors to avoid crashing window initialization
+                HeaderContent = null;
+            }
+        }
+
+        void UpdateHeaderVisibility()
+        {
+            try
+            {
+                var paneConfig = _viewModel?.PaneConfig;
+                if (paneConfig == null)
+                    return;
+
+                bool show = paneConfig.IsMenuHeaderVisible && !paneConfig.IsRibbonVisible;
+
+                // Template parts in StyledWindow
+                var icon = this.FindControl<Control>("PART_Icon");
+                var titleBar = this.FindControl<Border>("PART_TitleBar");
+                var minimize = this.FindControl<Button>("PART_Minimize");
+                var maximize = this.FindControl<Button>("PART_Maximize");
+                var close = this.FindControl<Button>("PART_Close");
+
+                if (icon != null)
+                    icon.IsVisible = show;
+
+                if (titleBar != null)
+                    titleBar.IsVisible = show;
+
+                if (minimize != null)
+                    minimize.IsVisible = show;
+
+                if (maximize != null)
+                    maximize.IsVisible = show;
+
+                if (close != null)
+                    close.IsVisible = show;
+            }
+            catch
+            {
+                // ignore, don't crash on visual tree timing issues
             }
         }
     }

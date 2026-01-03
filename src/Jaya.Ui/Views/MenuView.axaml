@@ -6,6 +6,7 @@
     xmlns:j="https://github.com/waliarubal/Jaya"
     xmlns:local="clr-namespace:Jaya.Ui;assembly=Jaya.Ui"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:v="clr-namespace:Jaya.Ui.Views;assembly=Jaya.Ui"
     xmlns:vm="clr-namespace:Jaya.Ui.ViewModels;assembly=Jaya.Ui"
     j:ViewModelLocator.AutoWireViewModel="True"
     mc:Ignorable="d">
