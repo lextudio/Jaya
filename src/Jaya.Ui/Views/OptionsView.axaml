@@ -21,6 +21,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <TextBlock Text="Color Theme:" />
@@ -51,5 +52,11 @@
             Grid.ColumnSpan="3"
             Content="Show status bar."
             IsChecked="{Binding PaneConfig.IsStatusBarVisible, Mode=TwoWay}" />
+
+        <CheckBox
+            Grid.Row="4"
+            Grid.ColumnSpan="3"
+            Content="Show custom title header (menu + window controls)."
+            IsChecked="{Binding PaneConfig.IsMenuHeaderVisible, Mode=TwoWay}" />
     </Grid>
 </UserControl>

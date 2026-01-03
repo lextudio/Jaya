@@ -60,7 +60,7 @@
                 <Image Source="{DynamicResource Icon.Rename.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
             <Button ToolTip.Tip="Format">
-                <Path Data="{DynamicResource Icon.DiscClean}" />
+                <Image Source="{DynamicResource Icon.DiscClean.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
             <Border Classes="Separator" />
             <Button ToolTip.Tip="Select All">
@@ -190,13 +190,13 @@
                 <Image Source="{DynamicResource Icon.Help.Image}" />
             </Button>
             <Button ToolTip.Tip="Project URL">
-                <Image Source="{DynamicResource Icon.Github.Image}" />
+                <Image Source="{DynamicResource Icon.Github.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
             <Button ToolTip.Tip="View License">
                 <Image Source="{DynamicResource Icon.CertificateWarning.Image}" />
             </Button>
             <Button ToolTip.Tip="Make a Donation">
-                <Image Source="{DynamicResource Icon.Donate.Image}" />
+                <Image Source="{DynamicResource Icon.Donate.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
             <Border Classes="Separator" />
             <Button ToolTip.Tip="Send Feedback...">

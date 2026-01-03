@@ -43,6 +43,8 @@ namespace Jaya.Ui.ViewModels.Windows
 
         public bool IsToolbarVisible => ToolbarConfig.IsVisible && !PaneConfig.IsRibbonVisible;
 
+        public bool IsMenuVisible => PaneConfig.IsMenuHeaderVisible && !PaneConfig.IsRibbonVisible;
+
         public string WindowTitle
         {
             get => Get<string>();
@@ -64,6 +66,12 @@ namespace Jaya.Ui.ViewModels.Windows
             switch(e.PropertyName)
             {
                 case nameof(PaneConfigModel.IsRibbonVisible):
+                    RaisePropertyChanged(nameof(IsToolbarVisible));
+                    RaisePropertyChanged(nameof(IsMenuVisible));
+                    break;
+                case nameof(PaneConfigModel.IsMenuHeaderVisible):
+                    RaisePropertyChanged(nameof(IsMenuVisible));
+                    break;
                 case nameof(ToolbarConfigModel.IsVisible):
                     RaisePropertyChanged(nameof(IsToolbarVisible));
                     break;

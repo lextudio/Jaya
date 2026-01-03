@@ -13,7 +13,7 @@
     Icon="avares://Jaya.Ui/Assets/Logo.ico"
     mc:Ignorable="d" j:ViewModelLocator.AutoWireViewModel="True">
     <StyledWindow.HeaderContent>
-      <v:MenuView IsVisible="{Binding !PaneConfig.IsRibbonVisible, Mode=OneWay}" />
+      <v:MenuView IsVisible="{Binding IsMenuVisible, Mode=OneWay}" />
     </StyledWindow.HeaderContent>
     <DockPanel>
         <v:RibbonView Classes="RibbonView" DockPanel.Dock="Top" IsVisible="{Binding $parent[DockPanel].DataContext.PaneConfig.IsRibbonVisible, Mode=OneWay}" />

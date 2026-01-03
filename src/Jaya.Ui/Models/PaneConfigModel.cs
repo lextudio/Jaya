@@ -216,6 +216,13 @@ namespace Jaya.Ui.Models
             set => Set(value);
         }
 
+        [JsonProperty]
+        public bool IsMenuHeaderVisible
+        {
+            get => Get<bool>();
+            set => Set(value);
+        }
+
         protected override ConfigModelBase Empty()
         {
             return new PaneConfigModel
@@ -229,7 +236,8 @@ namespace Jaya.Ui.Models
                 IsThumbnailView = true,
                 IsStatusBarVisible = true,
                 IsRibbonVisible = false,
-                IsRibbonCollapsed = false
+                IsRibbonCollapsed = false,
+                IsMenuHeaderVisible = false
             };
         }
 
