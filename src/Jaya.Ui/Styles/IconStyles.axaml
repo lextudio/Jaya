@@ -1136,6 +1136,8 @@
       <DrawingImage x:Key="Icon.CertificateWarning.Image" Drawing="{StaticResource Icon.CertificateWarning}" />
       <DrawingImage x:Key="Icon.SendMail.Image" Drawing="{StaticResource Icon.SendMail}" />
       <DrawingImage x:Key="Icon.RunUpdate.Image" Drawing="{StaticResource Icon.RunUpdate}" />
+      <DrawingImage x:Key="Icon.DetailsView.Image" Drawing="{StaticResource Icon.DetailsView}" />
+      <DrawingImage x:Key="Icon.IconsView.Image" Drawing="{StaticResource Icon.IconsView}" />
       <DrawingImage x:Key="Icon.Github.Image">
         <DrawingImage.Drawing>
           <GeometryDrawing Brush="{StaticResource Window.ForegroundBrush}" Geometry="{StaticResource Icon.Github}" />
