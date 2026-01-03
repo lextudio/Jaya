@@ -8,7 +8,6 @@ using Google.Apis.Drive.v3.Data;
 using Google.Apis.Oauth2.v2;
 using Google.Apis.Oauth2.v2.Data;
 using Google.Apis.Services;
-using Google.Apis.Util;
 using Google.Apis.Util.Store;
 using Jaya.Provider.GoogleDrive.Models;
 using Jaya.Provider.GoogleDrive.Views;
@@ -91,7 +90,7 @@ namespace Jaya.Provider.GoogleDrive.Services
 
         async Task<UserCredential> GetCredential()
         {
-            if (_credential != null && !_credential.Token.IsExpired(SystemClock.Default))
+            if (_credential != null && !_credential.Token.IsStale)
                 return _credential;
 
             var scopes = new string[]
@@ -108,7 +107,7 @@ namespace Jaya.Provider.GoogleDrive.Services
             };
 
             _credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(secret, scopes, Environment.UserName, CancellationToken.None, DataStore);
-            if (_credential.Token.IsExpired(SystemClock.Default))
+            if (_credential.Token.IsStale)
             {
                 var isRefreshed = await _credential.RefreshTokenAsync(CancellationToken.None);
                 if (!isRefreshed)
@@ -163,8 +162,8 @@ namespace Jaya.Provider.GoogleDrive.Services
                             dir.Name = entry.Name;
                             dir.Path = entry.Name;
                             dir.Size = entry.Size;
-                            dir.Created = entry.CreatedTime;
-                            dir.Modified = entry.ModifiedTime;
+                            dir.Created = entry.CreatedTimeDateTimeOffset?.DateTime;
+                            dir.Modified = entry.ModifiedTimeDateTimeOffset?.DateTime;
                             model.Directories.Add(dir);
                         }
                         else
@@ -177,8 +176,8 @@ namespace Jaya.Provider.GoogleDrive.Services
                             file.Extension = nameParts.Extension;
                             file.Path = entry.Name;
                             file.Size = entry.Size;
-                            file.Created = entry.CreatedTime;
-                            file.Modified = entry.ModifiedTime;
+                            file.Created = entry.CreatedTimeDateTimeOffset?.DateTime;
+                            file.Modified = entry.ModifiedTimeDateTimeOffset?.DateTime;
                             model.Files.Add(file);
                         }
                     }

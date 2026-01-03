@@ -35,32 +35,53 @@
                     <StackPanel Orientation="Horizontal">
                         <Image
                             Classes="Icon"
+                            Width="16"
+                            Height="16"
+                            Stretch="Uniform"
                             IsVisible="{Binding IsService}"
                             Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}}" />
                         <Image
                             Classes="Icon"
+                            Width="16"
+                            Height="16"
+                            Stretch="Uniform"
                             Source="{DynamicResource Icon.CloudFolder.Image}"
                             IsVisible="{Binding IsAccount}" />
                         <Image
                             Classes="Icon"
+                            Width="16"
+                            Height="16"
+                            Stretch="Uniform"
                             Source="{DynamicResource Icon.Computer.Image}"
                             IsVisible="{Binding IsComputer}" />
                         <Image
                             Classes="Icon"
+                            Width="16"
+                            Height="16"
+                            Stretch="Uniform"
                             Source="{DynamicResource Icon.Drive.Image}"
                             IsVisible="{Binding IsDrive}" />
                         <StackPanel IsVisible="{Binding IsDirectory}" Orientation="Horizontal">
                             <Image
                                 Classes="Icon"
+                                Width="16"
+                                Height="16"
+                                Stretch="Uniform"
                                 Source="{DynamicResource Icon.Folder.Image}"
                                 IsVisible="{Binding !IsExpanded}" />
                             <Image
                                 Classes="Icon"
+                                Width="16"
+                                Height="16"
+                                Stretch="Uniform"
                                 Source="{DynamicResource Icon.FolderOpen.Image}"
                                 IsVisible="{Binding IsExpanded}" />
                         </StackPanel>
                         <Image
                             Classes="Spinner"
+                            Width="16"
+                            Height="16"
+                            Stretch="Uniform"
                             Source="{DynamicResource Icon.Refresh.Image}"
                             IsVisible="{Binding IsDummy}" />
                         <TextBlock Text="{Binding ., Converter={StaticResource TreeNodeLabelConverter}}" />

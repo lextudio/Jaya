@@ -114,7 +114,7 @@
                             Stroke="{Binding $parent[Button].Foreground}"
                             StrokeThickness="2">
                             <Ellipse.OpacityMask>
-                                <RadialGradientBrush Center="62.5%,12.5%" GradientOrigin="62.5%,12.5%" Radius="2">
+                                    <RadialGradientBrush Center="62.5%,12.5%" GradientOrigin="62.5%,12.5%" RadiusX="200%" RadiusY="200%">
                                     <GradientStop Offset="0.1" Color="Transparent" />
                                     <GradientStop Offset="0.1" Color="White" />
                                 </RadialGradientBrush>

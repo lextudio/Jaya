@@ -10,12 +10,7 @@ namespace Jaya.Ui.Views
 {
     public partial class RibbonView : UserControl
     {
-        public static StyledProperty<bool> IsRibbonExpandedProperty;
-
-        static RibbonView()
-        {
-            IsRibbonExpandedProperty = AvaloniaProperty.Register<RibbonView, bool>(nameof(IsRibbonExpanded), true);
-        }
+        public static readonly StyledProperty<bool> IsRibbonExpandedProperty = AvaloniaProperty.Register<RibbonView, bool>(nameof(IsRibbonExpanded), true);
 
         public RibbonView()
         {

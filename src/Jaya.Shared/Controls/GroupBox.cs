@@ -9,7 +9,7 @@ using System;
 
 namespace Jaya.Shared.Controls
 {
-    public class GroupBox: ContentControl, IStyleable
+    public class GroupBox: ContentControl
     {
         public static readonly StyledProperty<string> HeaderProperty;
 
@@ -24,6 +24,6 @@ namespace Jaya.Shared.Controls
             set => SetValue(HeaderProperty, value);
         }
 
-        Type IStyleable.StyleKey => typeof(GroupBox);
+        protected override Type StyleKeyOverride => typeof(GroupBox);
     }
 }

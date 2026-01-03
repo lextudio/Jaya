@@ -12,7 +12,7 @@ using System;
 
 namespace Jaya.Shared.Controls
 {
-    public class Hyperlink : Button, IStyleable
+    public class Hyperlink : Button
     {
         public static readonly DirectProperty<Hyperlink, Uri> UrlProperty;
 
@@ -30,7 +30,7 @@ namespace Jaya.Shared.Controls
             set => SetAndRaise(UrlProperty, ref _url, value);
         }
 
-        Type IStyleable.StyleKey => typeof(Hyperlink);
+        protected override Type StyleKeyOverride => typeof(Hyperlink);
 
         protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
         {

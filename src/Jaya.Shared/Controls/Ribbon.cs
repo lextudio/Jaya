@@ -14,7 +14,7 @@ namespace Jaya.Shared.Controls
     /// <summary>
     /// Refer https://www.powerworld.com/WebHelp/Content/MainDocumentation_HTML/Ribbons.htm for details.
     /// </summary>
-    public class Ribbon : TabControl, IStyleable
+    public class Ribbon : TabControl
     {
         public static readonly DirectProperty<Ribbon, bool> IsExpandedProperty;
         public static readonly DirectProperty<Ribbon, ICommand> HelpButtonCommandProperty;
@@ -60,7 +60,7 @@ namespace Jaya.Shared.Controls
             base.OnPropertyChanged(e);
         }
 
-        Type IStyleable.StyleKey => typeof(Ribbon);
+        protected override Type StyleKeyOverride => typeof(Ribbon);
 
         protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
         {

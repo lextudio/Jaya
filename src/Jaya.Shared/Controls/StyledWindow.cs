@@ -15,7 +15,7 @@ using System.IO;
 
 namespace Jaya.Shared.Controls
 {
-    public class StyledWindow : Window, IStyleable
+    public class StyledWindow : Window
     {
         const string DEFAULT_ICON = "avares://Jaya.Shared/Assets/Logo.ico";
 
@@ -97,7 +97,7 @@ namespace Jaya.Shared.Controls
             }
         }
 
-        Type IStyleable.StyleKey => typeof(StyledWindow);
+        protected override Type StyleKeyOverride => typeof(StyledWindow);
 
         void SetupSide(string name, StandardCursorType cursor, WindowEdge edge)
         {

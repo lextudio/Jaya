@@ -8,8 +8,8 @@ using System;
 
 namespace Jaya.Shared.Controls
 {
-    public class RibbonTab : TabItem, IStyleable
+    public class RibbonTab : TabItem
     {
-        Type IStyleable.StyleKey => typeof(RibbonTab);
+        protected override Type StyleKeyOverride => typeof(RibbonTab);
     }
 }
