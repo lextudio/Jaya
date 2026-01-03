@@ -41,27 +41,20 @@ namespace Jaya.Provider.FileSystem.Services
                 if (string.IsNullOrEmpty(directory.Path))
                 {
                     model.Directories = new List<DirectoryModel>();
-                    if (ServiceLocator.Instance.GetService<IPlatformService>().GetPlatform() == OSPlatform.Linux)
+                    var platform = ServiceLocator.Instance.GetService<IPlatformService>().GetPlatform();
+                    if (platform == OSPlatform.Linux || platform == OSPlatform.OSX)
                     {
                         try
                         {
-                            foreach (var driveInfo in DriveInfo.GetDrives())
-                            {
-                                if (!driveInfo.IsReady)
-                                    continue;
+                            var rootDir = new DirectoryModel();
+                            rootDir.Name = "/";
+                            rootDir.Path = Path.GetPathRoot("/");
 
-                                if (driveInfo.Name.Equals("/", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    var rootDir = new DirectoryModel();
-                                    rootDir.Name = driveInfo.Name;
-                                    rootDir.Path = driveInfo.RootDirectory.FullName;
-                                    
-                                    rootDir = GetDirectoryAsync(account, rootDir).Result;
-                                    
-                                    model.Directories = rootDir.Directories;
-                                    model.Files = rootDir.Files;
-                                    break;
-                                }
+                            rootDir = GetDirectoryAsync(account, rootDir).Result;
+                            if (rootDir != null)
+                            {
+                                model.Directories = rootDir.Directories;
+                                model.Files = rootDir.Files;
                             }
                         }
                         catch (UnauthorizedAccessException)
