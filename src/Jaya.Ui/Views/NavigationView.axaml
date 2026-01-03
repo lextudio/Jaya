@@ -14,6 +14,7 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <j:BitmapValueConverter x:Key="BitmapValueConverter" />
+        <c:TreeNodeLabelConverter x:Key="TreeNodeLabelConverter" />
         <c:BooleanToTreeNodeVisibilityConverter x:Key="TreeNodeVisibilityConverter" />
     </UserControl.Resources>
     <UserControl.Styles>
@@ -62,7 +63,7 @@
                             Classes="Spinner"
                             Source="{DynamicResource Icon.Refresh.Image}"
                             IsVisible="{Binding IsDummy}" />
-                        <TextBlock Text="{Binding Label}" />
+                        <TextBlock Text="{Binding ., Converter={StaticResource TreeNodeLabelConverter}}" />
                     </StackPanel>
                 </TreeDataTemplate>
             </TreeView.ItemTemplate>

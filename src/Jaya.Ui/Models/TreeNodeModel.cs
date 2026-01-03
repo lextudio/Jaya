@@ -139,5 +139,22 @@ namespace Jaya.Ui.Models
             Children.Remove(_dummyChild);
             _dummyChild = null;
         }
+
+        public override string ToString()
+        {
+            if (!string.IsNullOrEmpty(Label))
+                return Label;
+
+            if (Account != null)
+                return Account.Name ?? base.ToString();
+
+            if (FileSystemObject != null && !string.IsNullOrEmpty(FileSystemObject.Name))
+                return FileSystemObject.Name;
+
+            if (NodeType != null)
+                return NodeType.ToString();
+
+            return base.ToString();
+        }
     }
 }
