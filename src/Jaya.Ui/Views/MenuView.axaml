@@ -287,7 +287,7 @@
             </MenuItem>
             <MenuItem Header="Project URL">
                 <MenuItem.Icon>
-                    <Path Data="{DynamicResource Icon.Github}" />
+                    <Path Data="{DynamicResource Icon.Github}" Width="16" Height="16" Fill="{DynamicResource ThemeForegroundBrush}" Stretch="Uniform" />
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="View License">
@@ -297,7 +297,7 @@
             </MenuItem>
             <MenuItem Header="Donate">
                 <MenuItem.Icon>
-                    <Path Data="{DynamicResource Icon.Donate}" />
+                    <Path Data="{DynamicResource Icon.Donate}" Width="16" Height="16" Fill="{DynamicResource ThemeForegroundBrush}" Stretch="Uniform" />
                 </MenuItem.Icon>
             </MenuItem>
             <Separator />
