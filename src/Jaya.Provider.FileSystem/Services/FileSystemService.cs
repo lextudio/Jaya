@@ -24,6 +24,7 @@ namespace Jaya.Provider.FileSystem.Services
     public class FileSystemService : ProviderServiceBase, IProviderService
     {
         readonly INativeFileSystemService _impl;
+        readonly System.Collections.Concurrent.ConcurrentDictionary<string, Task<DirectoryModel>> _inflight = new();
 
         public FileSystemService()
         {
@@ -44,12 +45,30 @@ namespace Jaya.Provider.FileSystem.Services
 
         public override async Task<DirectoryModel> GetDirectoryAsync(AccountModelBase account, DirectoryModel directory = null)
         {
+            Log.Debug("FileSystemService.GetDirectoryAsync called: Account={Account}, Path={Path}", account?.Name, directory?.Path);
             var model = GetFromCache(account, directory);
             if (model != null)
                 return model;
 
+            var key = $"{account?.Name ?? "__null"}:{directory?.Path ?? "__root"}";
+
+            // If there's already an in-flight request for the same key, return it
+            var task = _inflight.GetOrAdd(key, _ => FetchAndCacheAsync(account, directory, key));
+            try
+            {
+                return await task;
+            }
+            finally
+            {
+                _inflight.TryRemove(key, out _);
+            }
+        }
+
+        async Task<DirectoryModel> FetchAndCacheAsync(AccountModelBase account, DirectoryModel directory, string key)
+        {
+            Log.Debug("Fetching directory for key={Key} on thread {Thread}", key, Environment.CurrentManagedThreadId);
             var result = await _impl.GetDirectoryAsync(account, directory);
-            this.AddToCache(account, result);
+            AddToCache(account, result);
             return result;
         }
 

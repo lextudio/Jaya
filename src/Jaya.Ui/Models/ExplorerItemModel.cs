@@ -3,6 +3,8 @@
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
 using Jaya.Shared.Base;
+using Jaya.Shared.Models;
+using System;
 using System.Collections.ObjectModel;
 
 namespace Jaya.Ui.Models
@@ -53,6 +55,10 @@ namespace Jaya.Ui.Models
         }
 
         public ObservableCollection<ExplorerItemModel> Children { get; }
+
+        public string AccessErrorMessage => (Object as DirectoryModel)?.AccessErrorMessage;
+
+        public bool HasAccessError => !string.IsNullOrWhiteSpace(AccessErrorMessage);
 
         #endregion
     }

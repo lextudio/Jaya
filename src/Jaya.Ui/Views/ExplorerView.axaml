@@ -22,20 +22,36 @@
         <j:BitmapValueConverter x:Key="BitmapValueConverter" />
     </UserControl.Resources>
     <Grid>
-      <Grid.Styles>
-        <Style Selector="DataGrid[IsVisible=True]">
-          <Setter Property="ItemsSource" Value="{Binding Item.Children, Mode=OneWay}"/>
-        </Style>
-        <Style Selector="ListBox[IsVisible=True]">
-          <Setter Property="ItemsSource" Value="{Binding Item.Children, Mode=OneWay}"/>
-        </Style>
-        <Style Selector="ListBoxItem CheckBox">
-          <Setter Property="Background" Value="{DynamicResource Window.BackgroundBrush}"/>
-        </Style>
-        <Style Selector="ListBoxItem[IsSelected=False][IsPointerOver=False] CheckBox">
-          <Setter Property="IsVisible" Value="False"/>
-        </Style>
-      </Grid.Styles>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+
+      <Border
+          Grid.Row="0"
+          Margin="8"
+          Padding="8"
+          CornerRadius="4"
+          Background="{DynamicResource Window.BackgroundBrush}"
+          IsVisible="{Binding Item.HasAccessError}">
+        <TextBlock Text="{Binding Item.AccessErrorMessage}" TextWrapping="Wrap" />
+      </Border>
+
+      <Grid Grid.Row="1">
+        <Grid.Styles>
+          <Style Selector="DataGrid[IsVisible=True]">
+            <Setter Property="ItemsSource" Value="{Binding Item.Children, Mode=OneWay}"/>
+          </Style>
+          <Style Selector="ListBox[IsVisible=True]">
+            <Setter Property="ItemsSource" Value="{Binding Item.Children, Mode=OneWay}"/>
+          </Style>
+          <Style Selector="ListBoxItem CheckBox">
+            <Setter Property="Background" Value="{DynamicResource Window.BackgroundBrush}"/>
+          </Style>
+          <Style Selector="ListBoxItem[IsSelected=False][IsPointerOver=False] CheckBox">
+            <Setter Property="IsVisible" Value="False"/>
+          </Style>
+        </Grid.Styles>
 
         <!--  details view   -->
         <DataGrid
@@ -286,4 +302,5 @@
             </StackPanel>
         </Border>
     </Grid>
+  </Grid>
 </UserControl>

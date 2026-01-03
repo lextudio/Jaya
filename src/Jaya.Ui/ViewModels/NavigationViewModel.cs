@@ -59,6 +59,9 @@ namespace Jaya.Ui.ViewModels
                 if (value == null)
                     return;
 
+                Log.ForContext<NavigationViewModel>().Information("Node selected: Label={Label}, Service={Service}, Path={Path}",
+                    value.Label, value.Service?.Name, (value.FileSystemObject as DirectoryModel)?.Path);
+
                 var args = new SelectionChangedEventArgs(value.Service, value.Account, value.FileSystemObject as DirectoryModel);
                 EventAggregator.Publish(args);
             }
@@ -68,6 +71,12 @@ namespace Jaya.Ui.ViewModels
 
         void OnNodeExpanded(TreeNodeModel node, bool isExpaded)
         {
+            Log.ForContext<NavigationViewModel>().Information("Node {ExpandedState}: Label={Label}, Service={Service}, Path={Path}",
+                isExpaded ? "Expanded" : "Collapsed",
+                node.Label,
+                node.Service?.Name,
+                (node.FileSystemObject as DirectoryModel)?.Path);
+
             if (!isExpaded)
                 return;
 
@@ -77,12 +86,33 @@ namespace Jaya.Ui.ViewModels
 
         void AddChildNode(TreeNodeModel node, TreeNodeModel childNode)
         {
-            Invoke(() => node.Children.Add(childNode));
+            Invoke(() =>
+            {
+                // Avoid adding duplicate child nodes (same label and path)
+                var exists = node.Children.Any(c =>
+                    string.Equals(c.Label, childNode.Label, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals((c.FileSystemObject as Jaya.Shared.Models.DirectoryModel)?.Path,
+                                  (childNode.FileSystemObject as Jaya.Shared.Models.DirectoryModel)?.Path,
+                                  StringComparison.OrdinalIgnoreCase));
+
+                if (!exists)
+                {
+                    node.Children.Add(childNode);
+                    Log.ForContext<NavigationViewModel>().Information("Child added: Parent={Parent}, Child={Child}, Path={Path}",
+                        node.Label, childNode.Label, (childNode.FileSystemObject as DirectoryModel)?.Path);
+                }
+            });
         }
 
         void RemoveChildNode(TreeNodeModel node, TreeNodeModel childNode)
         {
-            Invoke(() => node.Children.Remove(childNode));
+            Invoke(() =>
+            {
+                if (node.Children.Remove(childNode))
+                {
+                    Log.ForContext<NavigationViewModel>().Information("Child removed: Parent={Parent}, Child={Child}", node.Label, childNode.Label);
+                }
+            });
         }
 
         async void PopulateAction(TreeNodeModel node)
@@ -92,6 +122,8 @@ namespace Jaya.Ui.ViewModels
 
             if (node.IsExpanded && !node.IsHavingDummyChild)
                 return;
+
+            Log.ForContext<NavigationViewModel>().Debug("PopulateAction start: NodeLabel={Label}, IsServiceRoot={IsServiceRoot}", node.Label, node.Service == null);
 
             if (node.Service == null)
             {

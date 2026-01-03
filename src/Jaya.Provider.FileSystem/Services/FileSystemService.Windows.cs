@@ -6,11 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace Jaya.Provider.FileSystem.Services
 {
     public class FileSystemServiceWindows : INativeFileSystemService
     {
+        static readonly ILogger Logger = Log.ForContext<FileSystemServiceWindows>();
         public Task<DirectoryModel> GetDirectoryAsync(AccountModelBase account, DirectoryModel directory = null)
         {
             // Simple Windows implementation using DriveInfo for now.
@@ -33,6 +35,10 @@ namespace Jaya.Provider.FileSystem.Services
                         drive.Path = driveInfo.RootDirectory.FullName;
                         drive.Size = driveInfo.TotalSize;
                         drive.IsExternalDrive = false;
+                        Logger.Debug("Windows drive {Name}@{Path} IsExternalDrive={IsExternalDrive}",
+                            drive.Name,
+                            drive.Path,
+                            drive.IsExternalDrive);
                         model.Directories.Add(drive);
                     }
                     catch (Exception)

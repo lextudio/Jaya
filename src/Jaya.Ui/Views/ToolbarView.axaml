@@ -108,7 +108,7 @@
             <ToggleButton
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.ToggleFileNameExtensions}"
-                IsChecked="{Binding ApplicationConfig.IsFileNameExtensionVisible, Mode=OneWay}"
+                IsChecked="{Binding ApplicationConfig.IsFileNameExtensionVisible}"
                 ToolTip.Tip="File Name Extensions">
                 <Image Source="{DynamicResource Icon.Extension.Image}" Width="16" Height="16" Stretch="Uniform" />
             </ToggleButton>

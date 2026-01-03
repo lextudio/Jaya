@@ -16,6 +16,8 @@ namespace Jaya.Provider.FileSystem.Services
 {
     public class FileSystemServiceMac : INativeFileSystemService
     {
+        static readonly ILogger Logger = Log.ForContext<FileSystemServiceMac>();
+
         public async Task<DirectoryModel> GetDirectoryAsync(AccountModelBase account, DirectoryModel directory = null)
         {
             return await Task.Run(() =>
@@ -36,13 +38,15 @@ namespace Jaya.Provider.FileSystem.Services
                                 Name = GetMacVolumeName(volume),
                                 Path = volume.MountPoint
                             };
-                            drive.IsExternalDrive = IsMacVolumeExternal(volume);
+                            var isExternal = IsMacVolumeExternal(volume);
+                            drive.IsExternalDrive = isExternal;                            
+                            Logger.Debug("DirectoryModel {Name}@{Path} IsExternalDrive={IsExternalDrive}", drive.Name, drive.Path, isExternal);
                             model.Directories.Add(drive);
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        // TODO: log
+                        Log.Warning(ex, "Mac volume enumeration failed");
                     }
 
                     return model;
@@ -81,9 +85,10 @@ namespace Jaya.Provider.FileSystem.Services
                         model.Files.Add(file);
                     }
                 }
-                catch (UnauthorizedAccessException)
+                catch (UnauthorizedAccessException ex)
                 {
-
+                    Log.Warning(ex, "Unauthorized access listing files in {Path}", directory.Path);
+                    MarkAccessDenied(model, directory.Path);
                 }
 
                 model.Directories = new List<DirectoryModel>();
@@ -102,9 +107,10 @@ namespace Jaya.Provider.FileSystem.Services
                         model.Directories.Add(dir);
                     }
                 }
-                catch (UnauthorizedAccessException)
+                catch (UnauthorizedAccessException ex)
                 {
-                    // TODO: log
+                    Log.Warning(ex, "Unauthorized access listing directories in {Path}", directory.Path);
+                    MarkAccessDenied(model, directory.Path);
                 }
 
                 return model;
@@ -167,6 +173,17 @@ namespace Jaya.Provider.FileSystem.Services
                 return true;
 
             return false;
+        }
+
+        static void MarkAccessDenied(DirectoryModel model, string path)
+        {
+            if (model == null || string.IsNullOrEmpty(path))
+                return;
+
+            if (!string.IsNullOrEmpty(model.AccessErrorMessage))
+                return;
+
+            model.AccessErrorMessage = $"Access to {path} is denied.";
         }
     }
 }

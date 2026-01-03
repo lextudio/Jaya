@@ -2,6 +2,7 @@
 // Copyright (c) Rubal Walia. All rights reserved.
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
+using System;
 using System.Collections.Generic;
 
 namespace Jaya.Shared.Models
@@ -46,5 +47,13 @@ namespace Jaya.Shared.Models
                 return children;
             }
         }
+
+        public string AccessErrorMessage
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+
+        public bool HasAccessError => !string.IsNullOrWhiteSpace(AccessErrorMessage);
     }
 }
