@@ -1,4 +1,4 @@
 [submodule "Avalonia.Ribbon"]
 	path = Avalonia.Ribbon
-	url = https://github.com/SachiHarshitha/Avalonia.Ribbon.git
+	url = https://github.com/lextudio/Avalonia.Ribbon.git
 	branch = sachi
