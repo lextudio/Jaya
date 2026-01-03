@@ -7,6 +7,7 @@ using Jaya.Shared.Base;
 using Jaya.Shared.Models;
 using Jaya.Ui.Models;
 using Jaya.Ui.Services;
+using Serilog;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -15,6 +16,9 @@ namespace Jaya.Ui.ViewModels
 {
     public class ExplorerViewModel: ViewModelBase
     {
+        static readonly ILogger FileSystemLogger = Log.ForContext("Category", "FileSystem")
+                                                       .ForContext("Area", "FileSystem");
+
         readonly Subscription<SelectionChangedEventArgs> _onSelectionChanged;
         readonly SharedService _shared;
 
@@ -119,6 +123,7 @@ namespace Jaya.Ui.ViewModels
                 }
 
                 Item = serviceItem;
+                LogDisplayedItems($"Service {_service.Name}", serviceItem);
             }
             else if (args.Directory != null)
             {
@@ -147,9 +152,66 @@ namespace Jaya.Ui.ViewModels
                 }
 
                 Item = directoryItem;
+                LogDisplayedItems(directory.Path ?? directory.Name ?? "Directory", directoryItem);
             }
 
             IsBusy = false;
+        }
+
+        void LogDisplayedItems(string context, ExplorerItemModel root)
+        {
+            if (root?.Children == null)
+                return;
+
+            FileSystemLogger.Information("Displaying {Count} items for {Context}", root.Children.Count, context);
+
+            foreach (var child in root.Children)
+            {
+                var label = child.Label;
+                string path = null;
+                string id = null;
+
+                switch (child.Object)
+                {
+                    case DirectoryModel directory:
+                        label ??= directory.Name;
+                        path ??= directory.Path;
+                        id ??= directory.Id;
+                        break;
+                    case FileModel file:
+                        label ??= file.Name;
+                        path ??= file.Path;
+                        id ??= file.Id;
+                        break;
+                    case AccountModelBase account:
+                        label ??= account.Name;
+                        id ??= account.Id;
+                        break;
+                }
+
+                if (string.IsNullOrWhiteSpace(label))
+                    label = child.Type?.ToString() ?? "Unnamed";
+
+                var objectType = child.Object?.GetType().Name ?? "<none>";
+                var fileModel = child.Object as FileModel;
+                var extension = fileModel?.Extension;
+                var fsObject = child.Object as FileSystemObjectModel;
+                var size = fsObject?.SizeString;
+
+                path ??= fsObject?.Path;
+                id ??= fsObject?.Id;
+
+                FileSystemLogger.Debug(
+                    "Displayed item {Label} (ItemType={ItemType}, ObjectType={ObjectType}, Extension={Extension}, Size={Size}) path={Path} id={Id} under {Context}",
+                    label,
+                    child.Type,
+                    objectType,
+                    string.IsNullOrEmpty(extension) ? "<none>" : extension,
+                    string.IsNullOrEmpty(size) ? "<unknown>" : size,
+                    path ?? "<unknown>",
+                    id ?? "<unknown>",
+                    context);
+            }
         }
     }
 }
