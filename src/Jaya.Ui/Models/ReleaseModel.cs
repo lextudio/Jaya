@@ -2,29 +2,29 @@
 // Copyright (c) Rubal Walia. All rights reserved.
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using System;
 
 namespace Jaya.Ui.Models
 {
     public class ReleaseModel
     {
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public Version Version { get; set; }
 
-        [JsonProperty("prerelease")]
+        [JsonPropertyName("prerelease")]
         public bool IsPrerelease { get; set; }
 
-        [JsonProperty("draft")]
+        [JsonPropertyName("draft")]
         public bool IsDraft { get; set; }
 
-        [JsonProperty("published_at")]
+        [JsonPropertyName("published_at")]
         public DateTime Date { get; set; }
 
-        [JsonProperty("body")]
+        [JsonPropertyName("body")]
         public string Notes { get; set; }
 
-        [JsonProperty("assets")]
+        [JsonPropertyName("assets")]
         public ReleaseAssetModel[] Downloads { get; set; }
 
         public override string ToString()

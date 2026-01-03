@@ -3,7 +3,7 @@
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
 using Jaya.Shared.Base;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using System.Collections.Generic;
 
 namespace Jaya.Provider.Dropbox.Models
@@ -22,7 +22,7 @@ namespace Jaya.Provider.Dropbox.Models
                 Accounts = new List<AccountModel>(accounts);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("accounts")]
         public IList<AccountModel> Accounts { get; private set; }
 
         protected override ConfigModelBase Empty()

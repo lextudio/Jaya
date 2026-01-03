@@ -1,5 +1,5 @@
 ﻿using Jaya.Shared.Base;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using System.Collections.Generic;
 
 namespace Jaya.Provider.S3.Models
@@ -18,14 +18,13 @@ namespace Jaya.Provider.S3.Models
                 Accounts = new List<AccountModel>(accounts);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("pageSize")]
         public int PageSize
         {
             get => Get<int>();
             set => Set(value);
         }
-
-        [JsonProperty]
+        [JsonPropertyName("accounts")]
         public IList<AccountModel> Accounts { get; private set; }
 
         protected override ConfigModelBase Empty()

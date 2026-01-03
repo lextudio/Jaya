@@ -5,7 +5,7 @@
 using Jaya.Shared;
 using Jaya.Shared.Base;
 using Jaya.Shared.Models;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 using System;
 
 namespace Jaya.Ui.Models
@@ -13,35 +13,35 @@ namespace Jaya.Ui.Models
     public class ApplicationConfigModel : ConfigModelBase
     {
 
-        [JsonProperty]
+        [JsonPropertyName("isItemCheckBoxVisible")]
         public bool IsItemCheckBoxVisible
         {
             get => Get<bool>();
             set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isFileNameExtensionVisible")]
         public bool IsFileNameExtensionVisible
         {
             get => Get<bool>();
             set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isHiddenItemVisible")]
         public bool IsHiddenItemVisible
         {
             get => Get<bool>();
             set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("widthPx")]
         public double WidthPx
         {
             get => Get<double>();
             set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("heightPx")]
         public double HeightPx
         {
             get => Get<double>();
@@ -62,7 +62,7 @@ namespace Jaya.Ui.Models
             }
         }
 
-        [JsonProperty]
+        [JsonPropertyName("themeName")]
         string ThemeName
         {
             get => Get<string>();

@@ -5,13 +5,14 @@
 using Jaya.Shared;
 using Jaya.Shared.Services;
 using Jaya.Ui.Models;
-using RestSharp;
-using RestSharp.Serializers.NewtonsoftJson;
 using System;
 using System.IO;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Jaya.Ui.Services
 {
@@ -51,15 +52,27 @@ namespace Jaya.Ui.Services
 
         public async Task CheckForUpdate()
         {
-            var client = new RestClient(GITHUB_API);
-            client.UseNewtonsoftJson();
+            using var http = new HttpClient { BaseAddress = new Uri(GITHUB_API) };
+            // GitHub API requires a User-Agent header
+            if (!http.DefaultRequestHeaders.Contains("User-Agent"))
+                http.DefaultRequestHeaders.Add("User-Agent", "Jaya-App");
 
-            var request = new RestRequest("repos/waliarubal/Jaya/releases", DataFormat.Json);
+            var resp = await http.GetAsync("repos/waliarubal/Jaya/releases");
+            resp.EnsureSuccessStatusCode();
 
-            var response = await client.GetAsync<ReleaseModel[]>(request);
+            var stream = await resp.Content.ReadAsStreamAsync();
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
+            };
 
-            if (response.Length > 0 && Version.CompareTo(response[0].Version) < 0 && Update.Downloads != null && Update.Downloads.Length == 0)
-                _sharedService.UpdateConfiguration.Update = response[0];
+            var releases = await JsonSerializer.DeserializeAsync<ReleaseModel[]>(stream, options).ConfigureAwait(false);
+
+            if (releases != null && releases.Length > 0 && Version.CompareTo(releases[0].Version) < 0 && releases[0].Downloads != null && releases[0].Downloads.Length > 0)
+            {
+                _sharedService.UpdateConfiguration.Update = releases[0];
+            }
 
             _sharedService.UpdateConfiguration.Checked = DateTime.Now;
             _sharedService.SaveConfigurations();
@@ -85,18 +98,17 @@ namespace Jaya.Ui.Services
             if (url == null)
                 return;
 
-            var client = new RestClient();
-
-            var request = new RestRequest(url, Method.GET);
-
-            var response = await client.ExecuteAsync(request);
-            if (response.StatusCode == HttpStatusCode.OK)
+            using var http = new HttpClient();
+            var response = await http.GetAsync(url);
+            if (response.IsSuccessStatusCode)
             {
                 if (!Directory.Exists(_sharedService.UpdateConfiguration.DownloadDirectory))
                     Directory.CreateDirectory(_sharedService.UpdateConfiguration.DownloadDirectory);
 
                 var updateFilePath = Path.Combine(_sharedService.UpdateConfiguration.DownloadDirectory, Path.GetFileName(url.LocalPath));
-                File.WriteAllBytes(updateFilePath, response.RawBytes);
+                await using var src = await response.Content.ReadAsStreamAsync();
+                await using var dst = File.OpenWrite(updateFilePath);
+                await src.CopyToAsync(dst);
             }
         }
     }

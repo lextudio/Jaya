@@ -3,7 +3,7 @@
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
 using Jaya.Shared.Models;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Jaya.Provider.Ftp.Models
 {
@@ -14,7 +14,7 @@ namespace Jaya.Provider.Ftp.Models
             
         }
 
-        [JsonProperty]
+        [JsonPropertyName("host")]
         public string Host
         {
             get => Get<string>();
@@ -25,7 +25,7 @@ namespace Jaya.Provider.Ftp.Models
             }
         }
 
-        [JsonProperty]
+        [JsonPropertyName("port")]
         public int Port
         {
             get => Get<int>();
@@ -36,21 +36,21 @@ namespace Jaya.Provider.Ftp.Models
             }
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isAnonymous")]
         public bool IsAnonymous
         {
             get => Get<bool>();
             set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("userName")]
         public string UserName
         {
             get => Get<string>();
             set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("password")]
         public string Password
         {
             get => Get<string>();

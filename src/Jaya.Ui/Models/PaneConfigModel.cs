@@ -4,7 +4,7 @@
 //
 using Avalonia.Controls;
 using Jaya.Shared.Base;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Jaya.Ui.Models
 {
@@ -24,7 +24,7 @@ namespace Jaya.Ui.Models
             private set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("navigationPaneWidthPx")]
         public double NavigationPaneWidthPx
         {
             get => Get<double>();
@@ -35,7 +35,7 @@ namespace Jaya.Ui.Models
             }
         }
 
-        [JsonProperty]
+        [JsonPropertyName("previewOrDetailsPanePaneWidthPx")]
         public double PreviewOrDetailsPanePaneWidthPx
         {
             get => Get<double>();
@@ -46,7 +46,7 @@ namespace Jaya.Ui.Models
             }
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isNavigationPaneVisible")]
         public bool IsNavigationPaneVisible
         {
             get => Get<bool>();
@@ -57,7 +57,7 @@ namespace Jaya.Ui.Models
             }
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isPreviewPaneVisible")]
         public bool IsPreviewPaneVisible
         {
             get => Get<bool>();
@@ -71,7 +71,7 @@ namespace Jaya.Ui.Models
             }
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isDetailsPaneVisible")]
         public bool IsDetailsPaneVisible
         {
             get => Get<bool>();
@@ -85,7 +85,7 @@ namespace Jaya.Ui.Models
             }
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isDetailsView")]
         public bool IsDetailsView
         {
             get => Get<bool>();
@@ -107,7 +107,7 @@ namespace Jaya.Ui.Models
             }
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isThumbnailView")]
         public bool IsThumbnailView
         {
             get => Get<bool>();
@@ -129,7 +129,7 @@ namespace Jaya.Ui.Models
             }
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isListView")]
         public bool IsListView
         {
             get => Get<bool>();
@@ -151,7 +151,7 @@ namespace Jaya.Ui.Models
             }
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isTilesView")]
         public bool IsTilesView
         {
             get => Get<bool>();
@@ -173,7 +173,7 @@ namespace Jaya.Ui.Models
             }
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isContentView")]
         public bool IsContentView
         {
             get => Get<bool>();
@@ -195,28 +195,28 @@ namespace Jaya.Ui.Models
             }
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isStatusBarVisible")]
         public bool IsStatusBarVisible
         {
             get => Get<bool>();
             set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isRibbonVisible")]
         public bool IsRibbonVisible
         {
             get => Get<bool>();
             set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isRibbonCollapsed")]
         public bool IsRibbonCollapsed
         {
             get => Get<bool>();
             set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isMenuHeaderVisible")]
         public bool IsMenuHeaderVisible
         {
             get => Get<bool>();

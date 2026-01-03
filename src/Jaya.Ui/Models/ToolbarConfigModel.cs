@@ -3,41 +3,41 @@
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
 using Jaya.Shared.Base;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Jaya.Ui.Models
 {
     public class ToolbarConfigModel : ConfigModelBase
     {
-        [JsonProperty]
+        [JsonPropertyName("isVisible")]
         public bool IsVisible
         {
             get => Get<bool>();
             set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isFileVisible")]
         public bool IsFileVisible
         {
             get => Get<bool>();
             set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isEditVisible")]
         public bool IsEditVisible
         {
             get => Get<bool>();
             set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isViewVisible")]
         public bool IsViewVisible
         {
             get => Get<bool>();
             set => Set(value);
         }
 
-        [JsonProperty]
+        [JsonPropertyName("isHelpVisible")]
         public bool IsHelpVisible
         {
             get => Get<bool>();

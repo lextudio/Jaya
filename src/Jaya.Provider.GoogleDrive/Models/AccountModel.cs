@@ -3,7 +3,7 @@
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
 using Jaya.Shared.Models;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Jaya.Provider.GoogleDrive.Models
 {
@@ -14,7 +14,7 @@ namespace Jaya.Provider.GoogleDrive.Models
             
         }
 
-        [JsonProperty]
+        [JsonPropertyName("email")]
         public string Email
         {
             get => Get<string>();

@@ -3,11 +3,10 @@
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
 using Jaya.Shared.Base;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Jaya.Shared.Models
 {
-    [JsonObject(MemberSerialization.OptIn)]
     public abstract class AccountModelBase: ModelBase
     {
         protected AccountModelBase(string id, string name)
@@ -16,15 +15,15 @@ namespace Jaya.Shared.Models
             Name = name;
         }
 
-        [JsonProperty]
+            [JsonPropertyName("id")]
         public string Id
         {
             get => Get<string>();
             protected set => Set(value);
         }
 
-        [JsonProperty]
-        public string Name
+            [JsonPropertyName("name")]
+            public string Name
         {
             get => Get<string>();
             protected set => Set(value);

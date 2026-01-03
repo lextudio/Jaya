@@ -4,6 +4,7 @@
 //
 using Jaya.Shared.Models;
 using System;
+using System.Text.Json.Serialization;
 
 namespace Jaya.Provider.FileSystem.Models
 {

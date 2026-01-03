@@ -3,9 +3,10 @@
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
 using Jaya.Shared.Base;
-using Newtonsoft.Json;
 using System;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Jaya.Shared.Services
 {
@@ -36,14 +37,18 @@ namespace Jaya.Shared.Services
             var fileInfo = new FileInfo(string.Format(_configurationFilePathFormat, key));
             if (fileInfo.Exists)
             {
-                using (var reader = File.OpenText(fileInfo.FullName))
+                var json = File.ReadAllText(fileInfo.FullName);
+                var options = new JsonSerializerOptions
                 {
-                    var serializer = new JsonSerializer { Formatting = Formatting.None };
-                    return serializer.Deserialize(reader, type) as T;
-                }
+                    PropertyNameCaseInsensitive = true,
+                    IncludeFields = false,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                };
+
+                return JsonSerializer.Deserialize(json, type, options) as T;
             }
-            else
-                return default;
+
+            return default;
         }
 
         public T GetOrDefault<T>(string key = null) where T : ConfigModelBase
@@ -65,11 +70,14 @@ namespace Jaya.Shared.Services
             if (fileInfo.Directory != null && !fileInfo.Directory.Exists)
                 Directory.CreateDirectory(fileInfo.DirectoryName);
 
-            using (var writer = File.CreateText(fileInfo.FullName))
+            var options = new JsonSerializerOptions
             {
-                var serializer = new JsonSerializer { Formatting = Formatting.None };
-                serializer.Serialize(writer, value, type);
-            }
+                WriteIndented = false,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            };
+
+            var json = JsonSerializer.Serialize(value, type, options);
+            File.WriteAllText(fileInfo.FullName, json);
         }
 
         string GetUsableKey(Type type)

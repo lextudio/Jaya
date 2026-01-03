@@ -1,5 +1,5 @@
 ﻿using Jaya.Shared.Models;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Jaya.Provider.S3.Models
 {
@@ -10,7 +10,7 @@ namespace Jaya.Provider.S3.Models
             
         }
 
-        [JsonProperty]
+            [JsonPropertyName("email")]
         public string Email
         {
             get => Get<string>();

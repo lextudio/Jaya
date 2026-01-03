@@ -3,7 +3,7 @@
     <PackageVersion Include="Avalonia" Version="11.3.10" />
     <PackageVersion Include="Avalonia.Controls.DataGrid" Version="11.3.10" />
     <PackageVersion Include="Avalonia.Desktop" Version="11.3.10" />
-    <PackageVersion Include="Avalonia.ReactiveUI" Version="11.3.9" />
+    <PackageVersion Include="Avalonia.ReactiveUI" Version="11.3.8" />
     <PackageVersion Include="Avalonia.Xaml.Behaviors" Version="11.3.0.6" />
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="11.3.10" />
     <PackageVersion Include="Dropbox.Api" Version="6.0.1" />
@@ -11,11 +11,8 @@
     <PackageVersion Include="AWSSDK.S3" Version="3.5.7.12" />
     <PackageVersion Include="Google.Apis.Drive.v3" Version="1.49.0.2201" />
     <PackageVersion Include="Google.Apis.Oauth2.v2" Version="1.49.0.1869" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="5.0.1" />
-    <PackageVersion Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageVersion Include="RestSharp" Version="106.11.7" />
-    <PackageVersion Include="RestSharp.Serializers.NewtonsoftJson" Version="106.11.7" />
-    <PackageVersion Include="SkiaSharp" Version="2.88.9" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+    <PackageVersion Include="SkiaSharp" Version="3.119.1" />
   </ItemGroup>
 </Project>
