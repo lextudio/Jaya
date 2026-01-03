@@ -15,7 +15,6 @@ namespace Jaya.Ui.Views.Windows
         {
             InitializeComponent();
 #if DEBUG
-            this.AttachDevTools();
 #endif
         }
 

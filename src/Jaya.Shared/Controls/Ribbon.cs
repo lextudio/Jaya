@@ -42,19 +42,22 @@ namespace Jaya.Shared.Controls
             set => SetAndRaise(HelpButtonCommandProperty, ref _helpCommand, value);
         }
 
-        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs e)
+        protected override void OnPropertyChanged<T>(AvaloniaPropertyChangedEventArgs<T> e)
         {
-            switch (e.Property.Name)
+            if (e.Property == SelectedItemProperty)
             {
-                case nameof(SelectedItem):
-                    if (e.NewValue == null || IsExpanded)
-                        break;
-
+                object newValue = e.NewValue as object;
+                if (newValue == null || IsExpanded)
+                {
+                    // no-op
+                }
+                else
+                {
                     IsExpanded = true;
-                    break;
+                }
             }
 
-            base.OnPropertyChanged(e);
+            base.OnPropertyChanged<T>(e);
         }
 
         Type IStyleable.StyleKey => typeof(Ribbon);
