@@ -19,7 +19,6 @@
                           HorizontalScrollBarVisibility="{TemplateBinding (ScrollViewer.HorizontalScrollBarVisibility)}"
                           VerticalScrollBarVisibility="{TemplateBinding (ScrollViewer.VerticalScrollBarVisibility)}">
               <ItemsPresenter Name="PART_ItemsPresenter"
-                              Items="{TemplateBinding Items}"
                               ItemsPanel="{TemplateBinding ItemsPanel}"
                               Margin="{TemplateBinding Padding}"/>
             </ScrollViewer>
@@ -59,7 +58,6 @@
           </Border>
           <ItemsPresenter Name="PART_ItemsPresenter"
                           IsVisible="{TemplateBinding IsExpanded}"
-                          Items="{TemplateBinding Items}"
                           ItemsPanel="{TemplateBinding ItemsPanel}"/>
         </StackPanel>
       </ControlTemplate>

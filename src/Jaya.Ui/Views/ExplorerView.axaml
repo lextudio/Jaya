@@ -24,10 +24,10 @@
     <Grid>
       <Grid.Styles>
         <Style Selector="DataGrid[IsVisible=True]">
-          <Setter Property="Items" Value="{Binding Item.Children, Mode=OneWay}"/>
+          <Setter Property="ItemsSource" Value="{Binding Item.Children, Mode=OneWay}"/>
         </Style>
         <Style Selector="ListBox[IsVisible=True]">
-          <Setter Property="Items" Value="{Binding Item.Children, Mode=OneWay}"/>
+          <Setter Property="ItemsSource" Value="{Binding Item.Children, Mode=OneWay}"/>
         </Style>
         <Style Selector="ListBoxItem CheckBox">
           <Setter Property="Background" Value="{DynamicResource Window.BackgroundBrush}"/>
