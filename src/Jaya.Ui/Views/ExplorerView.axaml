@@ -56,11 +56,11 @@
         <!--  details view   -->
         <DataGrid
             IsReadOnly="True"
-          x:Name="DetailsDataGrid"
-          IsVisible="{Binding PaneConfig.IsDetailsView, Mode=OneWay}"
+            x:Name="DetailsDataGrid"
+            IsVisible="{Binding PaneConfig.IsDetailsView, Mode=OneWay}"
             SelectionMode="Extended">
             <DataGrid.Columns>
-                <DataGridTemplateColumn Header="Name">
+                <DataGridTemplateColumn Header="Name" Width="*" SortMemberPath="DisplayName">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel x:Name="ObjectEntry" DataContext="{Binding}" Orientation="Horizontal" Background="#01000000">
@@ -82,17 +82,18 @@
                                 <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="16" Height="16" Stretch="Uniform" />
                                 <Image Classes="Icon" Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IsDirectory}" Width="16" Height="16" Stretch="Uniform" />
                                 <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="16" Height="16" Stretch="Uniform" />
-                                <TextBlock Width="220" Text="{Binding DisplayName}"
-                                       TextTrimming="CharacterEllipsis"
-                                       TextWrapping="NoWrap"
-                                       ToolTip.Tip="{Binding Label}" />
+                                    <TextBlock Text="{Binding DisplayName}"
+                                      TextWrapping="NoWrap"
+                                      ToolTip.Tip="{Binding Label}"
+                                      HorizontalAlignment="Stretch"
+                                      VerticalAlignment="Center" />
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <!--<DataGridTextColumn Binding="{Binding Object.Modified}" Header="Date Modified" />-->
                 <DataGridTextColumn Binding="{Binding Object.Type}" Header="Type" />
-                <DataGridTemplateColumn Header="Size">
+                <DataGridTemplateColumn Header="Size" SortMemberPath="SizeSort">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Object.SizeString}" TextAlignment="Right" />

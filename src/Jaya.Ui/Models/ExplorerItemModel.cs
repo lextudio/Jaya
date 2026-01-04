@@ -90,6 +90,17 @@ namespace Jaya.Ui.Models
 
         public bool HasAccessError => !string.IsNullOrWhiteSpace(AccessErrorMessage);
 
+        // Numeric size used for sorting. 0 if unknown/not a file.
+        public long SizeSort
+        {
+            get
+            {
+                if (Object is FileModel file)
+                    return file.Size!.Value;
+                return 0;
+            }
+        }
+
         #endregion
     }
 }

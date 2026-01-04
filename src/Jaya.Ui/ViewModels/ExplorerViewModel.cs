@@ -22,6 +22,7 @@ namespace Jaya.Ui.ViewModels
 
         readonly Subscription<SelectionChangedEventArgs> _onSelectionChanged;
         readonly SharedService _shared;
+        SelectionChangedEventArgs _lastSelectionArgs;
 
         ICommand _invokeObject;
         ProviderServiceBase _service;
@@ -31,11 +32,17 @@ namespace Jaya.Ui.ViewModels
         {
             _shared = GetService<SharedService>();
             _onSelectionChanged = EventAggregator?.Subscribe<SelectionChangedEventArgs>(SelectionChanged);
+            if (_shared?.ApplicationConfiguration != null)
+            {
+                _shared.ApplicationConfiguration.PropertyChanged += ApplicationConfiguration_PropertyChanged;
+            }
         }
 
         ~ExplorerViewModel()
         {
             EventAggregator?.UnSubscribe(_onSelectionChanged);
+            if (_shared?.ApplicationConfiguration != null)
+                _shared.ApplicationConfiguration.PropertyChanged -= ApplicationConfiguration_PropertyChanged;
         }
 
         #region properties
@@ -150,6 +157,9 @@ namespace Jaya.Ui.ViewModels
 
         async void SelectionChanged(SelectionChangedEventArgs args)
         {
+            // remember so we can refresh on configuration changes
+            _lastSelectionArgs = args;
+
             Item = null;
             IsBusy = true;
 
@@ -205,6 +215,26 @@ namespace Jaya.Ui.ViewModels
             }
 
             IsBusy = false;
+        }
+
+        void ApplicationConfiguration_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e == null || string.IsNullOrEmpty(e.PropertyName))
+                return;
+
+            if (e.PropertyName == nameof(ApplicationConfigModel.IsFileNameExtensionVisible) ||
+                e.PropertyName == nameof(ApplicationConfigModel.IsHiddenItemVisible))
+            {
+                // Re-run the last selection to refresh displayed items
+                if (_lastSelectionArgs != null)
+                {
+                    try
+                    {
+                        Invoke(() => SelectionChanged(_lastSelectionArgs));
+                    }
+                    catch { }
+                }
+            }
         }
 
         void LogDisplayedItems(string context, ExplorerItemModel root)
