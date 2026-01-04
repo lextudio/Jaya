@@ -17,5 +17,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Jaya.Shared\Jaya.Shared.csproj" />
+    <ProjectReference Include="..\Jaya.IO\Jaya.IO.csproj" />
   </ItemGroup>
 </Project>

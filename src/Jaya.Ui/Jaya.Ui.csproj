@@ -40,6 +40,7 @@
     <ProjectReference Include="..\Jaya.Shared\Jaya.Shared.csproj" />
     <ProjectReference Include="..\..\Avalonia.Ribbon\AvaloniaUI.Ribbon\AvaloniaUI.Ribbon.csproj" />
     <ProjectReference Include="..\..\Avalonia.Ribbon\AvaloniaUI.Ribbon.Desktop\AvaloniaUI.Ribbon.Desktop.csproj" />
+    <ProjectReference Include="..\Jaya.IO\Jaya.IO.csproj" />
   </ItemGroup>
 
   <!--enter plugin entries below for debugging-->
