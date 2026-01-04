@@ -21,7 +21,7 @@ namespace Jaya.Shared.Controls
 
         public static readonly StyledProperty<object> HeaderContentProperty;
         public static readonly StyledProperty<bool> IsModalProperty;
-        Button _closeButton, _minimizeButton, _maximizeButton;
+        Button? _closeButton, _minimizeButton, _maximizeButton;
         bool _isTemplateApplied;
 
         static StyledWindow()
@@ -43,30 +43,40 @@ namespace Jaya.Shared.Controls
             SetupSide("BottomLeft", StandardCursorType.BottomLeftCorner, WindowEdge.SouthWest);
             SetupSide("MiddleLeft", StandardCursorType.LeftSide, WindowEdge.West);
 
-            Border titlebar = this.FindControl<Border>("PART_TitleBar");
-            titlebar.PointerPressed += (sender, args) => 
+            var titlebar = this.FindControl<Border>("PART_TitleBar");
+            if (titlebar != null)
             {
-                if (args.ClickCount == 1)
-                    BeginMoveDrag(args);
-            };
-            titlebar.DoubleTapped += (sneder, args) =>
-            {
-                if (CanResize && (!IsModal))
-                    WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-            };
+                titlebar.PointerPressed += (sender, args) =>
+                {
+                    if (args.ClickCount == 1)
+                        BeginMoveDrag(args);
+                };
+                titlebar.DoubleTapped += (sender, args) =>
+                {
+                    if (CanResize && (!IsModal))
+                        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+                };
+            }
 
             _closeButton = this.FindControl<Button>("PART_Close");
-            _closeButton.Click += (object sender, RoutedEventArgs arg) => Close();
+            if (_closeButton != null)
+                _closeButton.Click += (sender, arg) => Close();
 
             var isNotModal = !IsModal;
 
             _minimizeButton = this.FindControl<Button>("PART_Minimize");
-            _minimizeButton.IsVisible = isNotModal;
-            _minimizeButton.Click += (sneder, args) => WindowState = WindowState.Minimized;
+            if (_minimizeButton != null)
+            {
+                _minimizeButton.IsVisible = isNotModal;
+                _minimizeButton.Click += (sender, args) => WindowState = WindowState.Minimized;
+            }
 
             _maximizeButton = this.FindControl<Button>("PART_Maximize");
-            _maximizeButton.IsVisible = isNotModal;
-            _maximizeButton.Click += (sneder, args) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+            if (_maximizeButton != null)
+            {
+                _maximizeButton.IsVisible = isNotModal;
+                _maximizeButton.Click += (sender, args) => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+            }
 
             _isTemplateApplied = true;
         }
@@ -92,8 +102,10 @@ namespace Jaya.Shared.Controls
                 if (!_isTemplateApplied)
                     return;
 
-                _minimizeButton.IsVisible = inverseValue;
-                _maximizeButton.IsVisible = inverseValue;
+                if (_minimizeButton != null)
+                    _minimizeButton.IsVisible = inverseValue;
+                if (_maximizeButton != null)
+                    _maximizeButton.IsVisible = inverseValue;
             }
         }
 
@@ -102,6 +114,9 @@ namespace Jaya.Shared.Controls
         void SetupSide(string name, StandardCursorType cursor, WindowEdge edge)
         {
             var control = this.FindControl<Control>("PART_" + name + "Edge");
+            if (control == null)
+                return;
+
             control.Cursor = new Cursor(cursor);
             control.PointerPressed += (sender, ep) => BeginResizeDrag(edge, ep);
         }

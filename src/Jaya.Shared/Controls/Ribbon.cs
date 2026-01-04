@@ -17,17 +17,17 @@ namespace Jaya.Shared.Controls
     public class Ribbon : TabControl
     {
         public static readonly DirectProperty<Ribbon, bool> IsExpandedProperty;
-        public static readonly DirectProperty<Ribbon, ICommand> HelpButtonCommandProperty;
+        public static readonly DirectProperty<Ribbon, ICommand?> HelpButtonCommandProperty;
 
-        Button _toggleButton;
-        ICommand _helpCommand;
+        Button? _toggleButton;
+        ICommand? _helpCommand;
         bool _isExpanded;
-        ISelectable _selectedTab;
+        ISelectable? _selectedTab;
 
         static Ribbon()
         {
             IsExpandedProperty = AvaloniaProperty.RegisterDirect<Ribbon, bool>(nameof(IsExpanded), o => o.IsExpanded, (o, v) => o.IsExpanded = v, true);
-            HelpButtonCommandProperty = AvaloniaProperty.RegisterDirect<Ribbon, ICommand>(nameof(HelpButtonCommand), o => o.HelpButtonCommand, (o, v) => o.HelpButtonCommand = v);
+            HelpButtonCommandProperty = AvaloniaProperty.RegisterDirect<Ribbon, ICommand?>(nameof(HelpButtonCommand), o => o.HelpButtonCommand, (o, v) => o.HelpButtonCommand = v, default(ICommand?));
         }
 
         public bool IsExpanded
@@ -36,7 +36,7 @@ namespace Jaya.Shared.Controls
             internal set => SetAndRaise(IsExpandedProperty, ref _isExpanded, value);
         }
 
-        public ICommand HelpButtonCommand
+        public ICommand? HelpButtonCommand
         {
             get => _helpCommand;
             set => SetAndRaise(HelpButtonCommandProperty, ref _helpCommand, value);
@@ -46,7 +46,7 @@ namespace Jaya.Shared.Controls
         {
             if (e.Property == SelectedItemProperty)
             {
-                object newValue = e.NewValue;
+                var newValue = e.NewValue;
                 if (newValue == null || IsExpanded)
                 {
                     // no-op
@@ -66,28 +66,32 @@ namespace Jaya.Shared.Controls
         {
             base.OnAttachedToVisualTree(e);
 
-            _toggleButton = this.FindControl<Button>("PART_ToggleButton");
-            _toggleButton.Click += delegate
-            {
-                IsExpanded = !IsExpanded;
+                _toggleButton = this.FindControl<Button>("PART_ToggleButton");
+                if (_toggleButton != null)
+                {
+                    _toggleButton.Click += delegate
+                    {
+                        IsExpanded = !IsExpanded;
 
-                if (IsExpanded)
-                {
-                    if (_selectedTab != null)
-                    {
-                        _selectedTab.IsSelected = true;
-                        _selectedTab = null;
-                    }
+                        if (IsExpanded)
+                        {
+                            if (_selectedTab != null)
+                            {
+                                _selectedTab.IsSelected = true;
+                                _selectedTab = null;
+                            }
+                        }
+                        else
+                        {
+                            if (SelectedItem != null)
+                            {
+                                _selectedTab = SelectedItem as ISelectable;
+                                if (_selectedTab != null)
+                                    _selectedTab.IsSelected = false;
+                            }
+                        }
+                    };
                 }
-                else
-                {
-                    if (SelectedItem != null)
-                    {
-                        _selectedTab = SelectedItem as ISelectable;
-                        _selectedTab.IsSelected = false;
-                    }
-                }
-            };
         }
     }
 }

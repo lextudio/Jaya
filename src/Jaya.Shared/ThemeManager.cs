@@ -12,11 +12,11 @@ namespace Jaya.Shared
     public sealed class ThemeManager : ModelBase
     {
         static readonly object _syncLock;
-        static ThemeManager _instance;
+        static ThemeManager? _instance;
         readonly List<ThemeModel> _themes;
         readonly List<Window> _windows;
         readonly Dictionary<Window, List<IStyle>> _windowStyles;
-        ThemeModel _selectedTheme;
+        ThemeModel? _selectedTheme;
 
         static ThemeManager()
         {
@@ -50,18 +50,18 @@ namespace Jaya.Shared
                     if (_instance == null)
                         _instance = new ThemeManager();
 
-                    return _instance;
+                    return _instance!;
                 }
             }
         }
 
         public IEnumerable<ThemeModel> Themes => _themes;
 
-        public ThemeModel SelectedTheme => _selectedTheme;
+        public ThemeModel? SelectedTheme => _selectedTheme;
 
         public void ApplyTheme(ThemeModel value)
         {
-            if (Design.IsDesignMode || value == null || value.Styles.Count == 0)
+            if (Design.IsDesignMode || value == null || value.Styles == null || value.Styles.Count == 0)
                 return;
 
             if (_selectedTheme == value)
@@ -72,19 +72,23 @@ namespace Jaya.Shared
 
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
-                Application.Current.RequestedThemeVariant = value.Variant;
+                if (Application.Current != null)
+                {
+                    Application.Current.RequestedThemeVariant = value.Variant;
 
-                var currentAppStyles = new List<IStyle>();
-                currentAppStyles.AddRange(Application.Current.Styles);
+                    var currentAppStyles = new List<IStyle>();
+                    currentAppStyles.AddRange(Application.Current.Styles);
 
                 var removalCount = Math.Min(2, currentAppStyles.Count);
                 if (removalCount > 0)
                     currentAppStyles.RemoveRange(0, removalCount);
 
-                currentAppStyles.InsertRange(0, SelectedTheme.Styles);
+                if (SelectedTheme != null)
+                    currentAppStyles.InsertRange(0, SelectedTheme.Styles);
 
-                Application.Current.Styles.Clear();
-                Application.Current.Styles.AddRange(currentAppStyles);
+                    Application.Current.Styles.Clear();
+                    Application.Current.Styles.AddRange(currentAppStyles);
+                }
 
                 if (previousTheme != null)
                 {
@@ -96,7 +100,7 @@ namespace Jaya.Shared
                                 window.Styles.Remove(style);
                         }
 
-                        var newStyles = CloneStyles(SelectedTheme);
+                        var newStyles = SelectedTheme != null ? CloneStyles(SelectedTheme) : new List<IStyle>();
                         _windowStyles[window] = newStyles;
 
                         foreach (var style in newStyles)

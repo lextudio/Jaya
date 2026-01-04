@@ -13,8 +13,8 @@ namespace Jaya.Shared.Base
 {
     public abstract class ViewModelBase : ModelBase
     {
-        ICommand _simpleCommand, _parameterizedCommand;
-        EventAggregator _eventAggregator;
+        ICommand? _simpleCommand, _parameterizedCommand;
+        EventAggregator? _eventAggregator;
 
         protected ViewModelBase()
         {
@@ -37,7 +37,7 @@ namespace Jaya.Shared.Base
 
         protected bool IsDesignMode => Design.IsDesignMode;
 
-        protected EventAggregator EventAggregator
+        protected EventAggregator? EventAggregator
         {
             get
             {
@@ -45,7 +45,7 @@ namespace Jaya.Shared.Base
                     return default;
 
                 if (_eventAggregator == null)
-                    _eventAggregator = GetService<ICommandService>().EventAggregator;
+                    _eventAggregator = GetService<ICommandService>()!.EventAggregator;
 
                 return _eventAggregator;
             }
@@ -76,7 +76,7 @@ namespace Jaya.Shared.Base
 
         #endregion
 
-        protected T GetService<T>() where T : class, IService
+        protected T? GetService<T>() where T : class, IService
         {
             if (IsDesignMode)
                 return default;
@@ -84,7 +84,7 @@ namespace Jaya.Shared.Base
             return ServiceLocator.Instance.GetService<T>();
         }
 
-        protected T GetProvider<T>() where T : class, IProviderService
+        protected T? GetProvider<T>() where T : class, IProviderService
         {
             if (IsDesignMode)
                 return default;

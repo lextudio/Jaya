@@ -19,12 +19,13 @@ namespace Jaya.Shared
         static ViewModelLocator()
         {
             AutoWireViewModelProperty = AvaloniaProperty.RegisterAttached<Control, bool>("AutoWireViewModel", typeof(ViewModelLocator), false);
-            AutoWireViewModelProperty.Changed.Subscribe(args => AutoWireViewModelChanged(args?.Sender, args));
+            AutoWireViewModelProperty.Changed.Subscribe(args => { if (args != null) AutoWireViewModelChanged(args.Sender, args); });
         }
 
         public static bool GetAutoWireViewModel(AvaloniaObject control)
         {
-            return (bool)control.GetValue(AutoWireViewModelProperty);
+            var val = control.GetValue(AutoWireViewModelProperty);
+            return val is bool b && b;
         }
 
         public static void SetAutoWireViewModel(AvaloniaObject control, bool value)
@@ -37,7 +38,7 @@ namespace Jaya.Shared
             if (Design.IsDesignMode)
                 return;
 
-            if (!(bool)e.NewValue)
+            if (!(e.NewValue is bool newVal) || !newVal)
                 return;
 
             var view = control as Control;
@@ -45,19 +46,29 @@ namespace Jaya.Shared
                 return;
 
             var viewType = control.GetType();
-            var viewName = viewType.FullName.Replace(".Views.", ".ViewModels.");
-            var viewAssemblyName = viewType.GetTypeInfo().Assembly.FullName;
+            var viewFullName = viewType.FullName ?? string.Empty;
+            var viewName = viewFullName.Replace(".Views.", ".ViewModels.");
+            var viewAssemblyName = viewType.GetTypeInfo().Assembly.FullName ?? string.Empty;
 
             var windowType = typeof(StyledWindow);
             if (windowType.IsAssignableFrom(viewType))
-                ThemeManager.Instance.EnableTheme(view as StyledWindow);
+            {
+                var styled = view as StyledWindow;
+                if (styled != null)
+                    ThemeManager.Instance.EnableTheme(styled);
+            }
 
             var viewModelName = string.Format(CultureInfo.InvariantCulture, "{0}Model, {1}", viewName, viewAssemblyName);
             var viewModelType = Type.GetType(viewModelName);
+            if (viewModelType == null)
+                return;
 
-            var viewModel = ServiceLocator.Instance.Container.GetService(viewModelType) as ViewModelBase;
-            view.DataContext = viewModel;
-            viewModel.IsLoaded = true;
+            var viewModel = ServiceLocator.Instance.Container?.GetService(viewModelType) as ViewModelBase;
+            if (viewModel != null)
+            {
+                view.DataContext = viewModel;
+                viewModel.IsLoaded = true;
+            }
         }
     }
 }

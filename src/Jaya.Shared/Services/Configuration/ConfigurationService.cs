@@ -27,7 +27,7 @@ namespace Jaya.Shared.Services
 
         public string ConfigurationDirectory { get; }
 
-        public T Get<T>(string key = null) where T : ConfigModelBase
+        public T? Get<T>(string? key = null) where T : ConfigModelBase
         {
             var type = typeof(T);
 
@@ -51,14 +51,14 @@ namespace Jaya.Shared.Services
             return default;
         }
 
-        public T GetOrDefault<T>(string key = null) where T : ConfigModelBase
+        public T GetOrDefault<T>(string? key = null) where T : ConfigModelBase
         {
             var config = Get<T>(key) ?? ConfigModelBase.Empty<T>();
 
             return config;
         }
 
-        public void Set<T>(T value, string key = null)
+        public void Set<T>(T value, string? key = null)
         {
             var type = typeof(T);
 
@@ -68,7 +68,10 @@ namespace Jaya.Shared.Services
             // create configuration directory if missing
             var fileInfo = new FileInfo(string.Format(_configurationFilePathFormat, key));
             if (fileInfo.Directory != null && !fileInfo.Directory.Exists)
-                Directory.CreateDirectory(fileInfo.DirectoryName);
+            {
+                if (!string.IsNullOrEmpty(fileInfo.DirectoryName))
+                    Directory.CreateDirectory(fileInfo.DirectoryName);
+            }
 
             var options = new JsonSerializerOptions
             {

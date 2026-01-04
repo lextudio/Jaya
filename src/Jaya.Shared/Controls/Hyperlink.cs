@@ -14,17 +14,17 @@ namespace Jaya.Shared.Controls
 {
     public class Hyperlink : Button
     {
-        public static readonly DirectProperty<Hyperlink, Uri> UrlProperty;
+        public static readonly DirectProperty<Hyperlink, Uri?> UrlProperty;
 
-        Uri _url;
-        ContentPresenter _container;
+        Uri? _url;
+        ContentPresenter? _container;
 
         static Hyperlink()
         {
-            UrlProperty = AvaloniaProperty.RegisterDirect<Hyperlink, Uri>(nameof(Url), o => o.Url, (o, v) => o.Url = v, null);
+            UrlProperty = AvaloniaProperty.RegisterDirect<Hyperlink, Uri?>(nameof(Url), o => o.Url, (o, v) => o.Url = v, default(Uri));
         }
 
-        public Uri Url
+        public Uri? Url
         {
             get => _url;
             set => SetAndRaise(UrlProperty, ref _url, value);
@@ -37,13 +37,16 @@ namespace Jaya.Shared.Controls
             base.OnAttachedToVisualTree(e);
 
             _container = this.FindControl<ContentPresenter>("PART_ContentPresenter");
-            _container.Tapped += delegate
+            if (_container != null)
             {
-                if (Url == null || Design.IsDesignMode)
-                    return;
+                _container.Tapped += delegate
+                {
+                    if (Url == null || Design.IsDesignMode)
+                        return;
 
-                ServiceLocator.Instance.GetService<PlatformService>().OpenBrowser(Url.ToString());
-            };
+                    ServiceLocator.Instance.GetService<PlatformService>()?.OpenBrowser(Url.ToString());
+                };
+            }
         }
     }
 }

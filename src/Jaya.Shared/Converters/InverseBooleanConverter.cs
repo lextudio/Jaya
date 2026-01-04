@@ -10,7 +10,7 @@ namespace Jaya.Shared.Converters
 {
     public class InverseBooleanConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value == null)
                 throw new ArgumentNullException(nameof(value));
@@ -21,7 +21,7 @@ namespace Jaya.Shared.Converters
             throw new ArgumentException("Passed value is not boolean.", nameof(value));
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             return !(bool)Convert(value, targetType, parameter, culture);
         }

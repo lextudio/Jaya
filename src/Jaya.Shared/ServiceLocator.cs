@@ -14,7 +14,7 @@ namespace Jaya.Shared
 {
     public sealed class ServiceLocator : IDisposable
     {
-        static ServiceLocator _instance;
+        static ServiceLocator? _instance;
         static readonly object _syncRoot;
         readonly Dictionary<string, IProviderService> _providersCache;
         readonly Dictionary<string, IService> _serviceCache;
@@ -47,11 +47,11 @@ namespace Jaya.Shared
                         _instance = new ServiceLocator();
                 }
 
-                return _instance;
+                return _instance!;
             }
         }
 
-        internal ServiceProvider Container { get; private set; }
+        internal ServiceProvider? Container { get; private set; }
 
         internal bool IsCacheInitialized { get; private set; }
 
@@ -78,8 +78,9 @@ namespace Jaya.Shared
             var currentDomainAssemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var assembly in currentDomainAssemblies)
             {
-                if (assembly.FullName.StartsWith("Jaya.", StringComparison.InvariantCultureIgnoreCase) &&
-                    !assembly.FullName.StartsWith("Jaya.Shared", StringComparison.InvariantCultureIgnoreCase))
+                var fullName = assembly.FullName ?? string.Empty;
+                if (fullName.StartsWith("Jaya.", StringComparison.InvariantCultureIgnoreCase) &&
+                    !fullName.StartsWith("Jaya.Shared", StringComparison.InvariantCultureIgnoreCase))
                     assemblies.Add(assembly);
             }
 
@@ -150,14 +151,14 @@ namespace Jaya.Shared
             if (IsCacheInitialized)
                 return true;
 
-            var services = Container.GetServices<IService>();
+            var services = Container?.GetServices<IService>() ?? Array.Empty<IService>();
             foreach (var service in services)
             {
                 var serviceType = service.GetType();
                 _serviceCache.Add(serviceType.Name, service);
             }
 
-            var providers = Container.GetServices<IProviderService>();
+            var providers = Container?.GetServices<IProviderService>() ?? Array.Empty<IProviderService>();
             foreach (var provider in providers)
             {
                 var providerType = provider.GetType();
@@ -178,7 +179,7 @@ namespace Jaya.Shared
             return _providersCache.Values;
         }
 
-        public T GetService<T>() where T : class, IService
+        public T? GetService<T>() where T : class, IService
         {
             if (Container == null)
             {
@@ -192,7 +193,7 @@ namespace Jaya.Shared
             return Container.GetService<T>();
         }
 
-        public T GetProviderService<T>() where T : class, IProviderService
+        public T? GetProviderService<T>() where T : class, IProviderService
         {
             if (Container == null)
             {

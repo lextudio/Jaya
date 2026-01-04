@@ -14,8 +14,7 @@ namespace Jaya.Shared.Converters
     public class BitmapValueConverter : IValueConverter
     {
         public static BitmapValueConverter Instance = new BitmapValueConverter();
-
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value == null)
                 return null;
@@ -35,7 +34,7 @@ namespace Jaya.Shared.Converters
             throw new NotSupportedException();
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotSupportedException();
         }

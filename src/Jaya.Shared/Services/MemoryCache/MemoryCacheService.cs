@@ -8,11 +8,16 @@ namespace Jaya.Shared.Services
 {
     public sealed class MemoryCacheService: IMemoryCacheService
     {
-        MemoryCache _cache;
+        MemoryCache? _cache;
+
+        public MemoryCacheService()
+        {
+            _cache = new MemoryCache(new MemoryCacheOptions());
+        }
 
         ~MemoryCacheService()
         {
-            _cache.Dispose();
+            _cache?.Dispose();
         }
 
         #region properties
@@ -37,7 +42,7 @@ namespace Jaya.Shared.Services
 
         public bool TryGetValue<T>(object key, out T result)
         {
-            return Cache.TryGetValue(key, out result);
+            return Cache.TryGetValue(key, out result!);
         }
 
         public void Set<T>(object key, T value)

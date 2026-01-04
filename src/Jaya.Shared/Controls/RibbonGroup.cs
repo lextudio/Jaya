@@ -12,7 +12,7 @@ namespace Jaya.Shared.Controls
     public class RibbonGroup: ItemsControl
     {
         public static readonly DirectProperty<RibbonGroup, string> HeaderProperty;
-        string _header;
+        string _header = string.Empty;
 
         static RibbonGroup()
         {
@@ -21,7 +21,7 @@ namespace Jaya.Shared.Controls
 
         public string Header
         {
-            get => _header;
+            get => _header ?? string.Empty;
             set => SetAndRaise(HeaderProperty, ref _header, value);
         }
 

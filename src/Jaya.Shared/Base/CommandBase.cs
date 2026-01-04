@@ -9,7 +9,7 @@ namespace Jaya.Shared.Base
 {
     public abstract class CommandBase : ModelBase, ICommand
     {
-        public event EventHandler CanExecuteChanged;
+        public event EventHandler? CanExecuteChanged;
 
         protected CommandBase(bool isEnabled, bool isAsynchronous)
         {
@@ -49,11 +49,11 @@ namespace Jaya.Shared.Base
             handler?.Invoke(this, EventArgs.Empty);
         }
 
-        public bool CanExecute(object parameter)
+        public bool CanExecute(object? parameter)
         {
             return IsEnabled && !IsExecuting;
         }
 
-        public abstract void Execute(object parameter);
+        public abstract void Execute(object? parameter);
     }
 }

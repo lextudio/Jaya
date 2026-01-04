@@ -11,12 +11,12 @@ namespace Jaya.Shared.Converters
 {
     public class MultiValueConverter : IMultiValueConverter
     {
-        public object Convert(IList<object> values, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(IList<object?>? values, Type targetType, object? parameter, CultureInfo culture)
         {
             if (values == null)
                 return null;
 
-            return new List<object>(values);
+            return new List<object?>(values);
         }
     }
 }

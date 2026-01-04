@@ -23,11 +23,12 @@ namespace Jaya.Shared
         public void Publish<TMessageType>(TMessageType message)
         {
             Type type = typeof(TMessageType);
-            if (_subscribers.ContainsKey(type))
+            if (_subscribers.TryGetValue(type, out var list))
             {
-                foreach (Subscription<TMessageType> action in _subscribers[type])
+                foreach (var obj in list)
                 {
-                    action.Action(message);
+                    if (obj is Subscription<TMessageType> action)
+                        action.Action(message);
                 }
             }
         }
@@ -37,9 +38,9 @@ namespace Jaya.Shared
             Type type = typeof(TMessageType);
             var actionDetail = new Subscription<TMessageType>(action, this);
 
-            if (!_subscribers.TryGetValue(type, out IList actionList))
+            if (!_subscribers.TryGetValue(type, out var actionList))
             {
-                actionList = new List<Subscription<TMessageType>>();
+                actionList = new List<object>();
                 actionList.Add(actionDetail);
                 _subscribers.Add(type, actionList);
             }
@@ -54,9 +55,9 @@ namespace Jaya.Shared
         public void UnSubscribe<TMessageType>(Subscription<TMessageType> subscription)
         {
             Type type = typeof(TMessageType);
-            if (_subscribers.ContainsKey(type))
+            if (_subscribers.TryGetValue(type, out var list))
             {
-                _subscribers[type].Remove(subscription);
+                list.Remove(subscription);
             }
         }
     }

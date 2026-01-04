@@ -17,7 +17,7 @@ namespace Jaya.Shared
             _action = action;
         }
 
-        public async override void Execute(object parameter)
+        public async override void Execute(object? parameter)
         {
             if (!CanExecute(parameter))
                 return;
@@ -42,7 +42,7 @@ namespace Jaya.Shared
             _action = action;
         }
 
-        public async override void Execute(object parameter)
+        public async override void Execute(object? parameter)
         {
             if (!CanExecute(parameter))
                 return;
@@ -51,11 +51,11 @@ namespace Jaya.Shared
 
             if (IsAsynchronous)
             {
-                var argument = (P)parameter;
-                await Task.Run(() => _action.Invoke(argument));
+                var argument = parameter is P pArg ? pArg : default;
+                await Task.Run(() => _action.Invoke(argument!));
             }
             else
-                _action.Invoke((P)parameter);
+                _action.Invoke((P)parameter!);
 
             IsExecuting = false;
         }

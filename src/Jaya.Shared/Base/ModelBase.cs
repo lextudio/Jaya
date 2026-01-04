@@ -11,7 +11,7 @@ namespace Jaya.Shared.Base
     public abstract class ModelBase : INotifyPropertyChanged
     {
         readonly Dictionary<string, object> _variables;
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected ModelBase()
         {
@@ -23,31 +23,41 @@ namespace Jaya.Shared.Base
             _variables.Clear();
         }
 
-        protected T Get<T>([CallerMemberName]string propertyName = null)
+        protected T Get<T>([CallerMemberName]string? propertyName = null)
         {
             if (string.IsNullOrEmpty(propertyName))
-                return default;
+                return default!;
 
             if (_variables.ContainsKey(propertyName))
                 return (T)_variables[propertyName];
 
-            return default;
+            return default!;
         }
 
-        protected bool Set<T>(T value, [CallerMemberName]string propertyName = null, bool raiseNotification = true)
+        protected bool Set<T>(T? value, [CallerMemberName]string? propertyName = null, bool raiseNotification = true)
         {
             if (string.IsNullOrEmpty(propertyName))
                 return false;
+            if (_variables.ContainsKey(propertyName) && (object?)value == _variables[propertyName])
+                return false;
 
             if (value == null)
+            {
+                if (_variables.ContainsKey(propertyName))
+                {
+                    _variables.Remove(propertyName);
+                    if (raiseNotification)
+                        RaisePropertyChanged(propertyName);
+                    return true;
+                }
+
                 return false;
-            if (_variables.ContainsKey(propertyName) && (object)value == _variables[propertyName])
-                return false;
+            }
 
             if (_variables.ContainsKey(propertyName))
-                _variables[propertyName] = value;
+                _variables[propertyName] = value!;
             else
-                _variables.Add(propertyName, value);
+                _variables.Add(propertyName, value!);
 
             if (raiseNotification)
                 RaisePropertyChanged(propertyName);
@@ -55,7 +65,7 @@ namespace Jaya.Shared.Base
             return true;
         }
 
-        protected bool Set<T>(ref T backingField, T value, [CallerMemberName]string propertyName = null, bool raiseNotification = true)
+        protected bool Set<T>(ref T? backingField, T? value, [CallerMemberName]string? propertyName = null, bool raiseNotification = true)
         {
             if (string.IsNullOrEmpty(propertyName))
                 return false;
@@ -72,7 +82,7 @@ namespace Jaya.Shared.Base
             return true;
         }
 
-        public void RaisePropertyChanged([CallerMemberName]string propertyName = null)
+        public void RaisePropertyChanged([CallerMemberName]string? propertyName = null)
         {
             var handler = PropertyChanged;
             if (handler == null)

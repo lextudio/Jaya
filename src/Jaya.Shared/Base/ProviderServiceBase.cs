@@ -13,15 +13,15 @@ namespace Jaya.Shared.Base
 {
     public abstract class ProviderServiceBase : ModelBase, IProviderService
     {
-        IMemoryCacheService _cache;
-        IConfigurationService _config;
-        IPlatformService _platform;
+        IMemoryCacheService? _cache;
+        IConfigurationService? _config;
+        IPlatformService? _platform;
 
         public delegate void OnAccountAdded(AccountModelBase account);
-        public event OnAccountAdded AccountAdded;
+        public event OnAccountAdded? AccountAdded;
 
         public delegate void OnAccountRemoved(AccountModelBase account);
-        public event OnAccountRemoved AccountRemoved;
+        public event OnAccountRemoved? AccountRemoved;
 
         protected ProviderServiceBase()
         {
@@ -35,7 +35,7 @@ namespace Jaya.Shared.Base
             get
             {
                 if (_cache == null)
-                    _cache = ServiceLocator.Instance.GetService<IMemoryCacheService>();
+                    _cache = ServiceLocator.Instance.GetService<IMemoryCacheService>()!;
 
                 return _cache;
             }
@@ -48,7 +48,7 @@ namespace Jaya.Shared.Base
             get
             {
                 if (_config == null)
-                    _config = ServiceLocator.Instance.GetService<IConfigurationService>();
+                    _config = ServiceLocator.Instance.GetService<IConfigurationService>()!;
 
                 return _config;
             }
@@ -59,7 +59,7 @@ namespace Jaya.Shared.Base
             get
             {
                 if (_platform == null)
-                    _platform = ServiceLocator.Instance.GetService<IPlatformService>();
+                    _platform = ServiceLocator.Instance.GetService<IPlatformService>()!;
 
                 return _platform;
             }
@@ -71,25 +71,25 @@ namespace Jaya.Shared.Base
             protected set;
         }
 
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         public string Description
         {
             get;
             protected set;
-        }
+        } = string.Empty;
 
         public string ImagePath
         {
             get;
             protected set;
-        }
+        } = string.Empty;
 
         public Type ConfigurationEditorType
         {
             get;
             protected set;
-        }
+        } = typeof(object);
 
         public bool IsEnabled
         {
@@ -99,11 +99,11 @@ namespace Jaya.Shared.Base
 
         #endregion
 
-        protected (string Name, string Extension) SplitName(string fileName)
+        protected (string Name, string? Extension) SplitName(string fileName)
         {
             var nameParts = fileName.Split('.');
             if (nameParts.Length == 1)
-                return (nameParts[0], null);
+            return (nameParts[0], null);
 
             var extensionBuilder = new StringBuilder();
             for (var index = 1; index < nameParts.Length - 1; index++)
@@ -118,13 +118,13 @@ namespace Jaya.Shared.Base
             Platform.OpenBrowser(url);
         }
 
-        protected DirectoryModel GetFromCache(AccountModelBase account, DirectoryModel directory)
+        protected DirectoryModel? GetFromCache(AccountModelBase account, DirectoryModel? directory)
         {
             var hash = account.GetHashCode();
             if (directory != null)
                 hash += directory.GetHashCode();
 
-            if (Cache.TryGetValue(hash, out DirectoryModel dir))
+            if (Cache.TryGetValue(hash, out DirectoryModel? dir))
                 return dir;
 
             return null;
@@ -144,6 +144,9 @@ namespace Jaya.Shared.Base
 
         public T GetConfiguration<T>() where T : ConfigModelBase
         {
+            if (string.IsNullOrEmpty(Name))
+                return ConfigModelBase.Empty<T>();
+
             return ConfigurationService.GetOrDefault<T>(Name);
         }
 
@@ -152,7 +155,7 @@ namespace Jaya.Shared.Base
             ConfigurationService.Set<T>(configuration, Name);
         }
 
-        public async Task<AccountModelBase> AddAccount(AccountModelBase account)
+        public async Task<AccountModelBase?> AddAccount(AccountModelBase? account)
         {
             account = await AddAccountAsync(account);
             if (account != null)
@@ -176,15 +179,15 @@ namespace Jaya.Shared.Base
             return isRemoved;
         }
 
-        protected abstract Task<AccountModelBase> AddAccountAsync(AccountModelBase account = null);
+        protected abstract Task<AccountModelBase?> AddAccountAsync(AccountModelBase? account = null);
 
         protected abstract Task<bool> RemoveAccountAsync(AccountModelBase account);
 
         public abstract Task<IEnumerable<AccountModelBase>> GetAccountsAsync();
 
-        public abstract Task<DirectoryModel> GetDirectoryAsync(AccountModelBase account, DirectoryModel directory = null);
+        public abstract Task<DirectoryModel?> GetDirectoryAsync(AccountModelBase account, DirectoryModel? directory = null);
 
-        public abstract Task FormatAsync(AccountModelBase account, DirectoryModel directory = null);
+        public abstract Task FormatAsync(AccountModelBase account, DirectoryModel? directory = null);
 
         public override string ToString()
         {

@@ -49,7 +49,7 @@ namespace Jaya.Shared.Models
 
         public override string ToString()
         {
-            return Name;
+            return Name ?? string.Empty;
         }
 
         public override int GetHashCode()
@@ -57,7 +57,7 @@ namespace Jaya.Shared.Models
             return Id.GetHashCode();
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (!(obj is AccountModelBase compareWith))
                 return false;
