@@ -16,15 +16,17 @@ namespace Jaya.Provider.GoogleDrive.ViewModels
     {
         readonly GoogleDriveService _googleDriveService;
         readonly ConfigModel _config;
-        ICommand _addAccount, _removeAccount;
+        ICommand? _addAccount, _removeAccount;
 
         public ConfigurationViewModel()
         {
-            _googleDriveService = GetProvider<GoogleDriveService>();
+            _googleDriveService = GetProvider<GoogleDriveService>()!;
 
-            _config = _googleDriveService.Config;
+            _config = _googleDriveService.Config!;
 
-            Accounts = new ObservableCollection<AccountModelBase>(_config.Accounts);
+            // _config.Accounts is IList<AccountModel> (concrete). Convert to AccountModelBase list for the view.
+            var accountsSource = _config.Accounts as System.Collections.Generic.IEnumerable<AccountModel> ?? System.Array.Empty<AccountModel>();
+            Accounts = new ObservableCollection<AccountModelBase>(new System.Collections.Generic.List<AccountModelBase>(System.Linq.Enumerable.Cast<AccountModelBase>(accountsSource)));
         }
 
         #region properties
@@ -41,9 +43,9 @@ namespace Jaya.Provider.GoogleDrive.ViewModels
             }
         }
 
-        public AccountModel SelectedAccount
+        public AccountModel? SelectedAccount
         {
-            get => Get<AccountModel>();
+            get => Get<AccountModel?>();
             set => Set(value);
         }
 
@@ -54,7 +56,7 @@ namespace Jaya.Provider.GoogleDrive.ViewModels
                 if (_addAccount == null)
                     _addAccount = new RelayCommand(AddAccountAction);
 
-                return _addAccount;
+                return _addAccount!;
             }
         }
 
@@ -65,7 +67,7 @@ namespace Jaya.Provider.GoogleDrive.ViewModels
                 if (_removeAccount == null)
                     _removeAccount = new RelayCommand<AccountModel>(RemoveAccountAction);
 
-                return _removeAccount;
+                return _removeAccount!;
             }
         }
 

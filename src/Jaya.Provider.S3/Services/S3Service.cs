@@ -12,7 +12,7 @@ namespace Jaya.Provider.S3.Services
 {
     public class S3Service : ProviderServiceBase
     {
-        static readonly IAmazonS3 client;
+        static readonly IAmazonS3? client;
         readonly ConfigModel _config = new ConfigModel();
         
         public S3Service()
@@ -23,13 +23,13 @@ namespace Jaya.Provider.S3.Services
             ConfigurationEditorType = typeof(ConfigurationView);
         }
 
-        public override async Task<DirectoryModel> GetDirectoryAsync(AccountModelBase account, DirectoryModel directory = null)
+        public override async Task<DirectoryModel?> GetDirectoryAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             var model = Task.FromResult(new DirectoryModel());
             return await model;
         }
 
-        protected override async Task<AccountModelBase> AddAccountAsync(AccountModelBase account = null)
+        protected override async Task<AccountModelBase?> AddAccountAsync(AccountModelBase? account = null)
         {
             var provider = new AccountModel("aps","aprs");
             return await Task.FromResult(provider);
@@ -52,7 +52,7 @@ namespace Jaya.Provider.S3.Services
             return await Task.Run(() => config.Accounts);
         }
 
-        public override Task FormatAsync(AccountModelBase account, DirectoryModel directory = null)
+        public override Task FormatAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             throw new NotImplementedException();
         }

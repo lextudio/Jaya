@@ -15,23 +15,30 @@ namespace Jaya.Provider.Dropbox.ViewModels
     public class ConfigurationViewModel : ViewModelBase
     {
         readonly DropboxService _dropboxService;
-        ICommand _addAccount, _removeAccount;
+        ICommand? _addAccount, _removeAccount;
        
         public ConfigurationViewModel()
         {
-            _dropboxService = GetProvider<DropboxService>();
+
+            _dropboxService = GetProvider<DropboxService>()!;
+
+            Accounts = new ObservableCollection<AccountModelBase>();
 
             var config = _dropboxService.GetConfiguration<ConfigModel>();
-            Accounts = new ObservableCollection<AccountModelBase>(config.Accounts);
+            if (config != null)
+            {
+                foreach (var acc in config.Accounts)
+                    Accounts.Add(acc);
+            }
         }
 
         #region properties
 
         public ObservableCollection<AccountModelBase> Accounts { get; }
 
-        public AccountModel SelectedAccount
+        public AccountModel? SelectedAccount
         {
-            get => Get<AccountModel>();
+            get => Get<AccountModel?>();
             set => Set(value);
         }
 
@@ -42,7 +49,7 @@ namespace Jaya.Provider.Dropbox.ViewModels
                 if (_addAccount == null)
                     _addAccount = new RelayCommand(AddAccountAction);
 
-                return _addAccount;
+                return _addAccount!;
             }
         }
 
@@ -53,7 +60,7 @@ namespace Jaya.Provider.Dropbox.ViewModels
                 if (_removeAccount == null)
                     _removeAccount = new RelayCommand<AccountModel>(RemoveAccountAction);
 
-                return _removeAccount;
+                return _removeAccount!;
             }
         }
 

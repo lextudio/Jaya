@@ -24,7 +24,7 @@ namespace Jaya.Provider.FileSystem.Services
     public class FileSystemService : ProviderServiceBase, IProviderService
     {
         readonly INativeFileSystemService _impl;
-        readonly System.Collections.Concurrent.ConcurrentDictionary<string, Task<DirectoryModel>> _inflight = new();
+        readonly System.Collections.Concurrent.ConcurrentDictionary<string, Task<DirectoryModel?>> _inflight = new();
 
         public FileSystemService()
         {
@@ -43,7 +43,7 @@ namespace Jaya.Provider.FileSystem.Services
             ConfigurationEditorType = typeof(ConfigurationView);
         }
 
-        public override async Task<DirectoryModel> GetDirectoryAsync(AccountModelBase account, DirectoryModel directory = null)
+        public override async Task<DirectoryModel?> GetDirectoryAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             Log.Debug("FileSystemService.GetDirectoryAsync called: Account={Account}, Path={Path}", account?.Name, directory?.Path);
             var model = GetFromCache(account, directory);
@@ -64,7 +64,7 @@ namespace Jaya.Provider.FileSystem.Services
             }
         }
 
-        async Task<DirectoryModel> FetchAndCacheAsync(AccountModelBase account, DirectoryModel directory, string key)
+        async Task<DirectoryModel?> FetchAndCacheAsync(AccountModelBase account, DirectoryModel? directory, string key)
         {
             Log.Debug("Fetching directory for key={Key} on thread {Thread}", key, Environment.CurrentManagedThreadId);
             var result = await _impl.GetDirectoryAsync(account, directory);
@@ -92,7 +92,7 @@ namespace Jaya.Provider.FileSystem.Services
             return await Task.Run(() => providers);
         }
 
-        public override Task FormatAsync(AccountModelBase account, DirectoryModel directory = null)
+        public override Task FormatAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             throw new NotImplementedException();
         }

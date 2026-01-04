@@ -13,14 +13,14 @@ namespace Jaya.Provider.S3.ViewModels
     {
         readonly S3Service _amazonS3Service;
         readonly ConfigModel _config = new ConfigModel();
-        ICommand _addAccount, _removeAccount;
+        ICommand? _addAccount, _removeAccount;
 
         public ConfigurationViewModel()
         {
             _amazonS3Service = GetProvider<S3Service>();
 
           //  _config = _amazonS3Service.;
-          Accounts = new ObservableCollection<AccountModelBase>(new List<AccountModelBase>());
+                    Accounts = new ObservableCollection<AccountModelBase>(new List<AccountModelBase>());
         }
 
         #region properties
@@ -43,9 +43,9 @@ namespace Jaya.Provider.S3.ViewModels
             set => Set(value);
         }
 
-        public ICommand AddAccountCommand => _addAccount ??= new RelayCommand(AddAccountAction);
+        public ICommand AddAccountCommand => (_addAccount ??= new RelayCommand(AddAccountAction))!;
 
-        public ICommand RemoveAccountCommand => _removeAccount ??= new RelayCommand<AccountModel>(RemoveAccountAction);
+        public ICommand RemoveAccountCommand => (_removeAccount ??= new RelayCommand<AccountModel>(RemoveAccountAction))!;
 
         #endregion
 

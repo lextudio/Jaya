@@ -25,28 +25,28 @@ namespace Jaya.Provider.Ftp.Services
             ConfigurationEditorType = typeof(ConfigurationView);
         }
 
-        async Task<AsyncFtpClient> GetConnection(AccountModel account)
+        async Task<AsyncFtpClient> GetConnection(AccountModel? account)
         {
             // FluentFTP v40+ has distinct sync/async clients. Since this service is async,
             // use AsyncFtpClient to avoid blocking threads.
 
             AsyncFtpClient client;
 
-            if (!account.IsAnonymous)
+            if (account != null && !account.IsAnonymous)
             {
                 var credentials = new NetworkCredential(account.UserName, account.Password);
                 client = new AsyncFtpClient(account.Host, credentials, account.Port);
             }
             else
             {
-                client = new AsyncFtpClient(account.Host, account.Port);
+                client = new AsyncFtpClient(account?.Host ?? string.Empty, account?.Port ?? 21);
             }
 
             await client.Connect();
             return client;
         }
 
-        public override async Task<DirectoryModel> GetDirectoryAsync(AccountModelBase account, DirectoryModel directory = null)
+        public override async Task<DirectoryModel?> GetDirectoryAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             var model = GetFromCache(account, directory);
             if (model != null)
@@ -103,7 +103,7 @@ namespace Jaya.Provider.Ftp.Services
             return model;
         }
 
-        protected override async Task<AccountModelBase> AddAccountAsync(AccountModelBase account = null)
+        protected override async Task<AccountModelBase?> AddAccountAsync(AccountModelBase? account = null)
         {
             var ftpAccount = account as AccountModel;
 
@@ -139,7 +139,7 @@ namespace Jaya.Provider.Ftp.Services
             return await Task.Run(() => config.Accounts);
         }
 
-        public override Task FormatAsync(AccountModelBase account, DirectoryModel directory = null)
+        public override Task FormatAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             throw new NotImplementedException();
         }

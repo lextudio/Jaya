@@ -11,11 +11,10 @@ namespace Jaya.Provider.FileSystem.ViewModels
     public class ConfigurationViewModel: ViewModelBase
     {
         readonly FileSystemService _fileSystemService;
-
         public ConfigurationViewModel()
         {
             _fileSystemService = GetProvider<FileSystemService>();
-            Configuration = _fileSystemService.GetConfiguration<ConfigModel>();
+            Configuration = _fileSystemService.GetConfiguration<ConfigModel>() ?? new ConfigModel();
         }
 
         public ConfigModel Configuration { get; }

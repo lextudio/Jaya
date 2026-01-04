@@ -7,6 +7,6 @@ namespace Jaya.Provider.FileSystem.Services
     // platform-specific implementations without exposing ProviderServiceBase surface.
     internal interface INativeFileSystemService
     {
-        Task<DirectoryModel> GetDirectoryAsync(Jaya.Shared.Models.AccountModelBase account, DirectoryModel directory = null);
+        Task<DirectoryModel?> GetDirectoryAsync(Jaya.Shared.Models.AccountModelBase account, DirectoryModel? directory = null);
     }
 }

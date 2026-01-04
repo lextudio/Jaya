@@ -16,18 +16,19 @@ namespace Jaya.Provider.Dropbox.Models
         }
 
         [JsonConstructor]
-        public ConfigModel(IEnumerable<AccountModel> accounts): this()
+        public ConfigModel(IEnumerable<AccountModel>? accounts): this()
         {
             if (accounts != null)
                 Accounts = new List<AccountModel>(accounts);
         }
 
         [JsonPropertyName("accounts")]
+
         public IList<AccountModel> Accounts { get; private set; }
 
         protected override ConfigModelBase Empty()
         {
-            return new ConfigModel(null);
+            return new ConfigModel(System.Array.Empty<AccountModel>());
         }
     }
 }

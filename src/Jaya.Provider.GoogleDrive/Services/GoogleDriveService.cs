@@ -30,9 +30,9 @@ namespace Jaya.Provider.GoogleDrive.Services
         const string MIME_TYPE_FILE = "application/vnd.google-apps.file";
         const string MIME_TYPE_DIRECTORY = "application/vnd.google-apps.folder";
 
-        ConfigModel _config;
-        UserCredential _credential;
-        IDataStore _dataStore;
+        ConfigModel? _config;
+        UserCredential? _credential;
+        IDataStore? _dataStore;
 
         /// <summary>
         /// Refer pages https://www.daimto.com/google-drive-authentication-c/ and https://www.daimto.com/google-drive-api-c/ for examples.
@@ -54,7 +54,7 @@ namespace Jaya.Provider.GoogleDrive.Services
                 if (_dataStore == null)
                     _dataStore = new FileDataStore(ConfigurationDirectory, true);
 
-                return _dataStore;
+                return _dataStore!;
             }
         }
 
@@ -73,8 +73,8 @@ namespace Jaya.Provider.GoogleDrive.Services
                         SetConfiguration(_config);
                     };
                 }
-                    
-                return _config;
+
+                return _config!;
             }
         }
 
@@ -88,7 +88,7 @@ namespace Jaya.Provider.GoogleDrive.Services
             };
         }
 
-        async Task<UserCredential> GetCredential()
+        async Task<UserCredential?> GetCredential()
         {
             if (_credential != null && !_credential.Token.IsStale)
                 return _credential;
@@ -107,6 +107,9 @@ namespace Jaya.Provider.GoogleDrive.Services
             };
 
             _credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(secret, scopes, Environment.UserName, CancellationToken.None, DataStore);
+            if (_credential == null)
+                return null;
+
             if (_credential.Token.IsStale)
             {
                 var isRefreshed = await _credential.RefreshTokenAsync(CancellationToken.None);
@@ -117,7 +120,7 @@ namespace Jaya.Provider.GoogleDrive.Services
             return _credential;
         }
 
-        public override async Task<DirectoryModel> GetDirectoryAsync(AccountModelBase account, DirectoryModel directory = null)
+        public override async Task<DirectoryModel?> GetDirectoryAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             var model = GetFromCache(account, directory);
             if (model != null)
@@ -125,12 +128,14 @@ namespace Jaya.Provider.GoogleDrive.Services
             else
                 model = new DirectoryModel();
 
-            model.Name = directory.Name;
-            model.Path = directory.Path;
+            model.Name = directory?.Name ?? string.Empty;
+            model.Path = directory?.Path ?? string.Empty;
             model.Directories = new List<DirectoryModel>();
             model.Files = new List<FileModel>();
 
             var credentials = await GetCredential();
+            if (credentials == null)
+                return null;
 
             var parent = directory == null || directory.Id == null ? "root" : directory.Id;
 
@@ -155,30 +160,33 @@ namespace Jaya.Provider.GoogleDrive.Services
                     foreach (var entry in entries.Files)
                     {
                         var parents = entry.Parents;
-                        if (entry.MimeType.Equals(MIME_TYPE_DIRECTORY))
+                        var mime = entry.MimeType ?? string.Empty;
+                        if (mime.Equals(MIME_TYPE_DIRECTORY))
                         {
                             var dir = new DirectoryModel();
                             dir.Id = entry.Id;
-                            dir.Name = entry.Name;
-                            dir.Path = entry.Name;
+                            dir.Name = entry.Name ?? string.Empty;
+                            dir.Path = entry.Name ?? string.Empty;
                             dir.Size = entry.Size;
                             dir.Created = entry.CreatedTimeDateTimeOffset?.DateTime;
                             dir.Modified = entry.ModifiedTimeDateTimeOffset?.DateTime;
-                            model.Directories.Add(dir);
+                            if (dir != null)
+                                model.Directories.Add(dir);
                         }
                         else
                         {
-                            var nameParts = SplitName(entry.Name);
+                            var nameParts = SplitName(entry.Name ?? string.Empty);
 
                             var file = new FileModel();
                             file.Id = entry.Id;
                             file.Name = nameParts.Name;
                             file.Extension = nameParts.Extension;
-                            file.Path = entry.Name;
+                            file.Path = entry.Name ?? string.Empty;
                             file.Size = entry.Size;
                             file.Created = entry.CreatedTimeDateTimeOffset?.DateTime;
                             file.Modified = entry.ModifiedTimeDateTimeOffset?.DateTime;
-                            model.Files.Add(file);
+                            if (file != null)
+                                model.Files.Add(file);
                         }
                     }
 
@@ -195,7 +203,7 @@ namespace Jaya.Provider.GoogleDrive.Services
             return model;
         }
 
-        protected override async Task<AccountModelBase> AddAccountAsync(AccountModelBase account = null)
+        protected override async Task<AccountModelBase?> AddAccountAsync(AccountModelBase? account = null)
         {
             var credentials = await GetCredential();
             if (credentials == null)
@@ -237,7 +245,7 @@ namespace Jaya.Provider.GoogleDrive.Services
             return await Task.Run(() => config.Accounts);
         }
 
-        public override Task FormatAsync(AccountModelBase account, DirectoryModel directory = null)
+        public override Task FormatAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             throw new NotImplementedException();
         }

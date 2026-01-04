@@ -44,35 +44,40 @@ namespace Jaya.Provider.Dropbox.Services
             http.Start();
 
             var context = await http.GetContextAsync();
-            while (context.Request.Url.AbsolutePath != redirectUri.AbsolutePath)
+            while (context.Request?.Url == null || context.Request.Url.AbsolutePath != redirectUri.AbsolutePath)
                 context = await http.GetContextAsync();
 
             http.Stop();
 
-            var code = Uri.UnescapeDataString(context.Request.QueryString["code"]);
+            var rawCode = context.Request.QueryString["code"];
+            var code = string.IsNullOrEmpty(rawCode) ? string.Empty : Uri.UnescapeDataString(rawCode);
 
             var response = await DropboxOAuth2Helper.ProcessCodeFlowAsync(code, APP_KEY, APP_SECRET, REDIRECT_URI);
             return response.AccessToken;
         }
 
-        public override async Task<DirectoryModel> GetDirectoryAsync(AccountModelBase account, DirectoryModel directory = null)
+        public override async Task<DirectoryModel?> GetDirectoryAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             var model = GetFromCache(account, directory);
             if (model != null)
                 return model;
             else
                 model = new DirectoryModel();
-
-            model.Name = directory.Name;
-            model.Path = directory.Path;
+            model.Name = directory?.Name ?? string.Empty;
+            model.Path = directory?.Path ?? string.Empty;
             model.Directories = new List<DirectoryModel>();
             model.Files = new List<FileModel>();
 
             var accountDetails = account as AccountModel;
+            if (accountDetails == null)
+                return null;
+
+            if (string.IsNullOrEmpty(accountDetails.Token))
+                return null;
 
             var client = new DropboxClient(accountDetails.Token);
 
-            var path = directory == null || directory.Path == null ? string.Empty : directory.Path;
+            var path = directory?.Path ?? string.Empty;
 
             var entries = await client.Files.ListFolderAsync(path);
             foreach (var entry in entries.Entries)
@@ -93,14 +98,19 @@ namespace Jaya.Provider.Dropbox.Services
                     var nameParts = SplitName(entry.Name);
 
                     var fileInfo = entry.AsFile;
-
-                    var file = new FileModel();
-                    file.Name = nameParts.Name;
-                    file.Extension = nameParts.Extension;
-                    file.Path = entry.PathDisplay;
-                    file.Size = (long)fileInfo.Size;
-                    file.Modified = fileInfo.ClientModified;
-                    model.Files.Add(file);
+                    if (fileInfo != null)
+                    {
+                        var file = new FileModel();
+                        file.Name = nameParts.Name;
+                        file.Extension = nameParts.Extension ?? string.Empty;
+                        file.Path = entry.PathDisplay ?? string.Empty;
+                        file.Size = (long)fileInfo.Size;
+                        if (fileInfo.ClientModified is DateTime dt)
+                            file.Modified = dt;
+                        else
+                            file.Modified = null;
+                        model.Files.Add(file);
+                    }
                 }
             }
 
@@ -108,7 +118,7 @@ namespace Jaya.Provider.Dropbox.Services
             return model;
         }
 
-        protected override async Task<AccountModelBase> AddAccountAsync(AccountModelBase account = null)
+        protected override async Task<AccountModelBase?> AddAccountAsync(AccountModelBase? account = null)
         {
             var token = await GetToken();
             if (string.IsNullOrEmpty(token))
@@ -135,7 +145,8 @@ namespace Jaya.Provider.Dropbox.Services
         {
             var config = GetConfiguration<ConfigModel>();
 
-            var isRemoved = config.Accounts.Remove(account as AccountModel);
+            var acc = account as AccountModel;
+            var isRemoved = acc != null && config.Accounts.Remove(acc);
             if (isRemoved)
                 SetConfiguration(config);
 
@@ -148,7 +159,7 @@ namespace Jaya.Provider.Dropbox.Services
             return await Task.Run(() => config.Accounts);
         }
 
-        public override Task FormatAsync(AccountModelBase account, DirectoryModel directory = null)
+        public override Task FormatAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             throw new NotImplementedException();
         }

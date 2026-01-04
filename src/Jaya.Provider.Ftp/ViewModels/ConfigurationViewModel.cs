@@ -15,7 +15,7 @@ namespace Jaya.Provider.Ftp.ViewModels
     {
         readonly FtpService _service;
         readonly ConfigModel _config;
-        ICommand _addAccount, _removeAccount, _clear;
+        ICommand? _addAccount, _removeAccount, _clear;
 
         public ConfigurationViewModel()
         {
@@ -24,22 +24,22 @@ namespace Jaya.Provider.Ftp.ViewModels
             ClearAction();
 
             _config = _service.GetConfiguration<ConfigModel>();
-            Accounts = new ObservableCollection<AccountModel>(_config.Accounts);
+            Accounts = new ObservableCollection<AccountModel>(_config.Accounts ?? System.Array.Empty<AccountModel>());
         }
 
         #region properties
 
         public ObservableCollection<AccountModel> Accounts { get; }
 
-        public AccountModel SelectedAccount
+        public AccountModel? SelectedAccount
         {
-            get => Get<AccountModel>();
+            get => Get<AccountModel?>();
             set => Set(value);
         }
 
-        public AccountModel NewAccount
+        public AccountModel? NewAccount
         {
-            get => Get<AccountModel>();
+            get => Get<AccountModel?>();
             private set => Set(value);
         }
 
@@ -50,7 +50,7 @@ namespace Jaya.Provider.Ftp.ViewModels
                 if (_addAccount == null)
                     _addAccount = new RelayCommand<AccountModel>(AddAccountAction);
 
-                return _addAccount;
+                return _addAccount!;
             }
         }
 
@@ -61,7 +61,7 @@ namespace Jaya.Provider.Ftp.ViewModels
                 if (_clear == null)
                     _clear = new RelayCommand(ClearAction);
 
-                return _clear;
+                return _clear!;
             }
         }
 
@@ -72,7 +72,7 @@ namespace Jaya.Provider.Ftp.ViewModels
                 if (_removeAccount == null)
                     _removeAccount = new RelayCommand<AccountModel>(RemoveAccountAction);
 
-                return _removeAccount;
+                return _removeAccount!;
             }
         }
 

@@ -11,10 +11,10 @@ namespace Jaya.Provider.FileSystem.Services
 {
     public class FileSystemServiceLinux : INativeFileSystemService
     {
-        public Task<DirectoryModel> GetDirectoryAsync(AccountModelBase account, DirectoryModel directory = null)
+        public Task<DirectoryModel?> GetDirectoryAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             // Simple Linux implementation using /proc/mounts or lsblk could be added.
-            return Task.FromResult(new DirectoryModel());
+            return Task.FromResult<DirectoryModel?>(new DirectoryModel());
         }
     }
 }

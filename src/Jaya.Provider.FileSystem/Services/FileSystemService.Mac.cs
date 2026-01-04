@@ -18,7 +18,7 @@ namespace Jaya.Provider.FileSystem.Services
     {
         static readonly ILogger Logger = Log.ForContext<FileSystemServiceMac>();
 
-        public async Task<DirectoryModel> GetDirectoryAsync(AccountModelBase account, DirectoryModel directory = null)
+        public async Task<DirectoryModel?> GetDirectoryAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             return await Task.Run(() =>
             {

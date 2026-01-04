@@ -13,10 +13,10 @@ namespace Jaya.Provider.FileSystem.Services
     public class FileSystemServiceWindows : INativeFileSystemService
     {
         static readonly ILogger Logger = Log.ForContext<FileSystemServiceWindows>();
-        public Task<DirectoryModel> GetDirectoryAsync(AccountModelBase account, DirectoryModel directory = null)
+        public Task<DirectoryModel?> GetDirectoryAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             // Simple Windows implementation using DriveInfo for now.
-            return Task.FromResult(new DirectoryModel());
+            return Task.FromResult<DirectoryModel?>(new DirectoryModel());
         }
 
         internal static void AddGetDrives(DirectoryModel model)

@@ -16,7 +16,7 @@ namespace Jaya.Provider.GoogleDrive.Models
         }
 
         [JsonConstructor]
-        public ConfigModel(IEnumerable<AccountModel> accounts): this()
+        public ConfigModel(IEnumerable<AccountModel>? accounts): this()
         {
             if (accounts != null)
                 Accounts = new List<AccountModel>(accounts);
