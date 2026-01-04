@@ -12,7 +12,10 @@ using Jaya.Ui.Models;
 using Jaya.Ui.Views;
 using Jaya.Ui.ViewModels.Windows;
 using System;
+using System.Linq;
 using System.ComponentModel;
+using System.Collections.Generic;
+using Avalonia.VisualTree;
 
 namespace Jaya.Ui.Views.Windows
 {
@@ -49,6 +52,94 @@ namespace Jaya.Ui.Views.Windows
             UpdateHeaderContent();
             UpdateHeaderVisibility();
             UpdateInlineMenuVisibility();
+            // Runtime diagnostics: log ribbon attachment and bounds to help debug layout/overlap
+            try
+            {
+                // Look up the named RibbonView and inspect its first visual child (the actual Ribbon control)
+                var ribbonView = this.FindControl<UserControl>("RibbonView");
+                if (ribbonView == null)
+                {
+                    Console.WriteLine("[MainView] Named RibbonView not found");
+                }
+                else
+                {
+                    var firstChild = Avalonia.VisualTree.VisualExtensions.GetVisualChildren(ribbonView).FirstOrDefault();
+                    if (firstChild == null)
+                    {
+                        Console.WriteLine("[MainView] RibbonView has no visual children");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[MainView] Ribbon visual type: {firstChild.GetType().FullName}");
+                        if (firstChild is Control ctrl)
+                        {
+                            Console.WriteLine($"[MainView] Ribbon.IsVisible: {ctrl.IsVisible}");
+                            Console.WriteLine($"[MainView] Ribbon.Bounds: {ctrl.Bounds}");
+                            Console.WriteLine($"[MainView] Ribbon.Parent: {ctrl.Parent?.GetType().FullName ?? "(null)"}");
+                        }
+                    }
+                }
+                // Check toolbar and addressbar positions to detect overlap
+                try
+                {
+                    var tb = this.FindControl<UserControl>("ToolbarView");
+                    var ab = this.FindControl<UserControl>("AddressbarView");
+                    if (tb is Control tctrl)
+                        Console.WriteLine($"[MainView] Toolbar.Bounds: {tctrl.Bounds}");
+                    else
+                        Console.WriteLine("[MainView] ToolbarView not found or not a Control");
+
+                    if (ab is Control actrl)
+                        Console.WriteLine($"[MainView] Addressbar.Bounds: {actrl.Bounds}");
+                    else
+                        Console.WriteLine("[MainView] AddressbarView not found or not a Control");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[MainView] Toolbar/Addressbar diagnostics error: " + ex);
+                }
+
+                // Additional: locate the search TextBox inside AddressbarView and print positions
+                try
+                {
+                    var addressCtrl = this.FindControl<UserControl>("AddressbarView") as Control;
+                    if (addressCtrl != null)
+                    {
+                        var searchBox = Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(addressCtrl)
+                            .OfType<Control>()
+                            .FirstOrDefault(c => c.GetType().Name == "TextBox" && c.Classes.Contains("SearchBox"));
+                        if (searchBox == null)
+                        {
+                            Console.WriteLine("[MainView] SearchBox not found inside AddressbarView");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[MainView] SearchBox.Bounds (local): {searchBox.Bounds}");
+                            var ptToWindow = searchBox.TranslatePoint(new Avalonia.Point(0,0), this);
+                            Console.WriteLine($"[MainView] SearchBox.TopLeft relative to window: {ptToWindow}");
+
+                            // Compare against ribbon's first child ctrl if available
+                            var ribbonView2 = this.FindControl<UserControl>("RibbonView");
+                            var ribbonChild = ribbonView2 != null ? Avalonia.VisualTree.VisualExtensions.GetVisualChildren(ribbonView2).FirstOrDefault() as Control : null;
+                            if (ribbonChild != null)
+                            {
+                                var ribbonBottom = ribbonChild.Bounds.Bottom;
+                                Console.WriteLine($"[MainView] Ribbon bottom (local to RibbonView): {ribbonBottom}");
+                                var ribbonLocToWindow = ribbonChild.TranslatePoint(new Avalonia.Point(0, ribbonBottom), this);
+                                Console.WriteLine($"[MainView] Ribbon bottom relative to window: {ribbonLocToWindow}");
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("[MainView] SearchBox diagnostics error: " + ex);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("[MainView] Ribbon diagnostics error: " + ex);
+            }
         }
 
         void OnClosed(object sender, EventArgs e)
@@ -199,5 +290,7 @@ namespace Jaya.Ui.Views.Windows
             var shouldShow = paneConfig != null && !paneConfig.IsRibbonVisible && !paneConfig.IsMenuHeaderVisible;
             _inlineMenu.IsVisible = shouldShow;
         }
+
+        // Removed heavy visual traversal; use named control lookups instead to keep code simple and compatible.
     }
 }

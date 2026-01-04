@@ -2,7 +2,8 @@
   xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:v="clr-namespace:Jaya.Ui.Views;assembly=Jaya.Ui"
-  xmlns:local="clr-namespace:AvaloniaUI.Ribbon;assembly=AvaloniaUI.Ribbon">
+  xmlns:local="clr-namespace:AvaloniaUI.Ribbon;assembly=AvaloniaUI.Ribbon"
+  xmlns:windows="clr-namespace:AvaloniaUI.Ribbon.Desktop;assembly=AvaloniaUI.Ribbon.Desktop">
   
   <!-- Using default styles from AvaloniaUI.Ribbon submodule -->
   <!-- StyleInclude resources have been disabled as they don't exist in the sachi branch -->
@@ -32,4 +33,11 @@
     <Setter Property="Stretch" Value="UniformToFill" />
     <Setter Property="Fill" Value="{DynamicResource ThemeForegroundBrush}" />
   </Style>
+
+  <!-- Hide the small launcher/command button in the bottom-right of RibbonGroupBox (not needed) -->
+  <Style Selector="local|RibbonGroupBox /template/ Button#PART_CommandButton">
+    <Setter Property="IsVisible" Value="False" />
+    <Setter Property="Width" Value="0" />
+  </Style>
+
 </Styles>

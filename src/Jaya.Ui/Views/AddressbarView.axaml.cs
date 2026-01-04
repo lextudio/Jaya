@@ -5,9 +5,11 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.VisualTree;
 using System;
-using System.Reflection;
-using System.Windows.Input;
+using System.Linq;
+using Avalonia;
+using Avalonia.Media;
 
 namespace Jaya.Ui.Views
 {
@@ -16,7 +18,7 @@ namespace Jaya.Ui.Views
         public AddressbarView()
         {
             this.InitializeComponent();
-            this.AttachedToVisualTree += AddressbarView_AttachedToVisualTree;
+            this.DataContextChanged += AddressbarView_DataContextChanged;
         }
 
         private void InitializeComponent()
@@ -24,66 +26,158 @@ namespace Jaya.Ui.Views
             AvaloniaXamlLoader.Load(this);
         }
 
-        private void AddressbarView_AttachedToVisualTree(object sender, VisualTreeAttachmentEventArgs e)
+        private void AddressBox_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
         {
-            // Try to wire breadcrumb events to view model commands if present
-            if (DataContext is null)
+            var vm = DataContext as ViewModels.AddressbarViewModel;
+            if (vm == null)
                 return;
 
-            var vm = DataContext;
-            var breadcrumb = this.FindControl<Control>("Breadcrumb");
-            if (breadcrumb is null)
-                return;
+            if (vm.EnterEditModeCommand?.CanExecute(null) == true)
+                vm.EnterEditModeCommand.Execute(null);
 
-            // Wire selection changed if control exposes SelectionChanged event
+            var combo = this.FindControl<ComboBox>("PART_Combo");
+            var breadcrumbs = this.FindControl<ItemsControl>("PART_Breadcrumbs");
+
+            var addrBorder = sender as Control;
+            Console.WriteLine($"[Addressbar] AddressBox.Bounds (local): {addrBorder?.Bounds}");
             try
             {
-                // Try to observe SelectedItem property change using reflection
-                var selectedProp = breadcrumb.GetType().GetProperty("SelectedItem", BindingFlags.Public | BindingFlags.Instance);
-                if (selectedProp is not null)
-                {
-                    // Subscribe to Avalonia's property change via Observable pattern if available
-                    // Fallback: poll on Loaded is not ideal, but try to hook to a "SelectedItemChanged" event first
-                    var eventInfo = breadcrumb.GetType().GetEvent("SelectedItemChanged") ?? breadcrumb.GetType().GetEvent("SelectionChanged");
-                    if (eventInfo is not null)
-                    {
-                        var handlerMethod = this.GetType().GetMethod(nameof(OnBreadcrumbSelectionChanged), BindingFlags.NonPublic | BindingFlags.Instance);
-                        if (handlerMethod is not null)
-                        {
-                            var handlerDelegate = Delegate.CreateDelegate(eventInfo.EventHandlerType, this, handlerMethod);
-                            eventInfo.AddEventHandler(breadcrumb, handlerDelegate);
-                        }
-                    }
-                }
+                var posOnAddr = e.GetPosition(addrBorder);
+                Console.WriteLine($"[Addressbar] Pointer position relative to AddressBox: {posOnAddr}");
             }
             catch { }
+            if (breadcrumbs != null)
+            {
+                Console.WriteLine($"[Addressbar] Breadcrumbs.Bounds (local): {breadcrumbs.Bounds}");
+                var p = breadcrumbs.TranslatePoint(new Point(0, 0), this.GetVisualRoot() as Visual);
+                Console.WriteLine($"[Addressbar] Breadcrumbs.TopLeft (window): {p}");
+                try
+                {
+                    var posOnBc = e.GetPosition(breadcrumbs);
+                    Console.WriteLine($"[Addressbar] Pointer position relative to Breadcrumbs: {posOnBc}");
+                }
+                catch { }
+            }
+
+            if (combo != null)
+            {
+                // Hide breadcrumbs so the combo fully occludes them
+                if (breadcrumbs != null)
+                    breadcrumbs.IsVisible = false;
+
+                combo.IsVisible = true;
+                combo.Background = Brushes.White;
+                combo.Opacity = 1.0;
+
+                // Align combo to exactly match breadcrumbs bounds (size and position)
+                try
+                {
+                    if (breadcrumbs != null && addrBorder != null)
+                    {
+                        // Copy breadcrumbs' position (margin)
+                        combo.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left;
+                        combo.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
+                        combo.Margin = new Thickness(breadcrumbs.Bounds.X, breadcrumbs.Bounds.Y, 0, 0);
+                        
+                        // Expand width to fill right side, leaving ~44px for refresh button
+                        var expandedWidth = addrBorder.Bounds.Width - breadcrumbs.Bounds.X - 50;
+                        combo.Width = expandedWidth > 0 ? expandedWidth : breadcrumbs.Bounds.Width;
+                        
+                        // Set height to match breadcrumb minus 10px to account for control padding
+                        var calculatedHeight = Math.Max(20, breadcrumbs.Bounds.Height);
+                        combo.Height = calculatedHeight;
+                        Console.WriteLine($"[Addressbar] Breadcrumbs height: {breadcrumbs.Bounds.Height}, Calculated combo height: {calculatedHeight}");
+                    }
+                }
+                catch { }
+
+                // Wait for layout to update, then log accurate bounds and focus
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    try
+                    {
+                        // Adjust height after layout is complete
+                        if (breadcrumbs != null && combo != null)
+                        {
+                            var adjustedHeight = Math.Max(20, breadcrumbs.Bounds.Height - 8);
+                            combo.Height = adjustedHeight;
+                            Console.WriteLine($"[Addressbar] Post-layout height adjustment: {adjustedHeight}");
+                        }
+                        
+                        Console.WriteLine($"[Addressbar] Combo.Bounds (local-after-layout): {combo.Bounds}");
+                        var p2 = combo.TranslatePoint(new Point(0, 0), this.GetVisualRoot() as Visual);
+                        Console.WriteLine($"[Addressbar] Combo.TopLeft (window-after-layout): {p2}");
+                        try
+                        {
+                            var posOnCombo = e.GetPosition(combo);
+                            Console.WriteLine($"[Addressbar] Pointer position relative to Combo: {posOnCombo}");
+                        }
+                        catch { }
+                        // Also log pointer position relative to window
+                        try
+                        {
+                            var root = this.GetVisualRoot() as Visual;
+                            var posOnRoot = e.GetPosition(root);
+                            Console.WriteLine($"[Addressbar] Pointer position relative to Window: {posOnRoot}");
+                        }
+                        catch { }
+                        combo.Focus();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[Addressbar] Post-layout logging failed: {ex}");
+                    }
+                }, Avalonia.Threading.DispatcherPriority.Render);
+            }
         }
 
-        private void OnBreadcrumbSelectionChanged(object sender, EventArgs e)
+        private void AddressbarView_DataContextChanged(object? sender, EventArgs e)
         {
-            try
+            var vm = DataContext as ViewModels.AddressbarViewModel;
+            if (vm == null)
+                return;
+
+            vm.PropertyChanged += (s, ev) =>
             {
-                var breadcrumb = this.FindControl<Control>("Breadcrumb");
-                var selectedProp = breadcrumb?.GetType().GetProperty("SelectedItem", BindingFlags.Public | BindingFlags.Instance);
-                var selected = selectedProp?.GetValue(breadcrumb);
-                var vmObj = DataContext;
-                if (vmObj is not null)
+                if (ev.PropertyName == nameof(ViewModels.AddressbarViewModel.IsInEditMode))
                 {
-                    var vmType = vmObj.GetType();
-                    var onBreadcrumbProp = vmType.GetProperty("OnBreadcrumbSelected");
-                    if (onBreadcrumbProp?.GetValue(vmObj) is Action<object> onBreadcrumb)
+                    var breadcrumbs = this.FindControl<ItemsControl>("PART_Breadcrumbs");
+                    var combo = this.FindControl<ComboBox>("PART_Combo");
+                    var val = vm.IsInEditMode;
+                    // update visuals on UI thread
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
-                        onBreadcrumb(selected);
-                    }
-                    else
-                    {
-                        var cmdProp = vmType.GetProperty("NavigateToPathCommand")?.GetValue(vmObj) as ICommand;
-                        if (cmdProp is not null && cmdProp.CanExecute(selected))
-                            cmdProp.Execute(selected);
-                    }
+                        if (breadcrumbs != null)
+                            breadcrumbs.IsVisible = !val;
+                        if (combo != null)
+                        {
+                            combo.IsVisible = val;
+                            if (val)
+                                combo.Focus();
+                        }
+                    }, Avalonia.Threading.DispatcherPriority.Render);
                 }
+            };
+        }
+
+        private void PART_Combo_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
+        {
+            var vm = DataContext as ViewModels.AddressbarViewModel;
+            if (vm == null)
+                return;
+
+            if (e.Key == Avalonia.Input.Key.Enter)
+            {
+                if (vm.CommitAddressCommand?.CanExecute(null) == true)
+                    vm.CommitAddressCommand.Execute(null);
+                e.Handled = true;
             }
-            catch { }
+            else if (e.Key == Avalonia.Input.Key.Escape)
+            {
+                if (vm.CancelEditCommand?.CanExecute(null) == true)
+                    vm.CancelEditCommand.Execute(null);
+                e.Handled = true;
+            }
         }
     }
 }

@@ -18,9 +18,9 @@
             x:Name="InlineMenu"
             Classes="InlineMenuView"
             DockPanel.Dock="Top" />
-        <v:RibbonView Classes="RibbonView" DockPanel.Dock="Top" IsVisible="{Binding $parent[DockPanel].DataContext.PaneConfig.IsRibbonVisible, Mode=OneWay}" />
-        <v:ToolbarView Classes="ToolbarView" DockPanel.Dock="Top" IsVisible="{Binding $parent[DockPanel].DataContext.IsToolbarVisible, Mode=OneWay}" />
-        <v:AddressbarView Classes="AddressbarView" DockPanel.Dock="Top" />
+        <v:RibbonView x:Name="RibbonView" Classes="RibbonView" DockPanel.Dock="Top" IsVisible="{Binding $parent[DockPanel].DataContext.PaneConfig.IsRibbonVisible, Mode=OneWay}" />
+        <v:ToolbarView x:Name="ToolbarView" Classes="ToolbarView" DockPanel.Dock="Top" IsVisible="{Binding $parent[DockPanel].DataContext.IsToolbarVisible, Mode=OneWay}" />
+        <v:AddressbarView x:Name="AddressbarView" Classes="AddressbarView" DockPanel.Dock="Top" />
         <v:StatusbarView Classes="StatusbarView" DockPanel.Dock="Bottom" IsVisible="{Binding $parent[DockPanel].DataContext.PaneConfig.IsStatusBarVisible, Mode=OneWay}" />
         <Grid>
             <Grid.ColumnDefinitions>

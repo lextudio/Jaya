@@ -9,6 +9,8 @@
         <StyleInclude Source="avares://Jaya.Shared/Styles/Accents/BaseLight.axaml" />
 
         <StyleInclude Source="avares://AvaloniaUI.Ribbon/Styles/Fluent/AvaloniaRibbon.axaml" />
+        <!-- Force include Desktop Ribbon styles for testing layout/attachment -->
+        <StyleInclude Source="avares://AvaloniaUI.Ribbon.Desktop/Styles/Fluent/AvaloniaRibbon.axaml" />
 
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
 

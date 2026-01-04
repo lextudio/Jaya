@@ -3,7 +3,8 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:v="clr-namespace:Jaya.Ui.Views;assembly=Jaya.Ui">
   <Style Selector="v|AddressbarView">
-    <Setter Property="Padding" Value="6,4"/>
+    <!-- Reduce vertical padding by 1px to move Addressbar content down slightly, to balance some unknown dock panel bound calculation -->
+    <Setter Property="Padding" Value="6,8"/>
     <Setter Property="Template">
       <ControlTemplate>
         <Panel>

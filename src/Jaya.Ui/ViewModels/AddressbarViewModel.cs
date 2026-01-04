@@ -19,6 +19,10 @@ namespace Jaya.Ui.ViewModels
         readonly Subscription<SelectionChangedEventArgs> _onSelectionChanged;
         readonly char[] _pathSeparator;
         ICommand _clearSearch, _search;
+        ICommand _enterEditMode, _commitAddress, _cancelEdit;
+        System.Collections.ObjectModel.ObservableCollection<string> _history;
+        bool _isInEditMode;
+        string _addressText;
         ItemType? _nodeType;
 
         public AddressbarViewModel()
@@ -33,6 +37,7 @@ namespace Jaya.Ui.ViewModels
 
             SearchQuery = string.Empty;
             SearchWatermark = "Search";
+            History = new System.Collections.ObjectModel.ObservableCollection<string>();
         }
 
         ~AddressbarViewModel()
@@ -62,6 +67,30 @@ namespace Jaya.Ui.ViewModels
 
                 return _clearSearch;
             }
+        }
+
+        public ICommand EnterEditModeCommand => _enterEditMode ??= new RelayCommand(EnterEditMode);
+
+        public ICommand CommitAddressCommand => _commitAddress ??= new RelayCommand(CommitAddress);
+
+        public ICommand CancelEditCommand => _cancelEdit ??= new RelayCommand(CancelEdit);
+
+        public System.Collections.ObjectModel.ObservableCollection<string> History
+        {
+            get => _history ??= new System.Collections.ObjectModel.ObservableCollection<string>();
+            private set => _history = value;
+        }
+
+        public bool IsInEditMode
+        {
+            get => _isInEditMode;
+            set => Set(ref _isInEditMode, value);
+        }
+
+        public string AddressText
+        {
+            get => _addressText;
+            set => Set(ref _addressText, value);
         }
 
         ItemType? NodeType
@@ -185,6 +214,51 @@ namespace Jaya.Ui.ViewModels
             }
 
             PathParts = pathParts;
+            if (!IsInEditMode)
+            {
+                AddressText = string.Join(Path.DirectorySeparatorChar.ToString(), PathParts);
+            }
+        }
+
+        void EnterEditMode()
+        {
+            IsInEditMode = true;
+            AddressText = PathParts != null 
+                ? string.Join(Path.DirectorySeparatorChar.ToString(), PathParts)
+                : string.Empty;
+        }
+
+        void CommitAddress()
+        {
+            if (string.IsNullOrWhiteSpace(AddressText))
+            {
+                IsInEditMode = false;
+                return;
+            }
+
+            try
+            {
+                // publish a direct path navigation request so higher-level services can handle it
+                EventAggregator?.Publish(new DirectPathNavigationRequest(AddressText));
+
+                // add to history
+                if (!History.Contains(AddressText))
+                    History.Insert(0, AddressText);
+            }
+            catch (Exception)
+            {
+                // swallow for now; navigation service may display errors
+            }
+            finally
+            {
+                IsInEditMode = false;
+            }
+        }
+
+        void CancelEdit()
+        {
+            IsInEditMode = false;
+            AddressText = string.Join(Path.DirectorySeparatorChar.ToString(), PathParts);
         }
     }
 }

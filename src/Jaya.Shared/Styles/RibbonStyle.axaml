@@ -338,12 +338,46 @@
                               <Setter Property="MinHeight" Value="21" />
                               <Setter Property="Background" Value="Transparent" />
                               <Setter Property="BorderBrush" Value="Transparent" />
+                              <Setter Property="BorderThickness" Value="0" />
                             </Style>
                             <Style Selector="Button:pointerover /template/ ContentPresenter">
                               <Setter Property="Background" Value="{DynamicResource Ribbon.ControlHoverBackgroundBrush}" />
                             </Style>
                             <Style Selector="Button:pressed /template/ ContentPresenter">
                               <Setter Property="Background" Value="{DynamicResource Ribbon.ControlPressedBackgroundBrush}" />
+                            </Style>
+                            <Style Selector="Button.RibbonHelpButton">
+                              <Setter Property="Background" Value="{DynamicResource Ribbon.FileButtonIdleBrush}" />
+                              <Setter Property="BorderBrush" Value="Transparent" />
+                              <Setter Property="BorderThickness" Value="0" />
+                              <Setter Property="Foreground" Value="{DynamicResource Ribbon.FileButtonForegroundBrush}" />
+                              <Setter Property="Padding" Value="0" />
+                              <Setter Property="HorizontalContentAlignment" Value="Center" />
+                              <Setter Property="VerticalContentAlignment" Value="Center" />
+                              <Setter Property="Template">
+                                <ControlTemplate>
+                                  <Border Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          CornerRadius="12">
+                                    <ContentPresenter
+                                        HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                        VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                  </Border>
+                                </ControlTemplate>
+                              </Setter>
+                            </Style>
+                            <Style Selector="Button.RibbonHelpButton:pointerover">
+                              <Setter Property="Background" Value="{DynamicResource Ribbon.FileButtonHoverBrush}" />
+                            </Style>
+                            <Style Selector="Button.RibbonHelpButton:pressed">
+                              <Setter Property="Background" Value="{DynamicResource Ribbon.FileButtonPressedBrush}" />
+                            </Style>
+                            <Style Selector="Button.RibbonHelpButton:pointerover /template/ ContentPresenter">
+                              <Setter Property="Background" Value="Transparent" />
+                            </Style>
+                            <Style Selector="Button.RibbonHelpButton:pressed /template/ ContentPresenter">
+                              <Setter Property="Background" Value="Transparent" />
                             </Style>
                             <Style Selector="Button:disabled">
                               <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
@@ -358,6 +392,7 @@
                             <Button
                                 Width="23"
                                 Height="23"
+                                Classes="RibbonHelpButton"
                                 Command="{TemplateBinding HelpButtonCommand}"
                                 ToolTip.Tip="Help">
                                 <Path Data="F1M9,9L8,9 8,10 9,10z M9,8.5L8,8.5 8,8C8,7.449,8.449,7,9,7L9,6C8.92,5.956 8.748,5.898 8.5,5.898 8.252,5.898 8.08,5.956 8,6L8,7 7,7 7,6C7,5.42 7.631,5 8.5,5 9.369,5 10,5.42 10,6L10,7C10,7.551,9.551,8,9,8z" Fill="{Binding $parent[Button].Foreground}" Width="5" Height="8" Stretch="Uniform"/>
