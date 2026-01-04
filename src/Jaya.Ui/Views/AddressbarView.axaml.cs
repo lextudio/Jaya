@@ -53,7 +53,8 @@ namespace Jaya.Ui.Views
                 if (root != null)
                 {
                     var p = breadcrumbs.TranslatePoint(new Point(0, 0), root);
-                    Console.WriteLine($"[Addressbar] Breadcrumbs.TopLeft (window): {p}");
+                    if (p != null)
+                        Console.WriteLine($"[Addressbar] Breadcrumbs.TopLeft (window): {p}");
                 }
                 try
                 {
@@ -108,12 +109,14 @@ namespace Jaya.Ui.Views
                             Console.WriteLine($"[Addressbar] Post-layout height adjustment: {adjustedHeight}");
                         }
                         
-                        Console.WriteLine($"[Addressbar] Combo.Bounds (local-after-layout): {combo.Bounds}");
+                        if (combo != null)
+                            Console.WriteLine($"[Addressbar] Combo.Bounds (local-after-layout): {combo.Bounds}");
                         var root2 = this.GetVisualRoot() as Visual;
                         if (root2 != null)
                         {
-                            var p2 = combo.TranslatePoint(new Point(0, 0), root2);
-                            Console.WriteLine($"[Addressbar] Combo.TopLeft (window-after-layout): {p2}");
+                                var p2 = combo?.TranslatePoint(new Point(0, 0), root2);
+                                if (p2 != null)
+                                    Console.WriteLine($"[Addressbar] Combo.TopLeft (window-after-layout): {p2}");
                         }
                         try
                         {
@@ -130,12 +133,16 @@ namespace Jaya.Ui.Views
                             var root = this.GetVisualRoot() as Visual;
                             if (root != null)
                             {
-                                var posOnRoot = e.GetPosition(root);
-                                Console.WriteLine($"[Addressbar] Pointer position relative to Window: {posOnRoot}");
+                                try
+                                {
+                                    var posOnRoot = e.GetPosition(root);
+                                    Console.WriteLine($"[Addressbar] Pointer position relative to Window: {posOnRoot}");
+                                }
+                                catch { }
                             }
                         }
                         catch { }
-                        combo.Focus();
+                        combo?.Focus();
                     }
                     catch (Exception ex)
                     {

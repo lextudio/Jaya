@@ -22,7 +22,7 @@ namespace Jaya.Ui.ViewModels
         ICommand? _enterEditMode, _commitAddress, _cancelEdit;
         System.Collections.ObjectModel.ObservableCollection<string> _history = new System.Collections.ObjectModel.ObservableCollection<string>();
         bool _isInEditMode;
-        string _addressText = string.Empty;
+        string? _addressText = string.Empty;
         ItemType? _nodeType;
 
         public AddressbarViewModel()
@@ -90,8 +90,8 @@ namespace Jaya.Ui.ViewModels
 
         public string AddressText
         {
-            get => _addressText;
-            set => Set(ref _addressText, value);
+            get => _addressText ?? string.Empty;
+            set => Set(ref _addressText, value ?? string.Empty);
         }
 
         ItemType? NodeType
@@ -238,9 +238,7 @@ namespace Jaya.Ui.ViewModels
         void EnterEditMode()
         {
             IsInEditMode = true;
-            AddressText = PathParts != null 
-                ? string.Join(Path.DirectorySeparatorChar.ToString(), PathParts)
-                : string.Empty;
+            AddressText = string.Join(Path.DirectorySeparatorChar.ToString(), PathParts ?? new System.Collections.Generic.List<string>());
         }
 
         void CommitAddress()
@@ -273,7 +271,7 @@ namespace Jaya.Ui.ViewModels
         void CancelEdit()
         {
             IsInEditMode = false;
-            AddressText = string.Join(Path.DirectorySeparatorChar.ToString(), PathParts ?? new List<string>());
+            AddressText = string.Join(Path.DirectorySeparatorChar.ToString(), PathParts ?? new System.Collections.Generic.List<string>());
         }
     }
 }

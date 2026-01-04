@@ -59,7 +59,7 @@ namespace Jaya.Provider.Ftp.Services
 
             var path = directory == null || string.IsNullOrEmpty(directory.Path) ? "/" : directory.Path;
 
-            model.Name = directory.Name;
+            model.Name = directory?.Name ?? string.Empty;
             model.Path = path;
             model.Directories = new List<DirectoryModel>();
             model.Files = new List<FileModel>();
@@ -115,8 +115,11 @@ namespace Jaya.Provider.Ftp.Services
                 await connection.Disconnect();
 
                 var config = GetConfiguration<ConfigModel>();
-                config.Accounts.Add(ftpAccount);
-                SetConfiguration(config);
+                if (ftpAccount != null)
+                {
+                    config.Accounts.Add(ftpAccount);
+                    SetConfiguration(config);
+                }
 
                 return ftpAccount;
             }
@@ -126,9 +129,14 @@ namespace Jaya.Provider.Ftp.Services
         {
             var config = GetConfiguration<ConfigModel>();
 
-            var isRemoved = config.Accounts.Remove(account as AccountModel);
-            if (isRemoved)
-                SetConfiguration(config);
+            var acc = account as AccountModel;
+            var isRemoved = false;
+            if (acc != null)
+            {
+                isRemoved = config.Accounts.Remove(acc);
+                if (isRemoved)
+                    SetConfiguration(config);
+            }
 
             return await Task.Run(() => isRemoved);
         }

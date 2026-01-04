@@ -67,7 +67,7 @@ namespace Jaya.Provider.GoogleDrive.Services
                     _config = GetConfiguration<ConfigModel>();
                     _config.PropertyChanged += (sender, e) =>
                     {
-                        if (e.PropertyName.Equals(nameof(ConfigModel.Accounts)))
+                        if (string.Equals(e.PropertyName, nameof(ConfigModel.Accounts), StringComparison.Ordinal))
                             return;
 
                         SetConfiguration(_config);
@@ -140,7 +140,7 @@ namespace Jaya.Provider.GoogleDrive.Services
             var parent = directory == null || directory.Id == null ? "root" : directory.Id;
 
             var query = new StringBuilder();
-            if (directory.Id == null)
+            if (directory == null || directory.Id == null)
                 query.Append(" and 'root' in parents");
             else
                 query.Append(" and '' in parents");
@@ -180,7 +180,7 @@ namespace Jaya.Provider.GoogleDrive.Services
                             var file = new FileModel();
                             file.Id = entry.Id;
                             file.Name = nameParts.Name;
-                            file.Extension = nameParts.Extension;
+                            file.Extension = nameParts.Extension ?? string.Empty;
                             file.Path = entry.Name ?? string.Empty;
                             file.Size = entry.Size;
                             file.Created = entry.CreatedTimeDateTimeOffset?.DateTime;
@@ -232,9 +232,14 @@ namespace Jaya.Provider.GoogleDrive.Services
         {
             var config = GetConfiguration<ConfigModel>();
 
-            var isRemoved = config.Accounts.Remove(account as AccountModel);
-            if (isRemoved)
-                SetConfiguration(config);
+            var acc = account as AccountModel;
+            var isRemoved = false;
+            if (acc != null)
+            {
+                isRemoved = config.Accounts.Remove(acc);
+                if (isRemoved)
+                    SetConfiguration(config);
+            }
 
             return await Task.Run(() => isRemoved);
         }

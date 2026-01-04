@@ -24,7 +24,7 @@ namespace Jaya.Ui.ViewModels
         ICommand? _populateCommand;
         TreeNodeModel? _selectedNode;
         bool _suppressPublish;
-        ObservableCollection<TreeNodeModel> _favorites = new();
+        ObservableCollection<TreeNodeModel>? _favorites = new();
 
         public NavigationViewModel()
         {
@@ -77,10 +77,10 @@ namespace Jaya.Ui.ViewModels
                     return;
 
                 Logger.Information("NavigationViewModel.SelectedNode setter invoked: Label={Label}, Service={Service}, Account={Account}, Path={Path}",
-                    value.Label,
-                    value.Service?.Name,
-                    value.Account?.Name,
-                    (value.FileSystemObject as DirectoryModel)?.Path);
+                    value.Label ?? string.Empty,
+                    value.Service?.Name ?? string.Empty,
+                    value.Account?.Name ?? string.Empty,
+                    (value.FileSystemObject as DirectoryModel)?.Path ?? string.Empty);
 
                 if (_suppressPublish)
                 {
@@ -95,8 +95,8 @@ namespace Jaya.Ui.ViewModels
 
         public ObservableCollection<TreeNodeModel> Favorites
         {
-            get => _favorites;
-            private set => Set(ref _favorites, value);
+            get => _favorites ?? (_favorites = new ObservableCollection<TreeNodeModel>());
+            private set => Set(ref _favorites, value ?? new ObservableCollection<TreeNodeModel>());
         }
 
         #endregion
@@ -246,9 +246,12 @@ namespace Jaya.Ui.ViewModels
                     // Update the observable collection on UI thread
                     Invoke(() =>
                     {
-                        _favorites.Clear();
-                        foreach (var f in favoritesLocal)
-                            _favorites.Add(f);
+                        Favorites.Clear();
+                        if (favoritesLocal != null)
+                        {
+                            foreach (var f in favoritesLocal)
+                                Favorites.Add(f);
+                        }
 
                         // Set initial selection to Home so app opens there — publish selection so Explorer loads it
                         try { SelectedNode = homeNode; } catch { }
@@ -363,7 +366,7 @@ namespace Jaya.Ui.ViewModels
             {
                 foreach (var accountNode in node.Children)
                 {
-                    if (!accountNode.Account.Equals(account))
+                    if (!object.Equals(accountNode.Account, account))
                         continue;
 
                     RemoveChildNode(node, accountNode);

@@ -50,8 +50,8 @@ namespace Jaya.Ui.ViewModels
 
         public ThemeModel SelectedThemePreview
         {
-            get => Get<ThemeModel>() ?? ThemeManager.Instance.SelectedTheme!;
-            set => Set(value);
+            get => Get<ThemeModel>() ?? ThemeManager.Instance.SelectedTheme ?? new ThemeModel();
+            set => Set(value ?? ThemeManager.Instance.SelectedTheme ?? new ThemeModel());
         }
 
         void EnsureThemeLoaded()
@@ -60,13 +60,14 @@ namespace Jaya.Ui.ViewModels
                 return;
 
             var currentTheme = _shared.ApplicationConfiguration.Theme;
-            if (currentTheme == null)
-            {
-                currentTheme = ThemeManager.Instance.SelectedTheme;
-                _shared.ApplicationConfiguration.Theme = currentTheme;
-            }
+                    if (currentTheme == null)
+                    {
+                    currentTheme = ThemeManager.Instance.SelectedTheme;
+                    if (currentTheme != null)
+                        _shared.ApplicationConfiguration.Theme = currentTheme;
+                    }
 
-            SelectedThemePreview = currentTheme ?? ThemeManager.Instance.SelectedTheme;
+                SelectedThemePreview = currentTheme ?? ThemeManager.Instance.SelectedTheme ?? new ThemeModel();
         }
 
         public void LogOpenState()
@@ -188,7 +189,7 @@ namespace Jaya.Ui.ViewModels
 
         public void DiscardChanges()
         {
-            SelectedThemePreview = _shared?.ApplicationConfiguration?.Theme ?? ThemeManager.Instance.SelectedTheme;
+            SelectedThemePreview = _shared?.ApplicationConfiguration?.Theme ?? ThemeManager.Instance.SelectedTheme ?? new ThemeModel();
             Logger.Information("Discarding options dialog changes");
             // Log that changes were discarded and current effective state
             try

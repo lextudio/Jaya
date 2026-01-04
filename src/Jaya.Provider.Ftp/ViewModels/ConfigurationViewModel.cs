@@ -13,8 +13,8 @@ namespace Jaya.Provider.Ftp.ViewModels
 {
     public class ConfigurationViewModel: ViewModelBase
     {
-        readonly FtpService _service;
-        readonly ConfigModel _config;
+        readonly FtpService? _service;
+        readonly ConfigModel? _config;
         ICommand? _addAccount, _removeAccount, _clear;
 
         public ConfigurationViewModel()
@@ -23,8 +23,8 @@ namespace Jaya.Provider.Ftp.ViewModels
 
             ClearAction();
 
-            _config = _service.GetConfiguration<ConfigModel>();
-            Accounts = new ObservableCollection<AccountModel>(_config.Accounts ?? System.Array.Empty<AccountModel>());
+            _config = _service?.GetConfiguration<ConfigModel>();
+            Accounts = new ObservableCollection<AccountModel>(_config?.Accounts ?? System.Array.Empty<AccountModel>());
         }
 
         #region properties
@@ -85,6 +85,9 @@ namespace Jaya.Provider.Ftp.ViewModels
 
         async void RemoveAccountAction(AccountModel account)
         {
+            if (_service == null)
+                return;
+
             var isRemoved = await _service.RemoveAccount(account);
             if (isRemoved)
             {
@@ -95,6 +98,9 @@ namespace Jaya.Provider.Ftp.ViewModels
 
         async void AddAccountAction(AccountModel account)
         {
+            if (_service == null)
+                return;
+
             var newAccount = await _service.AddAccount(account);
             if (newAccount == null)
                 return;
