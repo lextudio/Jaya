@@ -149,7 +149,7 @@ internal class WindowsPlatformFileSystem : IPlatformFileSystem
     static extern bool CopyFileEx(
         string lpExistingFileName,
         string lpNewFileName,
-        CopyProgressRoutine lpProgressRoutine,
+        CopyProgressRoutine? lpProgressRoutine,
         IntPtr lpData,
         ref bool pbCancel,
         CopyFileFlags dwCopyFlags);

@@ -172,6 +172,7 @@ internal class PlatformFileSystem : IFileSystem
         return Task.FromResult<Stream>(stream);
     }
 
+    #pragma warning disable CA1416
     public Task<FileAccessRights> GetAccessRightsAsync(string path, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -183,10 +184,13 @@ internal class PlatformFileSystem : IFileSystem
             return Task.FromResult(FileAccessRights.None);
 
         try
-        {
-            return Task.FromResult(OperatingSystem.IsWindows()
-                ? GetWindowsAccessRights(path)
-                : GetUnixAccessRights(path));
+            {
+                if (OperatingSystem.IsWindows())
+                    return Task.FromResult(GetWindowsAccessRights(path));
+                // Protect Unix-specific API to satisfy platform compatibility analyzers
+                if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+                    return Task.FromResult(GetUnixAccessRights(path));
+                return Task.FromResult(FileAccessRights.None);
         }
         catch
         {

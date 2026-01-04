@@ -158,6 +158,7 @@ namespace Jaya.Provider.FileSystem.Services
                 .Select(item => item?.Path)
                 .Where(path => !string.IsNullOrWhiteSpace(path))
                 .Distinct(comparer)
+                .Select(path => path!)
                 .ToList();
 
             if (paths.Count == 0)
@@ -198,6 +199,7 @@ namespace Jaya.Provider.FileSystem.Services
                 .Select(item => item?.Path)
                 .Where(path => !string.IsNullOrWhiteSpace(path))
                 .Distinct(comparer)
+                .Select(path => path!)
                 .ToList();
 
             if (sources.Count == 0)
