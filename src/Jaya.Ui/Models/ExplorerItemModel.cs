@@ -21,7 +21,7 @@ namespace Jaya.Ui.Models
 
             // Compute a display name that matches what the UI shows: prefer explicit label,
             // otherwise use the underlying object's name and include extension for files.
-            string displayName = label;
+            string displayName = label ?? string.Empty;
             if (Object is FileModel fileModel)
             {
                 var baseName = !string.IsNullOrWhiteSpace(label) && label != "File" ? label : fileModel.Name;
@@ -86,7 +86,7 @@ namespace Jaya.Ui.Models
 
         public ObservableCollection<ExplorerItemModel> Children { get; }
 
-        public string AccessErrorMessage => (Object as DirectoryModel)?.AccessErrorMessage;
+        public string AccessErrorMessage => (Object as DirectoryModel)?.AccessErrorMessage ?? string.Empty;
 
         public bool HasAccessError => !string.IsNullOrWhiteSpace(AccessErrorMessage);
 

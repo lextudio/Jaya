@@ -20,8 +20,8 @@ namespace Jaya.Ui.Views
             _rootMenu = this.FindControl<Menu>("RootMenu");
         }
 
-        Menu _rootMenu;
+        Menu? _rootMenu;
 
-        public Menu MenuControl => _rootMenu;
+        public Menu? MenuControl => _rootMenu;
     }
 }

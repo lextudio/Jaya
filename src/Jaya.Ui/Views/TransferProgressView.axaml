@@ -1,0 +1,47 @@
+<StyledWindow
+    x:Class="Jaya.Ui.Views.TransferProgressView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:j="https://github.com/lextudio/jaya"
+    xmlns:vm="clr-namespace:Jaya.Ui.ViewModels;assembly=Jaya.Ui"
+    j:ViewModelLocator.AutoWireViewModel="True"
+    Title="{Binding Title}"
+    Width="520"
+    Height="220"
+    WindowStartupLocation="CenterOwner"
+    mc:Ignorable="d">
+    <Design.DataContext>
+        <vm:TransferProgressViewModel />
+    </Design.DataContext>
+    <Grid Margin="16" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+        <TextBlock FontSize="16" FontWeight="SemiBold" Text="{Binding HeaderText}" />
+        <TextBlock Grid.Row="1" Margin="0,8,0,0" Text="{Binding StatusText}" />
+        <TextBlock
+            Grid.Row="2"
+            Margin="0,6,0,0"
+            Text="{Binding CurrentItemPath}"
+            TextTrimming="CharacterEllipsis" />
+        <ProgressBar
+            Grid.Row="3"
+            Margin="0,12,0,0"
+            Minimum="0"
+            Maximum="{Binding TotalItems}"
+            Value="{Binding ProcessedItems}"
+            IsIndeterminate="{Binding IsIndeterminate}" />
+        <Grid Grid.Row="4" Margin="0,12,0,0" ColumnDefinitions="*,Auto">
+            <TextBlock
+                VerticalAlignment="Center"
+                Text="{Binding TargetPath}"
+                TextTrimming="CharacterEllipsis" />
+            <Button
+                Grid.Column="1"
+                MinWidth="90"
+                Margin="12,0,0,0"
+                Content="Cancel"
+                IsEnabled="{Binding CanCancel}"
+                Command="{Binding CancelCommand}" />
+        </Grid>
+    </Grid>
+</StyledWindow>

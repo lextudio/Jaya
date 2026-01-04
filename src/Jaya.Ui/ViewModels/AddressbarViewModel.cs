@@ -15,14 +15,14 @@ namespace Jaya.Ui.ViewModels
 {
     public class AddressbarViewModel : ViewModelBase
     {
-        readonly NavigationService _navigationService;
-        readonly Subscription<SelectionChangedEventArgs> _onSelectionChanged;
+        readonly NavigationService? _navigationService;
+        readonly Subscription<SelectionChangedEventArgs>? _onSelectionChanged;
         readonly char[] _pathSeparator;
-        ICommand _clearSearch, _search;
-        ICommand _enterEditMode, _commitAddress, _cancelEdit;
-        System.Collections.ObjectModel.ObservableCollection<string> _history;
+        ICommand? _clearSearch, _search;
+        ICommand? _enterEditMode, _commitAddress, _cancelEdit;
+        System.Collections.ObjectModel.ObservableCollection<string> _history = new System.Collections.ObjectModel.ObservableCollection<string>();
         bool _isInEditMode;
-        string _addressText;
+        string _addressText = string.Empty;
         ItemType? _nodeType;
 
         public AddressbarViewModel()
@@ -42,7 +42,8 @@ namespace Jaya.Ui.ViewModels
 
         ~AddressbarViewModel()
         {
-            EventAggregator?.UnSubscribe(_onSelectionChanged);
+            if (_onSelectionChanged != null)
+                EventAggregator?.UnSubscribe(_onSelectionChanged);
         }
 
         #region properties
@@ -119,31 +120,31 @@ namespace Jaya.Ui.ViewModels
 
         public bool IsComputer => NodeType == ItemType.Computer;
 
-        public ICommand NavigateBackCommand => _navigationService?.NavigateBackCommand;
+        public ICommand? NavigateBackCommand => _navigationService?.NavigateBackCommand;
 
-        public ICommand NavigateForwardCommand => _navigationService?.NavigateForwardCommand;
+        public ICommand? NavigateForwardCommand => _navigationService?.NavigateForwardCommand;
 
         public string SearchQuery
         {
-            get => Get<string>();
+            get => Get<string>() ?? string.Empty;
             set => Set(value);
         }
 
         public string ImagePath
         {
-            get => Get<string>();
+            get => Get<string>() ?? string.Empty;
             private set => Set(value);
         }
 
         public List<string> PathParts
         {
-            get => Get<List<string>>();
+            get => Get<List<string>>() ?? new List<string>();
             private set => Set(value);
         }
 
         public string SearchWatermark
         {
-            get => Get<string>();
+            get => Get<string>() ?? string.Empty;
             private set => Set(value);
         }
 
@@ -187,36 +188,50 @@ namespace Jaya.Ui.ViewModels
 
         void SelectionChanged(SelectionChangedEventArgs args)
         {
-            var pathParts = new List<string> { args.Service.Name };
-            if (args.Account == null)
+            var service = args.Service;
+            var account = args.Account;
+            var directory = args.Directory;
+
+            if (service == null)
             {
-                SearchWatermark = string.Format("Search {0}", args.Service.Name);
-                ImagePath = args.Service.ImagePath;
+                // Nothing to display reliably
+                PathParts = new List<string>();
+                SearchWatermark = "Search";
+                ImagePath = string.Empty;
+                NodeType = null;
+                return;
+            }
+
+            var pathParts = new List<string> { service.Name ?? string.Empty };
+            if (account == null)
+            {
+                SearchWatermark = string.Format("Search {0}", service.Name);
+                ImagePath = service.ImagePath;
                 NodeType = ItemType.Service;
             }
-            else if (args.Directory == null || string.IsNullOrEmpty(args.Directory.Path))
+            else if (directory == null || string.IsNullOrEmpty(directory.Path))
             {
-                pathParts.Add(args.Account.Name);
+                pathParts.Add(account.Name ?? string.Empty);
 
-                SearchWatermark = string.Format("Search {0}", args.Account.Name);
-                ImagePath = args.Account.ImagePath;
-                NodeType = args.Service.IsRootDrive ? ItemType.Computer : ItemType.Account;
+                SearchWatermark = string.Format("Search {0}", account.Name);
+                ImagePath = account.ImagePath;
+                NodeType = service.IsRootDrive ? ItemType.Computer : ItemType.Account;
             }
             else
             {
-                SearchWatermark = string.Format("Search {0}", args.Directory.Name);
-                if (args.Directory.Type == FileSystemObjectType.Drive)
+                SearchWatermark = string.Format("Search {0}", directory.Name);
+                if (directory.Type == FileSystemObjectType.Drive)
                     NodeType = ItemType.Drive;
                 else
                     NodeType = ItemType.Directory;
 
-                pathParts.AddRange(args.Directory.Path.Split(_pathSeparator, StringSplitOptions.RemoveEmptyEntries));
+                pathParts.AddRange((directory.Path ?? string.Empty).Split(_pathSeparator, StringSplitOptions.RemoveEmptyEntries));
             }
 
             PathParts = pathParts;
             if (!IsInEditMode)
             {
-                AddressText = string.Join(Path.DirectorySeparatorChar.ToString(), PathParts);
+                AddressText = string.Join(Path.DirectorySeparatorChar.ToString(), PathParts ?? new List<string>());
             }
         }
 
@@ -258,7 +273,7 @@ namespace Jaya.Ui.ViewModels
         void CancelEdit()
         {
             IsInEditMode = false;
-            AddressText = string.Join(Path.DirectorySeparatorChar.ToString(), PathParts);
+            AddressText = string.Join(Path.DirectorySeparatorChar.ToString(), PathParts ?? new List<string>());
         }
     }
 }

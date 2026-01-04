@@ -24,8 +24,10 @@ namespace Jaya.Provider.FileSystem.Services
             return await Task.Run(() =>
             {
                 var model = new DirectoryModel();
+                Logger.Verbose("GetDirectoryAsync invoked for account={AccountId} directory={DirectoryPath}", account?.Id ?? "<null>", directory?.Path ?? "<null>");
 
                 var dirPath = directory?.Path ?? string.Empty;
+                Logger.Verbose("Resolved dirPath='{DirPath}'", dirPath);
                 if (string.IsNullOrEmpty(dirPath))
                 {
                     model.Directories = new List<DirectoryModel>();
@@ -33,6 +35,7 @@ namespace Jaya.Provider.FileSystem.Services
                     try
                     {
                         var volumes = MacDriveEnumerator.GetSystemAndExternalVolumes();
+                        Logger.Verbose("Found {VolumeCount} mac volumes", volumes?.Count() ?? 0);
                         foreach (var volume in volumes)
                         {
                             var drive = new DirectoryModel(true)
@@ -42,7 +45,7 @@ namespace Jaya.Provider.FileSystem.Services
                             };
                             var isExternal = IsMacVolumeExternal(volume);
                             drive.IsExternalDrive = isExternal;                            
-                            Logger.Debug("DirectoryModel {Name}@{Path} IsExternalDrive={IsExternalDrive}", drive.Name, drive.Path, isExternal);
+                            Logger.Verbose("DirectoryModel created: {Name}@{Path} IsExternalDrive={IsExternalDrive}", drive.Name, drive.Path, isExternal);
                             model.Directories.Add(drive);
                         }
                     }
@@ -51,11 +54,13 @@ namespace Jaya.Provider.FileSystem.Services
                         Log.Warning(ex, "Mac volume enumeration failed");
                     }
 
-                        return model;
+                    Logger.Verbose("Returning root DirectoryModel with {Count} children", model.Directories?.Count ?? 0);
+                    return model;
                 }
 
                 // Fallback to simple directory enumeration for non-root queries
                 DirectoryInfo info = new DirectoryInfo(directory?.Path ?? string.Empty);
+                Logger.Verbose("Enumerating directory info for path={Path}", info.FullName);
                 model.Name = string.IsNullOrEmpty(info.Name) ? info.FullName : info.Name;
                 model.Path = info.FullName;
                 model.Created = info.CreationTime;
@@ -104,6 +109,7 @@ namespace Jaya.Provider.FileSystem.Services
                         file.IsHidden = fileInfo.Attributes.HasFlag(FileAttributes.Hidden);
                         file.IsSystem = fileInfo.Attributes.HasFlag(FileAttributes.System);
                         model.Files.Add(file);
+                        Logger.Verbose("Added file {FileName} (ext='{Ext}') to model for path={Path}", file.Name, file.Extension ?? string.Empty, info.FullName);
                     }
                 }
                 catch (UnauthorizedAccessException ex)
@@ -126,6 +132,7 @@ namespace Jaya.Provider.FileSystem.Services
                         dir.IsHidden = directoryInfo.Attributes.HasFlag(FileAttributes.Hidden);
                         dir.IsSystem = directoryInfo.Attributes.HasFlag(FileAttributes.System);
                         model.Directories.Add(dir);
+                        Logger.Verbose("Added directory {Name} to model for path={Path}", dir.Name, dir.Path);
                     }
                 }
                 catch (UnauthorizedAccessException ex)
@@ -134,6 +141,7 @@ namespace Jaya.Provider.FileSystem.Services
                     MarkAccessDenied(model, directory?.Path ?? string.Empty);
                 }
 
+                Logger.Verbose("Returning directory model: Path={Path} Name={Name} Files={FileCount} Directories={DirCount}", model.Path, model.Name, model.Files?.Count ?? 0, model.Directories?.Count ?? 0);
                 return model;
             });
         }
@@ -151,17 +159,25 @@ namespace Jaya.Provider.FileSystem.Services
                     .Distinct(StringComparer.Ordinal)
                     .ToList();
 
+                Logger.Verbose("DeleteAsync invoked: mode={Mode} candidatePaths={Count}", mode, paths.Count);
+
                 if (paths.Count == 0)
+                {
+                    Logger.Verbose("DeleteAsync: no valid paths to delete");
                     return false;
+                }
 
                 var anyDeleted = false;
                 foreach (var path in paths)
                 {
+                    Logger.Verbose("Attempting delete for path={Path}", path);
                     var deleted = mode == DeleteMode.Trash ? TryMoveToTrash(path!) : TryDelete(path!);
+                    Logger.Verbose("Delete result for path={Path} => {Deleted}", path, deleted);
                     if (deleted)
                         anyDeleted = true;
                 }
 
+                Logger.Verbose("DeleteAsync completed: anyDeleted={AnyDeleted}", anyDeleted);
                 return anyDeleted;
             });
         }
@@ -275,24 +291,27 @@ namespace Jaya.Provider.FileSystem.Services
                 // options = 0 for default behavior; targetPath can be NULL if we don't need the resulting path.
                 var status = FSPathMoveObjectToTrashSync(path, IntPtr.Zero, 0);
                 if (status == 0)
+                {
+                    Logger.Verbose("FSPathMoveObjectToTrashSync succeeded for {Path}", path);
                     return true;
+                }
 
-                Logger.Debug("FSPathMoveObjectToTrashSync failed for {Path} (OSStatus={Status})", path, status);
+                Logger.Verbose("FSPathMoveObjectToTrashSync failed for {Path} (OSStatus={Status})", path, status);
                 return false;
             }
             catch (DllNotFoundException ex)
             {
-                Logger.Debug(ex, "CoreServices not available; falling back to managed/Finder trash for {Path}", path);
+                Logger.Warning(ex, "CoreServices not available; falling back to managed/Finder trash for {Path}", path);
                 return false;
             }
             catch (EntryPointNotFoundException ex)
             {
-                Logger.Debug(ex, "FSPathMoveObjectToTrashSync not available; falling back to managed/Finder trash for {Path}", path);
+                Logger.Warning(ex, "FSPathMoveObjectToTrashSync not available; falling back to managed/Finder trash for {Path}", path);
                 return false;
             }
             catch (Exception ex)
             {
-                Logger.Debug(ex, "Native trash move failed; falling back to managed/Finder trash for {Path}", path);
+                Logger.Warning(ex, "Native trash move failed; falling back to managed/Finder trash for {Path}", path);
                 return false;
             }
         }
@@ -314,9 +333,13 @@ namespace Jaya.Provider.FileSystem.Services
 
                 using var process = Process.Start(psi);
                 if (process == null)
+                {
+                    Logger.Warning("osascript process could not be started for {Path}", path);
                     return false;
+                }
 
                 process.WaitForExit();
+                Logger.Debug("osascript finished with exitCode={ExitCode} for {Path}", process.ExitCode, path);
                 if (process.ExitCode != 0)
                 {
                     var error = process.StandardError.ReadToEnd();
@@ -325,6 +348,7 @@ namespace Jaya.Provider.FileSystem.Services
                     return false;
                 }
 
+                Logger.Debug("Finder trash succeeded for {Path}", path);
                 return true;
             }
             catch (Exception ex)
@@ -352,12 +376,14 @@ namespace Jaya.Provider.FileSystem.Services
                 if (Directory.Exists(path))
                 {
                     Directory.Delete(path, true);
+                    Logger.Debug("Directory deleted: {Path}", path);
                     return true;
                 }
 
                 if (File.Exists(path))
                 {
                     File.Delete(path);
+                    Logger.Debug("File deleted: {Path}", path);
                     return true;
                 }
             }

@@ -27,6 +27,30 @@
             Gesture="Delete"
             Command="{Binding SimpleCommand}"
             CommandParameter="{x:Static local:CommandType.Delete}" />
+        <KeyBinding
+            Gesture="Ctrl+X"
+            Command="{Binding SimpleCommand}"
+            CommandParameter="{x:Static local:CommandType.Cut}" />
+        <KeyBinding
+            Gesture="Ctrl+C"
+            Command="{Binding SimpleCommand}"
+            CommandParameter="{x:Static local:CommandType.Copy}" />
+        <KeyBinding
+            Gesture="Ctrl+V"
+            Command="{Binding SimpleCommand}"
+            CommandParameter="{x:Static local:CommandType.Paste}" />
+        <KeyBinding
+            Gesture="Cmd+X"
+            Command="{Binding SimpleCommand}"
+            CommandParameter="{x:Static local:CommandType.Cut}" />
+        <KeyBinding
+            Gesture="Cmd+C"
+            Command="{Binding SimpleCommand}"
+            CommandParameter="{x:Static local:CommandType.Copy}" />
+        <KeyBinding
+            Gesture="Cmd+V"
+            Command="{Binding SimpleCommand}"
+            CommandParameter="{x:Static local:CommandType.Paste}" />
     </UserControl.KeyBindings>
     <Grid>
       <Grid.RowDefinitions>
@@ -66,6 +90,43 @@
             x:Name="DetailsDataGrid"
             IsVisible="{Binding PaneConfig.IsDetailsView, Mode=OneWay}"
             SelectionMode="Extended">
+            <DataGrid.ContextMenu>
+                <ContextMenu DataContext="{Binding $parent[UserControl].DataContext}">
+                    <MenuItem
+                        Command="{Binding SimpleCommand}"
+                        CommandParameter="{x:Static local:CommandType.Cut}"
+                        Header="Cut">
+                        <MenuItem.Icon>
+                            <Image Source="{DynamicResource Icon.Cut.Image}" Width="16" Height="16" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem
+                        Command="{Binding SimpleCommand}"
+                        CommandParameter="{x:Static local:CommandType.Copy}"
+                        Header="Copy">
+                        <MenuItem.Icon>
+                            <Image Source="{DynamicResource Icon.Copy.Image}" Width="16" Height="16" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem
+                        Command="{Binding SimpleCommand}"
+                        CommandParameter="{x:Static local:CommandType.Paste}"
+                        Header="Paste">
+                        <MenuItem.Icon>
+                            <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem
+                        Command="{Binding SimpleCommand}"
+                        CommandParameter="{x:Static local:CommandType.Delete}"
+                        Header="Delete">
+                        <MenuItem.Icon>
+                            <Image Source="{DynamicResource Icon.Delete.Image}" Width="16" Height="16" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="Name" Width="*" SortMemberPath="DisplayName">
                     <DataGridTemplateColumn.CellTemplate>
@@ -115,6 +176,43 @@
           IsVisible="{Binding PaneConfig.IsThumbnailView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             SelectionMode="Multiple">
+            <ListBox.ContextMenu>
+                <ContextMenu DataContext="{Binding $parent[UserControl].DataContext}">
+                    <MenuItem
+                        Command="{Binding SimpleCommand}"
+                        CommandParameter="{x:Static local:CommandType.Cut}"
+                        Header="Cut">
+                        <MenuItem.Icon>
+                            <Image Source="{DynamicResource Icon.Cut.Image}" Width="16" Height="16" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem
+                        Command="{Binding SimpleCommand}"
+                        CommandParameter="{x:Static local:CommandType.Copy}"
+                        Header="Copy">
+                        <MenuItem.Icon>
+                            <Image Source="{DynamicResource Icon.Copy.Image}" Width="16" Height="16" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem
+                        Command="{Binding SimpleCommand}"
+                        CommandParameter="{x:Static local:CommandType.Paste}"
+                        Header="Paste">
+                        <MenuItem.Icon>
+                            <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem
+                        Command="{Binding SimpleCommand}"
+                        CommandParameter="{x:Static local:CommandType.Delete}"
+                        Header="Delete">
+                        <MenuItem.Icon>
+                            <Image Source="{DynamicResource Icon.Delete.Image}" Width="16" Height="16" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </ContextMenu>
+            </ListBox.ContextMenu>
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel Width="{Binding $parent[ScrollContentPresenter].Bounds.Width, Mode=OneWay}"/>
@@ -157,6 +255,43 @@
           IsVisible="{Binding PaneConfig.IsListView, Mode=OneWay}"
             ScrollViewer.VerticalScrollBarVisibility="Disabled"
             SelectionMode="Multiple">
+          <ListBox.ContextMenu>
+            <ContextMenu DataContext="{Binding $parent[UserControl].DataContext}">
+              <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Cut}"
+                Header="Cut">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.Cut.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Copy}"
+                Header="Copy">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.Copy.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Paste}"
+                Header="Paste">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <Separator />
+              <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Delete}"
+                Header="Delete">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.Delete.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+            </ContextMenu>
+          </ListBox.ContextMenu>
           <ListBox.ItemsPanel>
             <ItemsPanelTemplate>
               <WrapPanel Width="{Binding $parent[ScrollContentPresenter].Bounds.Width, Mode=OneWay}" Orientation="Vertical"/>
@@ -202,6 +337,43 @@
           IsVisible="{Binding PaneConfig.IsTilesView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             SelectionMode="Multiple">
+          <ListBox.ContextMenu>
+            <ContextMenu DataContext="{Binding $parent[UserControl].DataContext}">
+              <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Cut}"
+                Header="Cut">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.Cut.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Copy}"
+                Header="Copy">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.Copy.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Paste}"
+                Header="Paste">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <Separator />
+              <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Delete}"
+                Header="Delete">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.Delete.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+            </ContextMenu>
+          </ListBox.ContextMenu>
           <ListBox.ItemsPanel>
             <ItemsPanelTemplate>
               <WrapPanel Width="{Binding $parent[ScrollContentPresenter].Bounds.Width, Mode=OneWay}"/>
@@ -254,6 +426,43 @@
         IsVisible="{Binding PaneConfig.IsContentView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             SelectionMode="Multiple">
+        <ListBox.ContextMenu>
+          <ContextMenu DataContext="{Binding $parent[UserControl].DataContext}">
+            <MenuItem
+              Command="{Binding SimpleCommand}"
+              CommandParameter="{x:Static local:CommandType.Cut}"
+              Header="Cut">
+              <MenuItem.Icon>
+                <Image Source="{DynamicResource Icon.Cut.Image}" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem
+              Command="{Binding SimpleCommand}"
+              CommandParameter="{x:Static local:CommandType.Copy}"
+              Header="Copy">
+              <MenuItem.Icon>
+                <Image Source="{DynamicResource Icon.Copy.Image}" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem
+              Command="{Binding SimpleCommand}"
+              CommandParameter="{x:Static local:CommandType.Paste}"
+              Header="Paste">
+              <MenuItem.Icon>
+                <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <Separator />
+            <MenuItem
+              Command="{Binding SimpleCommand}"
+              CommandParameter="{x:Static local:CommandType.Delete}"
+              Header="Delete">
+              <MenuItem.Icon>
+                <Image Source="{DynamicResource Icon.Delete.Image}" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+          </ContextMenu>
+        </ListBox.ContextMenu>
         <ListBox.ItemsPanel>
           <ItemsPanelTemplate>
             <StackPanel Orientation="Vertical"/>

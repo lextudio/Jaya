@@ -28,8 +28,8 @@ namespace Jaya.Ui.ViewModels
             // snapshot current values to detect changes when committing
             if (_shared != null)
             {
-                var pane = _shared.PaneConfiguration;
-                var toolbar = _shared.ToolbarConfiguration;
+                var pane = _shared?.PaneConfiguration;
+                var toolbar = _shared?.ToolbarConfiguration;
                 if (pane != null)
                 {
                     _prevIsRibbonVisible = pane.IsRibbonVisible;
@@ -42,15 +42,15 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
-        public IEnumerable<ThemeModel> Themes => ThemeManager.Instance.Themes;
+        public IEnumerable<ThemeModel> Themes => ThemeManager.Instance.Themes ?? System.Linq.Enumerable.Empty<ThemeModel>();
 
-        public ApplicationConfigModel ApplicationConfig => _shared!.ApplicationConfiguration;
+        public ApplicationConfigModel ApplicationConfig => _shared?.ApplicationConfiguration ?? new ApplicationConfigModel();
 
-        public PaneConfigModel PaneConfig => _shared!.PaneConfiguration;
+        public PaneConfigModel PaneConfig => _shared?.PaneConfiguration ?? new PaneConfigModel();
 
         public ThemeModel SelectedThemePreview
         {
-            get => Get<ThemeModel>();
+            get => Get<ThemeModel>() ?? ThemeManager.Instance.SelectedTheme!;
             set => Set(value);
         }
 
@@ -188,7 +188,7 @@ namespace Jaya.Ui.ViewModels
 
         public void DiscardChanges()
         {
-            SelectedThemePreview = _shared!.ApplicationConfiguration.Theme ?? ThemeManager.Instance.SelectedTheme;
+            SelectedThemePreview = _shared?.ApplicationConfiguration?.Theme ?? ThemeManager.Instance.SelectedTheme;
             Logger.Information("Discarding options dialog changes");
             // Log that changes were discarded and current effective state
             try

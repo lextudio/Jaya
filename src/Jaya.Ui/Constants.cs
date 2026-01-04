@@ -30,8 +30,8 @@ namespace Jaya.Ui
             URL_DONATION = new Uri("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DEXCFJ6R48SR2");
             URL_LICENSE = new Uri("https://raw.githubusercontent.com/lextudio/jaya/dev/LICENSE");
             URL_ISSUES = GetRepositoryUrl("issues");
-            VERSION = Assembly.GetExecutingAssembly().GetName().Version;
-            DATA_DIRECTORY = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), APP_SHORT_NAME);
+            VERSION = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0,0,0,0);
+            DATA_DIRECTORY = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), APP_SHORT_NAME ?? "JayaFM");
         }
 
         static Uri GetRepositoryUrl(string urlFragment)
@@ -66,6 +66,9 @@ namespace Jaya.Ui
     {
         Exit,
         Open,
+        Cut,
+        Copy,
+        Paste,
         ToggleToolbars,
         ToggleToolbarFile,
         ToggleToolbarEdit,

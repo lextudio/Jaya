@@ -30,7 +30,7 @@ namespace Jaya.Ui.ViewModels
                 EventAggregator?.UnSubscribe(_onSelectionChanged);
         }
 
-        public PaneConfigModel PaneConfig => _shared!.PaneConfiguration;
+        public PaneConfigModel PaneConfig => _shared?.PaneConfiguration ?? new PaneConfigModel();
 
         public long Count
         {
@@ -45,6 +45,12 @@ namespace Jaya.Ui.ViewModels
             _service = args.Service;
             _account = args.Account;
 
+            if (_service == null)
+            {
+                Count = 0;
+                return;
+            }
+
             if (_account == null)
             {
                 var accounts = await _service.GetAccountsAsync();
@@ -53,7 +59,7 @@ namespace Jaya.Ui.ViewModels
             }
             else if (args.Directory != null)
             {
-                _directory = await _service!.GetDirectoryAsync(_account!, args.Directory);
+                _directory = await _service.GetDirectoryAsync(_account!, args.Directory);
 
                 if (_directory?.Directories != null)
                     count += _directory.Directories.Count;

@@ -23,7 +23,7 @@ namespace Jaya.Ui.Views
             AvaloniaXamlLoader.Load(this);
         }
 
-        void OnOkClicked(object sender, RoutedEventArgs e)
+        void OnOkClicked(object? sender, RoutedEventArgs e)
         {
             if (DataContext is OptionsViewModel vm)
             {
@@ -33,7 +33,7 @@ namespace Jaya.Ui.Views
             }
         }
 
-        void OnCancelClicked(object sender, RoutedEventArgs e)
+        void OnCancelClicked(object? sender, RoutedEventArgs e)
         {
             if (DataContext is OptionsViewModel vm)
             {
@@ -43,7 +43,7 @@ namespace Jaya.Ui.Views
             }
         }
 
-        void OnPaneOptionChanged(object sender, RoutedEventArgs e)
+        void OnPaneOptionChanged(object? sender, RoutedEventArgs e)
         {
             if (!(DataContext is OptionsViewModel vm))
                 return;
@@ -59,7 +59,7 @@ namespace Jaya.Ui.Views
             }, Avalonia.Threading.DispatcherPriority.Background);
         }
 
-        private void OptionsView_AttachedToVisualTree(object sender, VisualTreeAttachmentEventArgs e)
+        private void OptionsView_AttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
         {
             if (DataContext is OptionsViewModel vm)
                 vm.LogOpenState();

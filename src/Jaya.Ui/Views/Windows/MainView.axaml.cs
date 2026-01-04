@@ -21,8 +21,8 @@ namespace Jaya.Ui.Views.Windows
 {
     public partial class MainView : StyledWindow
     {
-        MainViewModel _viewModel;
-        MenuView _inlineMenu;
+        MainViewModel? _viewModel;
+        MenuView? _inlineMenu;
 
         public MainView()
         {
@@ -41,12 +41,12 @@ namespace Jaya.Ui.Views.Windows
             _inlineMenu = this.FindControl<MenuView>("InlineMenu");
         }
 
-        void OnDataContextChanged(object sender, EventArgs e)
+        void OnDataContextChanged(object? sender, EventArgs e)
         {
             AttachToViewModel();
         }
 
-        void OnOpened(object sender, EventArgs e)
+        void OnOpened(object? sender, EventArgs e)
         {
             UpdateNativeMenu();
             UpdateHeaderContent();
@@ -142,11 +142,6 @@ namespace Jaya.Ui.Views.Windows
             }
         }
 
-        void OnClosed(object sender, EventArgs e)
-        {
-            DetachFromViewModel();
-        }
-
         void AttachToViewModel()
         {
             if (_viewModel?.PaneConfig != null)
@@ -218,29 +213,35 @@ namespace Jaya.Ui.Views.Windows
                 var paneConfig = _viewModel?.PaneConfig;
                 if (paneConfig == null)
                 {
-                    HeaderContent = null;
+                    HeaderContent = null!;
                     return;
                 }
 
-                // Find the TitleMenu control in the visual tree
                 var titleMenu = this.FindControl<MenuView>("TitleMenu");
-
                 if (titleMenu == null)
                 {
-                    HeaderContent = null;
+                    HeaderContent = null!;
                     return;
                 }
 
                 if (paneConfig.IsMenuHeaderVisible && !paneConfig.IsRibbonVisible)
+                {
                     HeaderContent = titleMenu;
+                }
                 else
-                    HeaderContent = null;
+                {
+                    HeaderContent = null!;
+                }
             }
             catch
             {
-                // Swallow errors to avoid crashing window initialization
-                HeaderContent = null;
+                HeaderContent = null!;
             }
+        }
+
+        void OnClosed(object? sender, EventArgs e)
+        {
+            DetachFromViewModel();
         }
 
         void UpdateHeaderVisibility()

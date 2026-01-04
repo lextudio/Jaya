@@ -22,24 +22,24 @@ namespace Jaya.Ui
 
         public override void OnFrameworkInitializationCompleted()
         {
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
             {
                 _shared = ServiceLocator.Instance.GetService<SharedService>();
                 _shared?.LoadConfigurations();
 
-                Lifetime.Exit += OnExit;
-                Lifetime.MainWindow = new MainView();
+                lifetime.Exit += OnExit;
+                lifetime.MainWindow = new MainView();
             }
 
             base.OnFrameworkInitializationCompleted();
         }
 
-        void OnExit(object sender, ControlledApplicationLifetimeExitEventArgs e)
+        void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
         {
             _shared?.SaveConfigurations();
             Lifetime.Exit -= OnExit;
         }
 
-        internal static IClassicDesktopStyleApplicationLifetime Lifetime => Current.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
+        internal static IClassicDesktopStyleApplicationLifetime Lifetime => (IClassicDesktopStyleApplicationLifetime)Current! .ApplicationLifetime!;
     }
 }

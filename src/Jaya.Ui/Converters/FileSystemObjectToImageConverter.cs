@@ -103,9 +103,11 @@ namespace Jaya.Ui.Converters
             }
         }
 
-        Bitmap? GetFileImage(FileModel fso, int iconSize)
+        Bitmap? GetFileImage(FileModel? fso, int iconSize)
         {
             var fallbackUri = new Uri(Constants.GetImageUrl(string.Format("File-{0}.png", iconSize)), UriKind.RelativeOrAbsolute);
+            if (fso == null)
+                return AddOrGetFromCache(fallbackUri);
 
             if (string.IsNullOrEmpty(fso.Extension))
                 return AddOrGetFromCache(fallbackUri);

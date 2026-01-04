@@ -17,12 +17,12 @@ namespace Jaya.Ui.Services
     {
         static readonly ILogger Logger = Log.ForContext<NavigationService>();
 
-        readonly CommandService _commandService;
+        readonly CommandService? _commandService;
         readonly Stack<SelectionChangedEventArgs> _backwardStack, _forwardStack;
-        readonly Subscription<SelectionChangedEventArgs> _onSelectionChanged;
-        RelayCommand _navigateBack, _navigateForward;
-        RelayCommand<WindowOptionsModel> _openWindow;
-        SelectionChangedEventArgs _directoryChangedArgs;
+        readonly Subscription<SelectionChangedEventArgs>? _onSelectionChanged;
+        RelayCommand? _navigateBack, _navigateForward;
+        RelayCommand<WindowOptionsModel>? _openWindow;
+        SelectionChangedEventArgs? _directoryChangedArgs;
 
         public NavigationService(ICommandService commandService)
         {
@@ -30,12 +30,13 @@ namespace Jaya.Ui.Services
 
             _backwardStack = new Stack<SelectionChangedEventArgs>();
             _forwardStack = new Stack<SelectionChangedEventArgs>();
-            _onSelectionChanged = _commandService.EventAggregator.Subscribe<SelectionChangedEventArgs>(SelectionChanged);
+            _onSelectionChanged = _commandService?.EventAggregator.Subscribe<SelectionChangedEventArgs>(SelectionChanged);
         }
 
         ~NavigationService()
         {
-            _commandService.EventAggregator.UnSubscribe(_onSelectionChanged);
+            if (_commandService != null && _onSelectionChanged != null)
+                _commandService.EventAggregator.UnSubscribe(_onSelectionChanged);
         }
 
         #region properties
@@ -44,10 +45,8 @@ namespace Jaya.Ui.Services
         {
             get
             {
-                if (_openWindow == null)
-                    _openWindow = new RelayCommand<WindowOptionsModel>(OpenWindowCommandAction);
-
-                return _openWindow;
+                _openWindow ??= new RelayCommand<WindowOptionsModel>(OpenWindowCommandAction);
+                return _openWindow!;
             }
         }
 
@@ -55,10 +54,8 @@ namespace Jaya.Ui.Services
         {
             get
             {
-                if (_navigateBack == null)
-                    _navigateBack = new RelayCommand(NavigateBack, false);
-
-                return _navigateBack;
+                _navigateBack ??= new RelayCommand(NavigateBack, false);
+                return _navigateBack!;
             }
         }
 
@@ -66,10 +63,8 @@ namespace Jaya.Ui.Services
         {
             get
             {
-                if (_navigateForward == null)
-                    _navigateForward = new RelayCommand(NavigateForward, false);
-
-                return _navigateForward;
+                _navigateForward ??= new RelayCommand(NavigateForward, false);
+                return _navigateForward!;
             }
         }
 
@@ -80,11 +75,16 @@ namespace Jaya.Ui.Services
             var window = new HostView();
 
             var viewModel = window.DataContext as HostViewModel;
-            viewModel.Option = option;
+            if (viewModel != null)
+                viewModel.Option = option;
 
             window.Content = Activator.CreateInstance(option.ContentType);
 
-            await window.ShowDialog(App.Lifetime.MainWindow);
+            var owner = App.Lifetime?.MainWindow;
+            if (owner != null)
+                await window.ShowDialog(owner);
+            else
+                window.Show();
         }
 
         void NavigateBack()
@@ -113,7 +113,7 @@ namespace Jaya.Ui.Services
                 _forwardStack.Count);
 
             var args = target.Clone(NavigationDirection.Backward);
-            _commandService.EventAggregator.Publish(args);
+            _commandService?.EventAggregator.Publish(args);
         }
 
         void NavigateForward()
@@ -139,7 +139,7 @@ namespace Jaya.Ui.Services
                 _forwardStack.Count);
 
             var args = next.Clone(NavigationDirection.Forward);
-            _commandService.EventAggregator.Publish(args);
+            _commandService?.EventAggregator.Publish(args);
         }
 
         void SelectionChanged(SelectionChangedEventArgs args)

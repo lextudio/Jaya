@@ -32,8 +32,9 @@ namespace Jaya.Ui.Services
 
             _isPortable = true;
 
-            Version = Assembly.GetExecutingAssembly().GetName().Version;
-            VersionString = string.Format("{0}.{1}.{2}.{3}", Version.Major, Version.Minor, Version.Build, Version.Revision);
+                Version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0,0,0,0);
+                var v = Version;
+                VersionString = string.Format("{0}.{1}.{2}.{3}", v.Major, v.Minor, v.Build, v.Revision);
             Bitness = Environment.Is64BitOperatingSystem ? (byte)64 : (byte)32;
         }
 
@@ -70,13 +71,35 @@ namespace Jaya.Ui.Services
 
             var releases = await JsonSerializer.DeserializeAsync<ReleaseModel[]>(stream, options).ConfigureAwait(false);
 
-            if (releases != null && releases.Length > 0 && Version.CompareTo(releases[0].Version) < 0 && releases[0].Downloads != null && releases[0].Downloads.Length > 0)
+            if (releases != null && releases.Length > 0 && releases[0] != null)
             {
-                _sharedService.UpdateConfiguration.Update = releases[0];
+                var first = releases[0];
+                if (first != null && Version.CompareTo(first.Version) < 0 && first.Downloads != null && first.Downloads.Length > 0 && _sharedService?.UpdateConfiguration != null)
+                {
+                    _sharedService.UpdateConfiguration.Update = first;
+                }
             }
 
-            _sharedService.UpdateConfiguration.Checked = DateTime.Now;
-            _sharedService.SaveConfigurations();
+            if (_sharedService != null && _sharedService.UpdateConfiguration != null)
+            {
+                _sharedService.UpdateConfiguration.Checked = DateTime.Now;
+                _sharedService.SaveConfigurations();
+            }
+                if (releases != null && releases.Length > 0 && releases[0] != null)
+                {
+                    var latest = releases[0];
+                        if (latest != null && latest.Downloads != null && latest.Downloads.Length > 0 && Version.CompareTo(latest.Version) < 0)
+                        {
+                            if (_sharedService?.UpdateConfiguration != null)
+                                _sharedService.UpdateConfiguration.Update = latest;
+                        }
+                }
+
+                if (_sharedService != null && _sharedService.UpdateConfiguration != null)
+                {
+                    _sharedService.UpdateConfiguration.Checked = DateTime.Now;
+                    _sharedService.SaveConfigurations();
+                }
         }
 
         public async Task DownloadUpdate()
@@ -84,12 +107,15 @@ namespace Jaya.Ui.Services
             if (Update == null)
                 return;
 
-            var platform = _platformService != null ? _platformService.GetPlatform() : OSPlatform.Create("unknown");
-            var updateFilePrefix = string.Format("{0}{1}", platform.ToString(), _isPortable ? "_portable" : string.Empty);
+                var platform = _platformService != null ? _platformService.GetPlatform() : OSPlatform.Create("unknown");
+                var updateFilePrefix = string.Format("{0}{1}", platform.ToString(), _isPortable ? "_portable" : string.Empty);
 
             Uri? url = null;
-            foreach(var download in Update?.Downloads ?? new ReleaseAssetModel[0])
+            foreach(var download in Update?.Downloads ?? Array.Empty<ReleaseAssetModel>())
             {
+                if (download?.Url == null)
+                    continue;
+
                 if (download.Url.Contains(updateFilePrefix, StringComparison.OrdinalIgnoreCase))
                 {
                     url = new Uri(download.Url, UriKind.Absolute);
@@ -102,12 +128,13 @@ namespace Jaya.Ui.Services
 
             using var http = new HttpClient();
             var response = await http.GetAsync(url);
-            if (response.IsSuccessStatusCode)
+            if (response.IsSuccessStatusCode && _sharedService != null && _sharedService.UpdateConfiguration != null)
             {
-                if (!Directory.Exists(_sharedService.UpdateConfiguration.DownloadDirectory))
-                    Directory.CreateDirectory(_sharedService.UpdateConfiguration.DownloadDirectory);
+                var downloadDir = _sharedService.UpdateConfiguration.DownloadDirectory ?? Path.GetTempPath();
+                if (!Directory.Exists(downloadDir))
+                    Directory.CreateDirectory(downloadDir);
 
-                var updateFilePath = Path.Combine(_sharedService.UpdateConfiguration.DownloadDirectory, Path.GetFileName(url.LocalPath));
+                var updateFilePath = Path.Combine(downloadDir, Path.GetFileName(url.LocalPath));
                 await using var src = await response.Content.ReadAsStreamAsync();
                 await using var dst = File.OpenWrite(updateFilePath);
                 await src.CopyToAsync(dst);

@@ -49,17 +49,26 @@
         </MenuItem>
 
         <MenuItem Header="_Edit">
-            <MenuItem Header="Cut">
+            <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Cut}"
+                Header="Cut">
                 <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.Cut.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
-            <MenuItem Header="Copy">
+            <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Copy}"
+                Header="Copy">
                 <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.Copy.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
-            <MenuItem Header="Paste">
+            <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Paste}"
+                Header="Paste">
                 <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>

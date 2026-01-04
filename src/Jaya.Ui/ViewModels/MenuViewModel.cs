@@ -13,26 +13,27 @@ namespace Jaya.Ui.ViewModels
     public class MenuViewModel : ViewModelBase
     {
         readonly SharedService? _shared;
-        ICommand _openWindow;
+        ICommand? _openWindow;
 
         public MenuViewModel()
         {
             _shared = GetService<SharedService>();
-            SimpleCommand = new RelayCommand<byte>(_shared!.SimpleCommandAction);
+            if (_shared != null)
+                SimpleCommand = new RelayCommand<byte>(_shared.SimpleCommandAction);
         }
 
-        public ToolbarConfigModel ToolbarConfig => _shared.ToolbarConfiguration;
+        public ToolbarConfigModel ToolbarConfig => _shared?.ToolbarConfiguration ?? new ToolbarConfigModel();
 
-        public PaneConfigModel PaneConfig => _shared.PaneConfiguration;
+        public PaneConfigModel PaneConfig => _shared?.PaneConfiguration ?? new PaneConfigModel();
 
-        public ApplicationConfigModel ApplicationConfig => _shared.ApplicationConfiguration;
+        public ApplicationConfigModel ApplicationConfig => _shared?.ApplicationConfiguration ?? new ApplicationConfigModel();
 
-        public ICommand OpenWindowCommand
+        public ICommand? OpenWindowCommand
         {
             get
             {
                 if (_openWindow == null)
-                    _openWindow = GetService<NavigationService>().OpenWindowCommand;
+                    _openWindow = GetService<NavigationService>()?.OpenWindowCommand;
 
                 return _openWindow;
             }

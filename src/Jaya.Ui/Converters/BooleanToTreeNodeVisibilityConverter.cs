@@ -21,10 +21,14 @@ namespace Jaya.Ui.Converters
 
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (_shared!.ApplicationConfiguration.IsHiddenItemVisible)
+            var config = _shared?.ApplicationConfiguration;
+            if (config != null && config.IsHiddenItemVisible)
                 return true;
 
-            return !(bool?)value;
+            if (value is bool b)
+                return !b;
+
+            return true;
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

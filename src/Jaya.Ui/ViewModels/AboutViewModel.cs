@@ -10,7 +10,7 @@ namespace Jaya.Ui.ViewModels
 {
     public class AboutViewModel: ViewModelBase
     {
-        UpdateService _updateService;
+        UpdateService? _updateService;
 
         public AboutViewModel()
         {
@@ -21,7 +21,7 @@ namespace Jaya.Ui.ViewModels
 
         public string Description => Constants.APP_DESCRIPTION;
 
-        public string VersionString => _updateService?.VersionString;
+        public string VersionString => _updateService?.VersionString ?? string.Empty;
 
         public byte? Bitness => _updateService?.Bitness;
 

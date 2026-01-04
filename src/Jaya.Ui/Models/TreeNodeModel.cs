@@ -127,7 +127,7 @@ namespace Jaya.Ui.Models
 
         #endregion
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             var compareWith = obj as TreeNodeModel;
             if (compareWith == null)
@@ -165,19 +165,18 @@ namespace Jaya.Ui.Models
 
         public override string ToString()
         {
+            string result = base.ToString() ?? "";
+
             if (!string.IsNullOrEmpty(Label))
-                return Label;
+                result = Label;
+            else if (Account != null)
+                result = Account.Name ?? result;
+            else if (FileSystemObject != null && !string.IsNullOrEmpty(FileSystemObject.Name))
+                result = FileSystemObject.Name ?? result;
+            else if (NodeType != null)
+                result = NodeType.ToString() ?? result;
 
-            if (Account != null)
-                return Account.Name ?? base.ToString();
-
-            if (FileSystemObject != null && !string.IsNullOrEmpty(FileSystemObject.Name))
-                return FileSystemObject.Name;
-
-            if (NodeType != null)
-                return NodeType.ToString();
-
-            return base.ToString();
+            return result;
         }
     }
 }

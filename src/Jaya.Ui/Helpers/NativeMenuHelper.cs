@@ -31,7 +31,7 @@ namespace Jaya.Ui.Helpers
             }
         }
 
-        static NativeMenuItemBase ConvertItem(object item)
+        static NativeMenuItemBase? ConvertItem(object item)
         {
             switch (item)
             {

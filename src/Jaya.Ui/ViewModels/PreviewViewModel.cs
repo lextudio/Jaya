@@ -17,6 +17,6 @@ namespace Jaya.Ui.ViewModels
             _shared = GetService<SharedService>();
         }
 
-        public PaneConfigModel PaneConfig => _shared.PaneConfiguration;
+        public PaneConfigModel PaneConfig => _shared?.PaneConfiguration ?? new PaneConfigModel();
     }
 }

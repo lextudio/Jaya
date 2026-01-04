@@ -33,7 +33,7 @@ namespace Jaya.Ui.ViewModels
             Node = new TreeNodeModel(null, null, null);
             Favorites = _favorites;
             if (!IsDesignMode)
-                PopulateCommand.Execute(Node);
+                PopulateCommand?.Execute(Node);
 
             if (!IsDesignMode)
                 _onSelectionChanged = EventAggregator?.Subscribe<SelectionChangedEventArgs>(OnExternalSelectionChanged);
@@ -51,16 +51,14 @@ namespace Jaya.Ui.ViewModels
         {
             get
             {
-                if (_populateCommand == null)
-                    _populateCommand = new RelayCommand<TreeNodeModel>(PopulateAction);
-
+                _populateCommand ??= new RelayCommand<TreeNodeModel>(PopulateAction);
                 return _populateCommand!;
             }
         }
 
-        public PaneConfigModel PaneConfig => _shared!.PaneConfiguration;
+        public PaneConfigModel PaneConfig => _shared?.PaneConfiguration ?? new PaneConfigModel();
 
-        public ApplicationConfigModel ApplicationConfig => _shared!.ApplicationConfiguration;
+        public ApplicationConfigModel ApplicationConfig => _shared?.ApplicationConfiguration ?? new ApplicationConfigModel();
 
         public TreeNodeModel Node { get; }
 
@@ -91,7 +89,7 @@ namespace Jaya.Ui.ViewModels
                 }
 
                 var args = new SelectionChangedEventArgs(value.Service, value.Account, value.FileSystemObject as DirectoryModel);
-                EventAggregator.Publish(args);
+                EventAggregator?.Publish(args);
             }
         }
 
@@ -115,7 +113,7 @@ namespace Jaya.Ui.ViewModels
                 return;
 
             if (node.IsHavingDummyChild)
-                PopulateCommand.Execute(node);
+                PopulateCommand?.Execute(node);
         }
 
         void AddChildNode(TreeNodeModel node, TreeNodeModel childNode)
@@ -169,13 +167,17 @@ namespace Jaya.Ui.ViewModels
                     AccountModelBase? fileAccount = null;
                     try
                     {
-                        var providers = GetService<ProviderService>().Providers;
-                        foreach (var p in providers)
+                        var providerService = GetService<ProviderService>();
+                        var providers = providerService?.Providers;
+                        if (providers != null)
                         {
-                            if (p is ProviderServiceBase ps && ps.Name == "File System")
+                            foreach (var p in providers)
                             {
-                                fileService = ps;
-                                break;
+                                if (p is ProviderServiceBase ps && ps.Name == "File System")
+                                {
+                                    fileService = ps;
+                                    break;
+                                }
                             }
                         }
 
@@ -257,20 +259,28 @@ namespace Jaya.Ui.ViewModels
                     Logger.Verbose(ex, "Failed to populate Favorites collection");
                 }
 
-                foreach (var service in GetService<ProviderService>().Providers)
+                var providerService2 = GetService<ProviderService>();
+                var providers2 = providerService2?.Providers;
+                if (providers2 != null)
                 {
-                    var serviceInstance = service as ProviderServiceBase;
-
-                    var serviceNode = new TreeNodeModel(service as ProviderServiceBase, null, ItemType.Service)
+                    foreach (var service in providers2)
                     {
-                        Label = service.Name, ImagePath = service.ImagePath
-                    };
-                    serviceNode.NodeExpanded += OnNodeExpanded;
-                    serviceNode.AddDummyChild();
-                    AddChildNode(node, serviceNode);
+                        var serviceInstance = service as ProviderServiceBase;
 
-                    serviceInstance.AccountAdded += (AccountModelBase account) => OnAccountAction(account, AccountAction.Added, serviceNode);
-                    serviceInstance.AccountRemoved += (AccountModelBase account) => OnAccountAction(account, AccountAction.Removed, serviceNode);
+                        var serviceNode = new TreeNodeModel(service as ProviderServiceBase, null, ItemType.Service)
+                        {
+                            Label = service.Name, ImagePath = service.ImagePath
+                        };
+                        serviceNode.NodeExpanded += OnNodeExpanded;
+                        serviceNode.AddDummyChild();
+                        AddChildNode(node, serviceNode);
+
+                        if (serviceInstance != null)
+                        {
+                            serviceInstance.AccountAdded += (AccountModelBase account) => OnAccountAction(account, AccountAction.Added, serviceNode);
+                            serviceInstance.AccountRemoved += (AccountModelBase account) => OnAccountAction(account, AccountAction.Removed, serviceNode);
+                        }
+                    }
                 }
 
                 // Log the top-tier nodes (services) for diagnostics with richer info
@@ -294,7 +304,11 @@ namespace Jaya.Ui.ViewModels
             }
             else if (node.Account == null)
             {
-                var accounts = await node.Service.GetAccountsAsync();
+                var svc = node.Service;
+                if (svc == null)
+                    return;
+
+                var accounts = await svc.GetAccountsAsync();
                 foreach (var account in accounts)
                 {
                     var accountNode = new TreeNodeModel(node.Service, account, node.Service.IsRootDrive ? ItemType.Computer : ItemType.Account);
@@ -308,7 +322,17 @@ namespace Jaya.Ui.ViewModels
             }
             else
             {
-                var currentDirectory = await node.Service.GetDirectoryAsync(node.Account, node.FileSystemObject as DirectoryModel);
+                var svc = node.Service;
+                if (svc == null)
+                    return;
+
+                var currentDirectory = await svc.GetDirectoryAsync(node.Account, node.FileSystemObject as DirectoryModel);
+                if (currentDirectory == null)
+                {
+                    node.RemoveDummyChild();
+                    return;
+                }
+
                 foreach (var directory in currentDirectory.Directories)
                 {
                     var fileSystemObjectNode = new TreeNodeModel(node.Service, node.Account, directory.Type == FileSystemObjectType.Drive ? ItemType.Drive : ItemType.Directory);

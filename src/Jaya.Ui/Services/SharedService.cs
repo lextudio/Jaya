@@ -29,27 +29,34 @@ namespace Jaya.Ui.Services
 
             _onSimpleCommand = _commandService.EventAggregator.Subscribe<byte>(SimpleCommandAction);
             _onParameterizedCommand = _commandService.EventAggregator.Subscribe<KeyValuePair<byte, object>>(ParameterizedCommandAction);
+
+            LoadConfigurations();
         }
 
         ~SharedService()
         {
-            _commandService.EventAggregator.UnSubscribe(_onSimpleCommand);
-            _commandService.EventAggregator.UnSubscribe(_onParameterizedCommand);
-            if (ApplicationConfiguration != null)
+            if (_commandService != null)
             {
-                ApplicationConfiguration.PropertyChanged -= ApplicationConfiguration_PropertyChanged;
+                if (_onSimpleCommand != null)
+                    _commandService.EventAggregator.UnSubscribe(_onSimpleCommand);
+
+                if (_onParameterizedCommand != null)
+                    _commandService.EventAggregator.UnSubscribe(_onParameterizedCommand);
             }
+
+            if (ApplicationConfiguration != null)
+                ApplicationConfiguration.PropertyChanged -= ApplicationConfiguration_PropertyChanged;
         }
 
         #region properties
 
-        public ApplicationConfigModel? ApplicationConfiguration { get; private set; }
+        public ApplicationConfigModel ApplicationConfiguration { get; private set; } = new ApplicationConfigModel();
 
-        public ToolbarConfigModel? ToolbarConfiguration { get; private set; }
+        public ToolbarConfigModel ToolbarConfiguration { get; private set; } = new ToolbarConfigModel();
 
-        public PaneConfigModel? PaneConfiguration { get; private set; }
+        public PaneConfigModel PaneConfiguration { get; private set; } = new PaneConfigModel();
 
-        public UpdateConfigModel? UpdateConfiguration { get; private set; }
+        public UpdateConfigModel UpdateConfiguration { get; private set; } = new UpdateConfigModel();
 
         #endregion
 
@@ -141,6 +148,27 @@ namespace Jaya.Ui.Services
                     try
                     {
                         _commandService.EventAggregator.Publish(new OpenRequestedEventArgs());
+                    }
+                    catch { }
+                    break;
+                case CommandType.Cut:
+                    try
+                    {
+                        _commandService.EventAggregator.Publish(new CutRequestedEventArgs());
+                    }
+                    catch { }
+                    break;
+                case CommandType.Copy:
+                    try
+                    {
+                        _commandService.EventAggregator.Publish(new CopyRequestedEventArgs());
+                    }
+                    catch { }
+                    break;
+                case CommandType.Paste:
+                    try
+                    {
+                        _commandService.EventAggregator.Publish(new PasteRequestedEventArgs());
                     }
                     catch { }
                     break;

@@ -6,8 +6,10 @@ using Jaya.Shared;
 using Jaya.Shared.Base;
 using Jaya.Shared.Models;
 using Jaya.Shared.Services;
+using Jaya.Ui;
 using Jaya.Ui.Models;
 using Jaya.Ui.Services;
+using Jaya.Ui.Views;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -29,8 +31,13 @@ namespace Jaya.Ui.ViewModels
 
         ICommand? _invokeObject;
         ICommand? _deleteItems;
+        ICommand? _cutItems;
+        ICommand? _copyItems;
+        ICommand? _pasteItems;
         ProviderServiceBase? _service;
         AccountModelBase? _account;
+        List<FileSystemObjectModel> _clipboardItems = new();
+        TransferMode _clipboardMode = TransferMode.Copy;
 
         public ExplorerViewModel()
         {
@@ -74,20 +81,55 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
+        public ICommand CutItemsCommand
+        {
+            get
+            {
+                if (_cutItems == null)
+                    _cutItems = new RelayCommand<IReadOnlyList<ExplorerItemModel>>(CutItems);
+
+                return _cutItems!;
+            }
+        }
+
+        public ICommand CopyItemsCommand
+        {
+            get
+            {
+                if (_copyItems == null)
+                    _copyItems = new RelayCommand<IReadOnlyList<ExplorerItemModel>>(CopyItems);
+
+                return _copyItems!;
+            }
+        }
+
+        public ICommand PasteItemsCommand
+        {
+            get
+            {
+                if (_pasteItems == null)
+                    _pasteItems = new RelayCommand(PasteItems);
+
+                return _pasteItems!;
+            }
+        }
+
         public ApplicationConfigModel ApplicationConfig => _shared!.ApplicationConfiguration;
 
         public PaneConfigModel PaneConfig => _shared!.PaneConfiguration;
 
-        public ExplorerItemModel Item
+        public ExplorerItemModel? Item
         {
-            get => Get<ExplorerItemModel>();
+            get => Get<ExplorerItemModel?>();
             private set => Set(value);
         }
 
         #endregion
 
-        void InvokeObject(ExplorerItemModel obj)
+        void InvokeObject(ExplorerItemModel? obj)
         {
+            if (obj == null)
+                return;
             if (!obj.Type.HasValue)
                 return;
 
@@ -147,7 +189,7 @@ namespace Jaya.Ui.ViewModels
             IsBusy = false;
 
             var eventArgs = new SelectionChangedEventArgs(_service, _account, directory);
-            EventAggregator.Publish(eventArgs);
+            EventAggregator?.Publish(eventArgs);
         }
 
         void DeleteItems(IReadOnlyList<ExplorerItemModel> items)
@@ -197,6 +239,162 @@ namespace Jaya.Ui.ViewModels
             catch (Exception ex)
             {
                 FileSystemLogger.Error(ex, "Failed to delete {Count} items", targets.Count);
+            }
+        }
+
+        void CutItems(IReadOnlyList<ExplorerItemModel> items)
+        {
+            StoreClipboard(items, TransferMode.Move);
+        }
+
+        void CopyItems(IReadOnlyList<ExplorerItemModel> items)
+        {
+            StoreClipboard(items, TransferMode.Copy);
+        }
+
+        async void PasteItems()
+        {
+            if (_clipboardItems == null || _clipboardItems.Count == 0)
+            {
+                FileSystemLogger.Debug("Paste skipped: clipboard is empty.");
+                return;
+            }
+
+            if (_service == null || _account == null)
+            {
+                FileSystemLogger.Debug("Paste skipped: missing service/account context.");
+                return;
+            }
+
+            if (_service is not IFileTransferService transferService)
+            {
+                FileSystemLogger.Warning("Paste requested but service does not support transfer.");
+                return;
+            }
+
+            var targetDirectory = Item?.Object as DirectoryModel;
+            if (targetDirectory == null || string.IsNullOrWhiteSpace(targetDirectory.Path))
+            {
+                FileSystemLogger.Debug("Paste skipped: no target directory.");
+                return;
+            }
+
+            try
+            {
+                var cancellation = new System.Threading.CancellationTokenSource();
+                var progressWindow = new TransferProgressView();
+                var progressViewModel = progressWindow.DataContext as TransferProgressViewModel;
+                if (progressViewModel != null)
+                {
+                    progressViewModel.AttachCancellation(cancellation);
+                    var verb = _clipboardMode == TransferMode.Move ? "Moving items" : "Copying items";
+                    progressViewModel.Title = verb;
+                    progressViewModel.HeaderText = $"{verb}...";
+                    progressViewModel.StatusText = "Preparing items...";
+                    progressViewModel.TargetPath = targetDirectory.Path;
+                }
+
+                var owner = App.Lifetime?.MainWindow;
+                if (owner != null)
+                    progressWindow.Show(owner);
+                else
+                    progressWindow.Show();
+
+                var progress = new Progress<TransferProgressReport>(report =>
+                {
+                    if (progressViewModel != null)
+                        progressViewModel.Update(report);
+                });
+
+                var createdItems = await transferService.TransferAsync(
+                    _account,
+                    _clipboardItems,
+                    targetDirectory,
+                    _clipboardMode,
+                    progress,
+                    cancellation.Token);
+                FileSystemLogger.Information("Paste requested for {Count} items (created={Created})", _clipboardItems.Count, createdItems.Count);
+
+                if (createdItems.Count > 0)
+                {
+                    Invoke(() => AddItemsToView(createdItems, selectAdded: true));
+                }
+
+                if (createdItems.Count > 0 && _clipboardMode == TransferMode.Move)
+                    _clipboardItems.Clear();
+            }
+            catch (Exception ex)
+            {
+                FileSystemLogger.Error(ex, "Failed to paste {Count} items", _clipboardItems.Count);
+            }
+        }
+
+        void StoreClipboard(IReadOnlyList<ExplorerItemModel> items, TransferMode mode)
+        {
+            if (items == null || items.Count == 0)
+                return;
+
+            var targets = items
+                .Where(item => item != null && (item.IsFile || item.IsDirectory))
+                .Select(item => item.Object)
+                .OfType<FileSystemObjectModel>()
+                .Where(obj => !string.IsNullOrWhiteSpace(obj.Path))
+                .ToList();
+
+            if (targets.Count == 0)
+            {
+                FileSystemLogger.Debug("Clipboard skipped: no file or directory targets in selection.");
+                return;
+            }
+
+            _clipboardItems = targets;
+            _clipboardMode = mode;
+            FileSystemLogger.Debug("Clipboard stored {Count} items with mode={Mode}.", targets.Count, mode);
+        }
+
+        void AddItemsToView(IReadOnlyCollection<FileSystemObjectModel> createdItems, bool selectAdded)
+        {
+            if (createdItems == null || createdItems.Count == 0)
+                return;
+
+            if (Item?.Children == null)
+                return;
+
+            var comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+            var existingPaths = new HashSet<string>(
+                Item.Children
+                    .Select(child => (child.Object as FileSystemObjectModel)?.Path ?? string.Empty)
+                    .Where(path => !string.IsNullOrWhiteSpace(path)),
+                comparer);
+            var addedPaths = selectAdded ? new List<string>() : null;
+
+            foreach (var created in createdItems)
+            {
+                if (string.IsNullOrWhiteSpace(created.Path) || existingPaths.Contains(created.Path))
+                    continue;
+
+                var itemType = created.Type switch
+                {
+                    FileSystemObjectType.Directory => ItemType.Directory,
+                    FileSystemObjectType.Drive => ItemType.Drive,
+                    _ => ItemType.File
+                };
+
+                var label = created switch
+                {
+                    FileModel file => file.Name,
+                    DirectoryModel directory => directory.Name,
+                    _ => created.Name
+                };
+
+                Item.Children.Add(new ExplorerItemModel(itemType, label, created));
+                existingPaths.Add(created.Path);
+                addedPaths?.Add(created.Path);
+            }
+
+            if (selectAdded && addedPaths != null && addedPaths.Count > 0)
+            {
+                EventAggregator?.Publish(new SelectItemsRequestedEventArgs(addedPaths));
             }
         }
 
@@ -255,13 +453,25 @@ namespace Jaya.Ui.ViewModels
             Item = null;
             IsBusy = true;
 
-            
+            if (args == null)
+            {
+                IsBusy = false;
+                return;
+            }
+
             _service = args.Service;
             _account = args.Account;
 
+            if (_service == null)
+            {
+                // nothing to do if no service is provided
+                IsBusy = false;
+                return;
+            }
+
             if (_account == null)
             {
-                var accounts = await _service!.GetAccountsAsync();
+                var accounts = await _service.GetAccountsAsync();
                 var serviceItem = new ExplorerItemModel(ItemType.Service, _service.Name, _service.ImagePath);
 
                 foreach (var account in accounts)
@@ -274,21 +484,32 @@ namespace Jaya.Ui.ViewModels
                 }
 
                 Item = serviceItem;
-                LogDisplayedItems($"Service {_service!.Name}", serviceItem);
+                LogDisplayedItems($"Service {_service.Name}", serviceItem);
             }
-            else if (args.Directory != null)
+            else if (args.Directory != null && _account != null)
             {
-                var directory = await args.Service.GetDirectoryAsync(args.Account!, args.Directory!);
-                var dirType = (directory?.Type == FileSystemObjectType.Drive) ? ItemType.Drive : ItemType.Directory;
-                var directoryItem = new ExplorerItemModel(dirType, directory?.Name, directory);
-
-                    foreach (var subDirectory in directory.Directories)
+                var directory = await _service.GetDirectoryAsync(_account, args.Directory);
+                if (directory == null)
                 {
-                    await Task.Run(new Action(() =>
+                    // empty directory or failed to load
+                    Item = new ExplorerItemModel(ItemType.Directory, args.Directory.Path ?? "", new DirectoryModel());
+                    IsBusy = false;
+                    return;
+                }
+
+                var dirType = (directory.Type == FileSystemObjectType.Drive) ? ItemType.Drive : ItemType.Directory;
+                var directoryItem = new ExplorerItemModel(dirType, directory.Name ?? string.Empty, directory);
+
+                if (directory.Directories != null)
+                {
+                    foreach (var subDirectory in directory.Directories)
                     {
-                        var subDirectoryItem = new ExplorerItemModel(subDirectory.Type == FileSystemObjectType.Drive ? ItemType.Drive : ItemType.Directory, subDirectory.Name, subDirectory);
-                        directoryItem.Children.Add(subDirectoryItem);
-                    }));
+                        await Task.Run(new Action(() =>
+                        {
+                            var subDirectoryItem = new ExplorerItemModel(subDirectory.Type == FileSystemObjectType.Drive ? ItemType.Drive : ItemType.Directory, subDirectory.Name, subDirectory);
+                            directoryItem.Children.Add(subDirectoryItem);
+                        }));
+                    }
                 }
 
                 if (directory.Files != null)
@@ -330,7 +551,7 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
-        void LogDisplayedItems(string context, ExplorerItemModel root)
+        void LogDisplayedItems(string context, ExplorerItemModel? root)
         {
             if (root?.Children == null)
                 return;
@@ -340,8 +561,8 @@ namespace Jaya.Ui.ViewModels
             foreach (var child in root.Children)
             {
                 var label = child.Label;
-                string path = null;
-                string id = null;
+                string? path = null;
+                string? id = null;
 
                 switch (child.Object)
                 {

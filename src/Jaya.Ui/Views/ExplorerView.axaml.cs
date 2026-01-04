@@ -7,7 +7,9 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
 using Jaya.Shared.Models;
+using Jaya.Ui;
 using Jaya.Shared.Base;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,15 +26,21 @@ namespace Jaya.Ui.Views
     {
         static readonly ILogger Logger = Log.ForContext<ExplorerView>();
         Subscription<OpenRequestedEventArgs>? _openRequested;
+        Subscription<CutRequestedEventArgs>? _cutRequested;
+        Subscription<CopyRequestedEventArgs>? _copyRequested;
+        Subscription<PasteRequestedEventArgs>? _pasteRequested;
         Subscription<DeleteRequestedEventArgs>? _deleteRequested;
+        Subscription<SelectItemsRequestedEventArgs>? _selectItemsRequested;
 
         public ExplorerView()
         {
             this.InitializeComponent();
             if (!Design.IsDesignMode)
             {
-                var eventAggregator = ServiceLocator.Instance.GetService<ICommandService>().EventAggregator;
-                _openRequested = eventAggregator.Subscribe<OpenRequestedEventArgs>(args =>
+                var eventAggregator = ServiceLocator.Instance.GetService<ICommandService>()?.EventAggregator;
+                if (eventAggregator != null)
+                {
+                    _openRequested = eventAggregator.Subscribe<OpenRequestedEventArgs>(args =>
                 {
                     // Attempt to open the selected item(s) by invoking ViewModel command on UI thread
                     Dispatcher.UIThread.Post(() =>
@@ -50,13 +58,63 @@ namespace Jaya.Ui.Views
                                            ?? TilesListBox?.SelectedItem as Models.ExplorerItemModel
                                            ?? ContentListBox?.SelectedItem as Models.ExplorerItemModel;
 
-                            if (selected != null)
-                                vm?.InvokeObjectCommand.Execute(selected);
+                            if (selected != null && vm?.InvokeObjectCommand != null)
+                                vm.InvokeObjectCommand.Execute(selected);
                         }
                         catch { }
                     });
                 });
-                _deleteRequested = eventAggregator.Subscribe<DeleteRequestedEventArgs>(args =>
+                    _cutRequested = eventAggregator.Subscribe<CutRequestedEventArgs>(args =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        try
+                        {
+                            var vm = DataContext as ExplorerViewModel;
+                            if (vm == null)
+                                return;
+
+                            var selectedItems = GetSelectedItems();
+                            if (selectedItems.Count > 0 && vm?.CutItemsCommand != null)
+                                vm.CutItemsCommand.Execute(selectedItems);
+                        }
+                        catch { }
+                    });
+                });
+                    _copyRequested = eventAggregator.Subscribe<CopyRequestedEventArgs>(args =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        try
+                        {
+                            var vm = DataContext as ExplorerViewModel;
+                            if (vm == null)
+                                return;
+
+                            var selectedItems = GetSelectedItems();
+                            if (selectedItems.Count > 0 && vm?.CopyItemsCommand != null)
+                                vm.CopyItemsCommand.Execute(selectedItems);
+                        }
+                        catch { }
+                    });
+                });
+                    _pasteRequested = eventAggregator.Subscribe<PasteRequestedEventArgs>(args =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        try
+                        {
+                            var vm = DataContext as ExplorerViewModel;
+                            if (vm == null)
+                                return;
+
+                            if (vm?.PasteItemsCommand != null)
+                                vm.PasteItemsCommand.Execute(null);
+                        }
+                        catch { }
+                    });
+                });
+                    _deleteRequested = eventAggregator.Subscribe<DeleteRequestedEventArgs>(args =>
                 {
                     Dispatcher.UIThread.Post(() =>
                     {
@@ -86,23 +144,46 @@ namespace Jaya.Ui.Views
                             Logger.Debug("DeleteRequested selection count={Count} items={Items}",
                                 selectedItems.Count,
                                 DescribeSelection(selectedItems));
-                            if (selectedItems.Count > 0)
-                                vm?.DeleteItemsCommand.Execute(selectedItems);
+                            if (selectedItems.Count > 0 && vm?.DeleteItemsCommand != null)
+                                vm.DeleteItemsCommand.Execute(selectedItems);
+                        }
+                        catch { }
+                    });
+                });
+                _selectItemsRequested = eventAggregator.Subscribe<SelectItemsRequestedEventArgs>(args =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        try
+                        {
+                            if (args == null || args.Paths == null || args.Paths.Count == 0)
+                                return;
+
+                            ApplySelection(args.Paths);
                         }
                         catch { }
                     });
                 });
 
-                DetachedFromVisualTree += ExplorerView_DetachedFromVisualTree;
+                    DetachedFromVisualTree += ExplorerView_DetachedFromVisualTree;
+                }
             }
         }
 
-        void ExplorerView_DetachedFromVisualTree(object sender, VisualTreeAttachmentEventArgs e)
+        void ExplorerView_DetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
         {
             _openRequested?.Dispose();
+            _cutRequested?.Dispose();
+            _copyRequested?.Dispose();
+            _pasteRequested?.Dispose();
             _deleteRequested?.Dispose();
+            _selectItemsRequested?.Dispose();
             _openRequested = null;
+            _cutRequested = null;
+            _copyRequested = null;
+            _pasteRequested = null;
             _deleteRequested = null;
+            _selectItemsRequested = null;
             DetachedFromVisualTree -= ExplorerView_DetachedFromVisualTree;
         }
 
@@ -162,6 +243,111 @@ namespace Jaya.Ui.Views
                 results.Add(single);
 
             return results;
+        }
+
+        void ApplySelection(IReadOnlyList<string> paths)
+        {
+            var pathSet = BuildPathSet(paths);
+            if (pathSet.Count == 0)
+                return;
+
+            var details = DetailsDataGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
+            var list = ListListBox ?? this.FindControl<ListBox>("ListListBox");
+            var icons = IconsListBox ?? this.FindControl<ListBox>("IconsListBox");
+            var tiles = TilesListBox ?? this.FindControl<ListBox>("TilesListBox");
+            var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
+
+            if (details?.IsVisible == true && SelectInDataGrid(details, pathSet))
+                return;
+            if (list?.IsVisible == true && SelectInListBox(list, pathSet))
+                return;
+            if (icons?.IsVisible == true && SelectInListBox(icons, pathSet))
+                return;
+            if (tiles?.IsVisible == true && SelectInListBox(tiles, pathSet))
+                return;
+            if (content?.IsVisible == true && SelectInListBox(content, pathSet))
+                return;
+
+            if (SelectInDataGrid(details, pathSet))
+                return;
+            if (SelectInListBox(list, pathSet))
+                return;
+            if (SelectInListBox(icons, pathSet))
+                return;
+            if (SelectInListBox(tiles, pathSet))
+                return;
+            SelectInListBox(content, pathSet);
+        }
+
+        static HashSet<string> BuildPathSet(IReadOnlyList<string> paths)
+        {
+            var comparer = System.OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+            var set = new HashSet<string>(comparer);
+            foreach (var path in paths)
+            {
+                if (!string.IsNullOrWhiteSpace(path))
+                    set.Add(path);
+            }
+
+            return set;
+        }
+
+        static bool SelectInDataGrid(DataGrid? grid, HashSet<string> pathSet)
+        {
+            if (grid == null || pathSet.Count == 0)
+                return false;
+
+            var selectedItems = grid.SelectedItems;
+            selectedItems?.Clear();
+            Models.ExplorerItemModel? firstSelected = null;
+
+            var gridItems = grid as IEnumerable ?? Array.Empty<object>();
+            foreach (var item in gridItems)
+            {
+                if (item is not Models.ExplorerItemModel model)
+                    continue;
+
+                var path = (model.Object as FileSystemObjectModel)?.Path;
+                if (string.IsNullOrWhiteSpace(path) || !pathSet.Contains(path))
+                    continue;
+
+                selectedItems?.Add(model);
+                firstSelected ??= model;
+            }
+
+            if (firstSelected != null)
+                grid.SelectedItem = firstSelected;
+
+            return firstSelected != null;
+        }
+
+        static bool SelectInListBox(ListBox? listBox, HashSet<string> pathSet)
+        {
+            if (listBox == null || pathSet.Count == 0)
+                return false;
+
+            var selectedItems = listBox.SelectedItems;
+            selectedItems?.Clear();
+            Models.ExplorerItemModel? firstSelected = null;
+
+            var listItems = listBox as IEnumerable ?? Array.Empty<object>();
+            foreach (var item in listItems)
+            {
+                if (item is not Models.ExplorerItemModel model)
+                    continue;
+
+                var path = (model.Object as FileSystemObjectModel)?.Path;
+                if (string.IsNullOrWhiteSpace(path) || !pathSet.Contains(path))
+                    continue;
+
+                selectedItems?.Add(model);
+                firstSelected ??= model;
+            }
+
+            if (firstSelected != null)
+                listBox.SelectedItem = firstSelected;
+
+            return firstSelected != null;
         }
 
         static string DescribeSelection(IReadOnlyList<Models.ExplorerItemModel> items)

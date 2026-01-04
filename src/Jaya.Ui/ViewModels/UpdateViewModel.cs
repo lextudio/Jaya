@@ -18,15 +18,15 @@ namespace Jaya.Ui.ViewModels
         const string UPDATE_AVAILABLE = "Update available";
         const string DOWNLOADING = "Downloaidng update...";
 
-        RelayCommand _checkForUpdate, _downloadUpdate;
-        UpdateService _updateService;
+        RelayCommand? _checkForUpdate, _downloadUpdate;
+        UpdateService? _updateService;
 
         public UpdateViewModel()
         {
             _updateService = GetService<UpdateService>();
 
-            Update = _updateService?.Update;
-            Checked = _updateService?.Checked;
+            Update = _updateService?.Update ?? null;
+            Checked = _updateService?.Checked ?? null;
         }
 
         #region properties
@@ -37,7 +37,7 @@ namespace Jaya.Ui.ViewModels
             private set => Set(value);
         }
 
-        public string VersionString => _updateService?.VersionString;
+        public string? VersionString => _updateService?.VersionString;
 
         public byte? Bitness => _updateService?.Bitness;
 
@@ -47,9 +47,9 @@ namespace Jaya.Ui.ViewModels
             private set => Set(value);
         }
 
-        public ReleaseModel Update
+        public ReleaseModel? Update
         {
-            get => Get<ReleaseModel>();
+            get => Get<ReleaseModel?>();
             private set
             {
                 Set(value);
@@ -74,10 +74,8 @@ namespace Jaya.Ui.ViewModels
         {
             get
             {
-                if (_checkForUpdate == null)
-                    _checkForUpdate = new RelayCommand(CheckForUpdateAction);
-
-                return _checkForUpdate;
+                _checkForUpdate ??= new RelayCommand(CheckForUpdateAction);
+                return _checkForUpdate!;
             }
         }
 
@@ -85,10 +83,8 @@ namespace Jaya.Ui.ViewModels
         {
             get
             {
-                if (_downloadUpdate == null)
-                    _downloadUpdate = new RelayCommand(DownloadUpdateAction);
-
-                return _downloadUpdate;
+                _downloadUpdate ??= new RelayCommand(DownloadUpdateAction);
+                return _downloadUpdate!;
             }
         }
 
@@ -97,9 +93,12 @@ namespace Jaya.Ui.ViewModels
             Title = CHECKING_FOR_UPDATE;
             IsBusy = true;
 
-            await _updateService.CheckForUpdate();
-            Update = _updateService.Update;
-            Checked = _updateService.Checked;
+            if (_updateService != null)
+            {
+                await _updateService.CheckForUpdate();
+                Update = _updateService.Update;
+                Checked = _updateService.Checked;
+            }
 
             IsBusy = false;
         }
@@ -109,9 +108,11 @@ namespace Jaya.Ui.ViewModels
             Title = DOWNLOADING;
             IsBusy = true;
 
-            await _updateService.DownloadUpdate();
-
-            Title = UPDATE_AVAILABLE;
+            if (_updateService != null)
+            {
+                await _updateService.DownloadUpdate();
+                Title = UPDATE_AVAILABLE;
+            }
             IsBusy = false;
         }
     }

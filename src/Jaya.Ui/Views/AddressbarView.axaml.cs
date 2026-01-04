@@ -49,8 +49,12 @@ namespace Jaya.Ui.Views
             if (breadcrumbs != null)
             {
                 Console.WriteLine($"[Addressbar] Breadcrumbs.Bounds (local): {breadcrumbs.Bounds}");
-                var p = breadcrumbs.TranslatePoint(new Point(0, 0), this.GetVisualRoot() as Visual);
-                Console.WriteLine($"[Addressbar] Breadcrumbs.TopLeft (window): {p}");
+                var root = this.GetVisualRoot() as Visual;
+                if (root != null)
+                {
+                    var p = breadcrumbs.TranslatePoint(new Point(0, 0), root);
+                    Console.WriteLine($"[Addressbar] Breadcrumbs.TopLeft (window): {p}");
+                }
                 try
                 {
                     var posOnBc = e.GetPosition(breadcrumbs);
@@ -105,20 +109,30 @@ namespace Jaya.Ui.Views
                         }
                         
                         Console.WriteLine($"[Addressbar] Combo.Bounds (local-after-layout): {combo.Bounds}");
-                        var p2 = combo.TranslatePoint(new Point(0, 0), this.GetVisualRoot() as Visual);
-                        Console.WriteLine($"[Addressbar] Combo.TopLeft (window-after-layout): {p2}");
+                        var root2 = this.GetVisualRoot() as Visual;
+                        if (root2 != null)
+                        {
+                            var p2 = combo.TranslatePoint(new Point(0, 0), root2);
+                            Console.WriteLine($"[Addressbar] Combo.TopLeft (window-after-layout): {p2}");
+                        }
                         try
                         {
-                            var posOnCombo = e.GetPosition(combo);
-                            Console.WriteLine($"[Addressbar] Pointer position relative to Combo: {posOnCombo}");
+                            if (combo != null)
+                            {
+                                var posOnCombo = e.GetPosition(combo);
+                                Console.WriteLine($"[Addressbar] Pointer position relative to Combo: {posOnCombo}");
+                            }
                         }
                         catch { }
                         // Also log pointer position relative to window
                         try
                         {
                             var root = this.GetVisualRoot() as Visual;
-                            var posOnRoot = e.GetPosition(root);
-                            Console.WriteLine($"[Addressbar] Pointer position relative to Window: {posOnRoot}");
+                            if (root != null)
+                            {
+                                var posOnRoot = e.GetPosition(root);
+                                Console.WriteLine($"[Addressbar] Pointer position relative to Window: {posOnRoot}");
+                            }
                         }
                         catch { }
                         combo.Focus();

@@ -21,18 +21,18 @@ namespace Jaya.Ui.ViewModels
             _shared = GetService<SharedService>();
         }
 
-        public ToolbarConfigModel ToolbarConfig => _shared!.ToolbarConfiguration;
+        public ToolbarConfigModel ToolbarConfig => _shared?.ToolbarConfiguration ?? new ToolbarConfigModel();
 
-        public PaneConfigModel PaneConfig => _shared!.PaneConfiguration;
+        public PaneConfigModel PaneConfig => _shared?.PaneConfiguration ?? new PaneConfigModel();
 
-        public ApplicationConfigModel ApplicationConfig => _shared!.ApplicationConfiguration;
+        public ApplicationConfigModel ApplicationConfig => _shared?.ApplicationConfiguration ?? new ApplicationConfigModel();
 
         public ICommand OpenWindowCommand
         {
             get
             {
                 if (_openWindow == null)
-                    _openWindow = GetService<NavigationService>().OpenWindowCommand;
+                    _openWindow = GetService<NavigationService>()?.OpenWindowCommand;
 
                 return _openWindow!;
             }

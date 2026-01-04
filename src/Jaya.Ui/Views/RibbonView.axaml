@@ -54,6 +54,8 @@
                     <ribbon:RibbonTab.Groups>
                         <ribbon:RibbonGroupBox Header="Clipboard">
                             <ribbon:RibbonButton
+                                    Command="{Binding SimpleCommand}"
+                                    CommandParameter="{x:Static local:CommandType.Copy}"
                                     ribbon:KeyTip.KeyTipKeys="CO"
                                     Content="Copy"
                                     MaxSize="Large"
@@ -63,6 +65,8 @@
                                 </ribbon:RibbonButton.LargeIcon>
                             </ribbon:RibbonButton>
                             <ribbon:RibbonButton
+                                    Command="{Binding SimpleCommand}"
+                                    CommandParameter="{x:Static local:CommandType.Paste}"
                                     ribbon:KeyTip.KeyTipKeys="V"
                                     Content="Paste"
                                     MaxSize="Large"
@@ -72,6 +76,8 @@
                                 </ribbon:RibbonButton.LargeIcon>
                             </ribbon:RibbonButton>
                             <ribbon:RibbonButton
+                                    Command="{Binding SimpleCommand}"
+                                    CommandParameter="{x:Static local:CommandType.Cut}"
                                     ribbon:KeyTip.KeyTipKeys="T"
                                     Content="Cut"
                                     MaxSize="Medium"

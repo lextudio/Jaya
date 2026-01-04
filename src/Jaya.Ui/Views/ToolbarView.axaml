@@ -43,13 +43,22 @@
         <StackPanel IsVisible="{Binding ToolbarConfig.IsEditVisible, Mode=TwoWay}">
             <Border Classes="Thumb" />
 
-            <Button ToolTip.Tip="Cut">
+            <Button
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Cut}"
+                ToolTip.Tip="Cut">
                 <Image Source="{DynamicResource Icon.Cut.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
-            <Button ToolTip.Tip="Copy">
+            <Button
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Copy}"
+                ToolTip.Tip="Copy">
                 <Image Source="{DynamicResource Icon.Copy.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
-            <Button ToolTip.Tip="Paste">
+            <Button
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Paste}"
+                ToolTip.Tip="Paste">
                 <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
             <Border Classes="Separator" />

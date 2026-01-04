@@ -12,21 +12,23 @@ namespace Jaya.Ui.ViewModels
 {
     public class ManagePluginsViewModel : ViewModelBase
     {
-        object _configurationEditor;
+        object? _configurationEditor;
 
-        public IEnumerable<IProviderService> Plugins => GetService<ProviderService>().Providers;
+        public IEnumerable<IProviderService> Plugins => GetService<ProviderService>()?.Providers ?? Array.Empty<IProviderService>();
 
-        public IProviderService SelectedPlugin
+        public IProviderService? SelectedPlugin
         {
-            get => Get<IProviderService>();
+            get => Get<IProviderService?>();
             set
             {
                 if (value == null)
+                {
                     ConfigurationEditor = null;
+                }
 
                 if (Set(value))
                 {
-                    if (value.ConfigurationEditorType == null)
+                    if (value?.ConfigurationEditorType == null)
                         ConfigurationEditor = null;
                     else
                         ConfigurationEditor = Activator.CreateInstance(value.ConfigurationEditorType);
@@ -38,7 +40,7 @@ namespace Jaya.Ui.ViewModels
 
         public bool IsPluginConfigurable => ConfigurationEditor != null;
 
-        public object ConfigurationEditor
+        public object? ConfigurationEditor
         {
             get => _configurationEditor;
             private set

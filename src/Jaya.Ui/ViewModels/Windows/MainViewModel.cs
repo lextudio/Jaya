@@ -13,7 +13,7 @@ namespace Jaya.Ui.ViewModels.Windows
 {
     public class MainViewModel : ViewModelBase
     {
-        readonly Subscription<SelectionChangedEventArgs> _onDirectoryChanged;
+        readonly Subscription<SelectionChangedEventArgs>? _onDirectoryChanged;
         readonly SharedService? _shared;
         static readonly ILogger Logger = Log.ForContext<MainViewModel>();
         public MainViewModel()
@@ -23,27 +23,33 @@ namespace Jaya.Ui.ViewModels.Windows
             _onDirectoryChanged = EventAggregator?.Subscribe<SelectionChangedEventArgs>(DirectoryChanged);
 
             _shared = GetService<SharedService>();
-            _shared.ToolbarConfiguration.PropertyChanged += OnPropertyChanged;
-            _shared.PaneConfiguration.PropertyChanged += OnPropertyChanged;
+            if (_shared?.ToolbarConfiguration != null)
+                _shared.ToolbarConfiguration.PropertyChanged += OnPropertyChanged;
+            if (_shared?.PaneConfiguration != null)
+                _shared.PaneConfiguration.PropertyChanged += OnPropertyChanged;
 
-            SimpleCommand = new RelayCommand<byte>(_shared.SimpleCommandAction);
+            if (_shared != null)
+                SimpleCommand = new RelayCommand<byte>(_shared.SimpleCommandAction);
 
             LogRibbonVisibilityAtStartup();
         }
 
         ~MainViewModel()
         {
-            _shared.ToolbarConfiguration.PropertyChanged -= OnPropertyChanged;
-            _shared.PaneConfiguration.PropertyChanged -= OnPropertyChanged;
+            if (_shared?.ToolbarConfiguration != null)
+                _shared.ToolbarConfiguration.PropertyChanged -= OnPropertyChanged;
+            if (_shared?.PaneConfiguration != null)
+                _shared.PaneConfiguration.PropertyChanged -= OnPropertyChanged;
 
-            EventAggregator.UnSubscribe(_onDirectoryChanged);
+            if (_onDirectoryChanged != null)
+                EventAggregator?.UnSubscribe(_onDirectoryChanged);
         }
 
-        public ToolbarConfigModel ToolbarConfig => _shared.ToolbarConfiguration;
+        public ToolbarConfigModel ToolbarConfig => _shared?.ToolbarConfiguration ?? new ToolbarConfigModel();
 
-        public PaneConfigModel PaneConfig => _shared.PaneConfiguration;
+        public PaneConfigModel PaneConfig => _shared?.PaneConfiguration ?? new PaneConfigModel();
 
-        public ApplicationConfigModel ApplicationConfig => _shared.ApplicationConfiguration;
+        public ApplicationConfigModel ApplicationConfig => _shared?.ApplicationConfiguration ?? new ApplicationConfigModel();
 
         public bool IsToolbarVisible => ToolbarConfig.IsVisible && !PaneConfig.IsRibbonVisible;
 
