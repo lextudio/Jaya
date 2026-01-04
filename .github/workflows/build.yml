@@ -46,7 +46,7 @@ jobs:
     runs-on: macOS-latest
     steps:
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           path: |
             publish/setup.exe
