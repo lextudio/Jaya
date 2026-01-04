@@ -67,7 +67,7 @@ namespace Jaya.Ui.ViewModels.Windows
                 WindowTitle = args.Directory.Name;
         }
 
-        void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (PaneConfig == null)
                 return;

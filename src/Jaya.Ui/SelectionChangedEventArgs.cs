@@ -17,7 +17,7 @@ namespace Jaya.Ui
 
     public class SelectionChangedEventArgs : EventArgs
     {
-        public SelectionChangedEventArgs(ProviderServiceBase service, AccountModelBase account, DirectoryModel directory, NavigationDirection direction = NavigationDirection.Unknown)
+        public SelectionChangedEventArgs(ProviderServiceBase? service, AccountModelBase? account, DirectoryModel? directory, NavigationDirection direction = NavigationDirection.Unknown)
         {
             Service = service;
             Account = account;
@@ -27,11 +27,11 @@ namespace Jaya.Ui
 
         public NavigationDirection Direction { get; }
 
-        public ProviderServiceBase Service { get; }
+        public ProviderServiceBase? Service { get; }
 
-        public AccountModelBase Account { get; }
+        public AccountModelBase? Account { get; }
 
-        public DirectoryModel Directory { get; }
+        public DirectoryModel? Directory { get; }
 
         public override int GetHashCode()
         {

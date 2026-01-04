@@ -6,6 +6,7 @@ using Jaya.Shared;
 using Jaya.Shared.Services;
 using Jaya.Ui.Models;
 using System;
+using System.Runtime.InteropServices;
 using System.IO;
 using System.Net;
 using System.Reflection;
@@ -20,8 +21,8 @@ namespace Jaya.Ui.Services
     {
         const string GITHUB_API = "https://api.github.com/";
 
-        readonly SharedService _sharedService;
-        readonly IPlatformService _platformService;
+        readonly SharedService? _sharedService;
+        readonly IPlatformService? _platformService;
         readonly bool _isPortable;
 
         public UpdateService()
@@ -40,9 +41,9 @@ namespace Jaya.Ui.Services
 
         public Version Version { get; }
 
-        public DateTime? Checked => _sharedService?.UpdateConfiguration.Checked;
+        public DateTime? Checked => _sharedService?.UpdateConfiguration?.Checked;
 
-        public ReleaseModel Update => _sharedService?.UpdateConfiguration.Update;
+        public ReleaseModel? Update => _sharedService?.UpdateConfiguration?.Update;
 
         public string VersionString { get; }
 
@@ -83,10 +84,11 @@ namespace Jaya.Ui.Services
             if (Update == null)
                 return;
 
-            var updateFilePrefix = string.Format("{0}{1}", _platformService.GetPlatform(), _isPortable ? "_portable" : string.Empty);
+            var platform = _platformService != null ? _platformService.GetPlatform() : OSPlatform.Create("unknown");
+            var updateFilePrefix = string.Format("{0}{1}", platform.ToString(), _isPortable ? "_portable" : string.Empty);
 
-            Uri url = null;
-            foreach(var download in Update.Downloads)
+            Uri? url = null;
+            foreach(var download in Update?.Downloads ?? new ReleaseAssetModel[0])
             {
                 if (download.Url.Contains(updateFilePrefix, StringComparison.OrdinalIgnoreCase))
                 {

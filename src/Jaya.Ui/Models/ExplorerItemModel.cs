@@ -11,10 +11,10 @@ namespace Jaya.Ui.Models
 {
     public class ExplorerItemModel: ModelBase
     {
-        public ExplorerItemModel(ItemType? type, string label, object obj, string imagePath = null)
+        public ExplorerItemModel(ItemType? type, string? label, object? obj, string? imagePath = null)
         {
             Type = type;
-            Label = label;
+            Label = label ?? string.Empty;
             Children = new ObservableCollection<ExplorerItemModel>();
             Object = obj;
             ImagePath = imagePath;
@@ -48,7 +48,7 @@ namespace Jaya.Ui.Models
 
         internal ItemType? Type { get; }
 
-        public object Object { get; }
+        public object? Object { get; }
 
         public bool IsDummy => Type == ItemType.Dummy;
 
@@ -66,21 +66,21 @@ namespace Jaya.Ui.Models
 
         public bool IsHavingMetaData => IsAccount || IsDrive || IsDirectory;
 
-        public string Label
+        public string? Label
         {
-            get => Get<string>();
+            get => Get<string?>();
             set => Set(value);
         }
 
-        public string DisplayName
+        public string? DisplayName
         {
-            get => Get<string>();
+            get => Get<string?>();
             set => Set(value);
         }
 
-        public string ImagePath
+        public string? ImagePath
         {
-            get => Get<string>();
+            get => Get<string?>();
             set => Set(value);
         }
 
@@ -95,8 +95,8 @@ namespace Jaya.Ui.Models
         {
             get
             {
-                if (Object is FileModel file)
-                    return file.Size!.Value;
+                if (Object is FileModel file && file.Size.HasValue)
+                    return file.Size.Value;
                 return 0;
             }
         }

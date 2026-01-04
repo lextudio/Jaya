@@ -19,7 +19,7 @@ namespace Jaya.Ui.Models
         public delegate void TreeNodeExpanded(TreeNodeModel node, bool isExpaded);
         public event TreeNodeExpanded? NodeExpanded;
 
-        public TreeNodeModel(ProviderServiceBase service, AccountModelBase account, ItemType? nodeType)
+        public TreeNodeModel(ProviderServiceBase? service, AccountModelBase? account, ItemType? nodeType)
         {
             Service = service;
             Account = account;
@@ -56,9 +56,9 @@ namespace Jaya.Ui.Models
 
         public bool IsComputer => NodeType == ItemType.Computer;
 
-        public ProviderServiceBase Service { get; }
+        public ProviderServiceBase? Service { get; }
 
-        public AccountModelBase Account { get; }
+        public AccountModelBase? Account { get; }
 
         public string Label
         {
@@ -89,9 +89,9 @@ namespace Jaya.Ui.Models
 
         public ObservableCollection<TreeNodeModel> Children { get; }
 
-        public FileSystemObjectModel FileSystemObject
+        public FileSystemObjectModel? FileSystemObject
         {
-            get => Get<FileSystemObjectModel>();
+            get => Get<FileSystemObjectModel?>();
             set
             {
                 if (Set(value))
@@ -114,7 +114,7 @@ namespace Jaya.Ui.Models
             return false;
         }
 
-        private void OnApplicationConfigChanged(object sender, PropertyChangedEventArgs e)
+        private void OnApplicationConfigChanged(object? sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
             {

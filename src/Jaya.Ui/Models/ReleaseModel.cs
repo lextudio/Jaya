@@ -10,7 +10,7 @@ namespace Jaya.Ui.Models
     public class ReleaseModel
     {
         [JsonPropertyName("name")]
-        public Version Version { get; set; }
+        public Version? Version { get; set; }
 
         [JsonPropertyName("prerelease")]
         public bool IsPrerelease { get; set; }
@@ -22,15 +22,15 @@ namespace Jaya.Ui.Models
         public DateTime Date { get; set; }
 
         [JsonPropertyName("body")]
-        public string Notes { get; set; }
+        public string? Notes { get; set; }
 
         [JsonPropertyName("assets")]
-        public ReleaseAssetModel[] Downloads { get; set; }
+        public ReleaseAssetModel[]? Downloads { get; set; }
 
         public override string ToString()
         {
             if (Version == null)
-                return null;
+                return string.Empty;
 
             return string.Format("{0}.{1}.{2}.{3}", Version.Major, Version.Minor, Version.Build, Version.Revision);
         }

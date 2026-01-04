@@ -12,19 +12,20 @@ namespace Jaya.Ui.ViewModels
 {
     public class RibbonViewModel: ViewModelBase
     {
-        readonly SharedService _shared;
-        ICommand _openWindow, _toggleRibbon;
+        readonly SharedService? _shared;
+        ICommand? _openWindow;
+        ICommand? _toggleRibbon;
 
         public RibbonViewModel()
         {
             _shared = GetService<SharedService>();
         }
 
-        public ToolbarConfigModel ToolbarConfig => _shared.ToolbarConfiguration;
+        public ToolbarConfigModel ToolbarConfig => _shared!.ToolbarConfiguration;
 
-        public PaneConfigModel PaneConfig => _shared.PaneConfiguration;
+        public PaneConfigModel PaneConfig => _shared!.PaneConfiguration;
 
-        public ApplicationConfigModel ApplicationConfig => _shared.ApplicationConfiguration;
+        public ApplicationConfigModel ApplicationConfig => _shared!.ApplicationConfiguration;
 
         public ICommand OpenWindowCommand
         {
@@ -33,7 +34,7 @@ namespace Jaya.Ui.ViewModels
                 if (_openWindow == null)
                     _openWindow = GetService<NavigationService>().OpenWindowCommand;
 
-                return _openWindow;
+                return _openWindow!;
             }
         }
 
@@ -44,7 +45,7 @@ namespace Jaya.Ui.ViewModels
                 if (_toggleRibbon == null)
                     _toggleRibbon = new RelayCommand(ToggleRibbonAction);
 
-                return _toggleRibbon;
+                return _toggleRibbon!;
             }
         }
 

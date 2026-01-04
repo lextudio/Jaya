@@ -43,22 +43,22 @@ namespace Jaya.Ui.Services
 
         #region properties
 
-        public ApplicationConfigModel ApplicationConfiguration { get; private set; }
+        public ApplicationConfigModel? ApplicationConfiguration { get; private set; }
 
-        public ToolbarConfigModel ToolbarConfiguration { get; private set; }
+        public ToolbarConfigModel? ToolbarConfiguration { get; private set; }
 
-        public PaneConfigModel PaneConfiguration { get; private set; }
+        public PaneConfigModel? PaneConfiguration { get; private set; }
 
-        public UpdateConfigModel UpdateConfiguration { get; private set; }
+        public UpdateConfigModel? UpdateConfiguration { get; private set; }
 
         #endregion
 
         internal void LoadConfigurations()
         {
-            ApplicationConfiguration = _configService.GetOrDefault<ApplicationConfigModel>();
-            ToolbarConfiguration = _configService.GetOrDefault<ToolbarConfigModel>();
-            PaneConfiguration = _configService.GetOrDefault<PaneConfigModel>();
-            UpdateConfiguration = _configService.GetOrDefault<UpdateConfigModel>();
+            ApplicationConfiguration = _configService.GetOrDefault<ApplicationConfigModel>() ?? new ApplicationConfigModel();
+            ToolbarConfiguration = _configService.GetOrDefault<ToolbarConfigModel>() ?? new ToolbarConfigModel();
+            PaneConfiguration = _configService.GetOrDefault<PaneConfigModel>() ?? new PaneConfigModel();
+            UpdateConfiguration = _configService.GetOrDefault<UpdateConfigModel>() ?? new UpdateConfigModel();
             // Log changes to interesting configuration properties so UI binding issues can be diagnosed.
             if (ApplicationConfiguration != null)
             {
@@ -176,7 +176,7 @@ namespace Jaya.Ui.Services
             var command = (CommandType)parameter.Key;
         }
 
-        void ApplicationConfiguration_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        void ApplicationConfiguration_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e == null || string.IsNullOrEmpty(e.PropertyName))
                 return;

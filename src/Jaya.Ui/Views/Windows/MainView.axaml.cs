@@ -170,7 +170,7 @@ namespace Jaya.Ui.Views.Windows
             _viewModel = null;
         }
 
-        void PaneConfig_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        void PaneConfig_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(PaneConfigModel.IsMenuHeaderVisible) ||
                 e.PropertyName == nameof(PaneConfigModel.IsRibbonVisible))

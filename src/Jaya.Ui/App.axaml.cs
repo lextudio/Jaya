@@ -13,7 +13,7 @@ namespace Jaya.Ui
 {
     public partial class App : Application
     {
-        SharedService _shared;
+        SharedService? _shared;
 
         public override void Initialize()
         {
@@ -25,7 +25,7 @@ namespace Jaya.Ui
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
             {
                 _shared = ServiceLocator.Instance.GetService<SharedService>();
-                _shared.LoadConfigurations();
+                _shared?.LoadConfigurations();
 
                 Lifetime.Exit += OnExit;
                 Lifetime.MainWindow = new MainView();
@@ -36,7 +36,7 @@ namespace Jaya.Ui
 
         void OnExit(object sender, ControlledApplicationLifetimeExitEventArgs e)
         {
-            _shared.SaveConfigurations();
+            _shared?.SaveConfigurations();
             Lifetime.Exit -= OnExit;
         }
 

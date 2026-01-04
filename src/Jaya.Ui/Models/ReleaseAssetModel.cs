@@ -12,11 +12,11 @@ namespace Jaya.Ui.Models
         public long Size { get; set; }
 
         [JsonPropertyName("browser_download_url")]
-        public string Url { get; set; }
+        public string? Url { get; set; }
 
         public override string ToString()
         {
-            return Url;
+            return Url ?? string.Empty;
         }
     }
 }

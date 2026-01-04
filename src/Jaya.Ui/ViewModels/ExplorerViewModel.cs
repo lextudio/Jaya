@@ -93,7 +93,7 @@ namespace Jaya.Ui.ViewModels
 
             IsBusy = true;
 
-            DirectoryModel directory = null;
+            DirectoryModel? directory = null;
             switch (obj.Type.Value)
             {
                 case ItemType.Drive:
@@ -155,8 +155,16 @@ namespace Jaya.Ui.ViewModels
             if (items == null || items.Count == 0)
                 return;
 
+            FileSystemLogger.Debug("DeleteItems invoked: Count={Count}, Service={Service}, Account={Account}",
+                items.Count,
+                _service?.Name ?? "<null>",
+                _account?.Name ?? "<null>");
+
             if (_service == null || _account == null)
+            {
+                FileSystemLogger.Debug("Delete skipped: missing service/account context.");
                 return;
+            }
 
             if (_service is not IFileDeleteService deleteService)
             {
@@ -172,25 +180,49 @@ namespace Jaya.Ui.ViewModels
                 .ToList();
 
             if (targets.Count == 0)
+            {
+                FileSystemLogger.Debug("Delete skipped: no file or directory targets in selection.");
                 return;
+            }
 
             try
             {
                 var deleted = deleteService.DeleteAsync(_account, targets, DeleteMode.Trash).GetAwaiter().GetResult();
                 FileSystemLogger.Information("Delete requested for {Count} items (anyDeleted={AnyDeleted})", targets.Count, deleted);
+                if (deleted)
+                {
+                    Invoke(() => RemoveItemsFromView(targets));
+                }
             }
             catch (Exception ex)
             {
                 FileSystemLogger.Error(ex, "Failed to delete {Count} items", targets.Count);
             }
+        }
 
-            if (_lastSelectionArgs != null)
+        void RemoveItemsFromView(IReadOnlyCollection<FileSystemObjectModel> targets)
+        {
+            if (targets == null || targets.Count == 0)
+                return;
+
+            if (Item?.Children == null)
+                return;
+
+            var removePaths = new HashSet<string>(targets.Select(target => target.Path), StringComparer.Ordinal);
+            var toRemove = Item.Children
+                .Where(child => child.Object is FileSystemObjectModel fso && !string.IsNullOrWhiteSpace(fso.Path) && removePaths.Contains(fso.Path))
+                .ToList();
+
+            foreach (var child in toRemove)
+                Item.Children.Remove(child);
+
+            if (toRemove.Count == 0)
             {
-                try
-                {
-                    Invoke(() => SelectionChanged(_lastSelectionArgs));
-                }
-                catch { }
+                FileSystemLogger.Debug("Delete succeeded but no matching items found in view.");
+            }
+            else
+            {
+                FileSystemLogger.Debug("Removed {Count} items from view after delete.", toRemove.Count);
             }
         }
 
@@ -229,14 +261,14 @@ namespace Jaya.Ui.ViewModels
 
             if (_account == null)
             {
-                var accounts = await _service.GetAccountsAsync();
-                var serviceItem = new ExplorerItemModel(ItemType.Service, _service!.Name, _service.ImagePath);
+                var accounts = await _service!.GetAccountsAsync();
+                var serviceItem = new ExplorerItemModel(ItemType.Service, _service.Name, _service.ImagePath);
 
                 foreach (var account in accounts)
                 {
                     await Task.Run(new Action(() =>
                     {
-                        var accountItem = new ExplorerItemModel(_service!.IsRootDrive ? ItemType.Computer : ItemType.Account, account.Name, account);
+                        var accountItem = new ExplorerItemModel(_service.IsRootDrive ? ItemType.Computer : ItemType.Account, account.Name, account);
                         serviceItem.Children.Add(accountItem);
                     }));
                 }
@@ -246,8 +278,9 @@ namespace Jaya.Ui.ViewModels
             }
             else if (args.Directory != null)
             {
-                var directory = await args.Service.GetDirectoryAsync(args.Account, args.Directory);
-                var directoryItem = new ExplorerItemModel(directory!.Type == FileSystemObjectType.Drive ? ItemType.Drive : ItemType.Directory, directory.Name, directory);
+                var directory = await args.Service.GetDirectoryAsync(args.Account!, args.Directory!);
+                var dirType = (directory?.Type == FileSystemObjectType.Drive) ? ItemType.Drive : ItemType.Directory;
+                var directoryItem = new ExplorerItemModel(dirType, directory?.Name, directory);
 
                     foreach (var subDirectory in directory.Directories)
                 {
@@ -277,7 +310,7 @@ namespace Jaya.Ui.ViewModels
             IsBusy = false;
         }
 
-        void ApplicationConfiguration_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        void ApplicationConfiguration_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e == null || string.IsNullOrEmpty(e.PropertyName))
                 return;
@@ -340,7 +373,7 @@ namespace Jaya.Ui.ViewModels
                 path ??= fsObject?.Path;
                 id ??= fsObject?.Id;
 
-                FileSystemLogger.Debug(
+                FileSystemLogger.Verbose(
                     "Displayed item {Label} as {DisplayName} (ItemType={ItemType}, ObjectType={ObjectType}, Extension={Extension}, Size={Size}) path={Path} id={Id} under {Context}",
                     label,
                     child.DisplayName,

@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 
 namespace Jaya.Provider.FileSystem.Services
 {
@@ -239,61 +240,61 @@ namespace Jaya.Provider.FileSystem.Services
             if (string.IsNullOrWhiteSpace(path))
                 return false;
 
-            if (TryMoveToUserTrash(path))
+            // Prefer native APIs so items go to the correct per-volume Trash without requiring Finder automation.
+            if (TryMoveToTrashNative(path))
                 return true;
 
+            // Last resort: ask Finder to delete (can require Automation permission; may not work headless).
             return TryMoveToTrashWithFinder(path);
         }
 
-        static bool TryMoveToUserTrash(string path)
+        // Native Trash implementation (macOS)
+        //
+        // Uses CoreServices' FSPathMoveObjectToTrashSync to ask the OS to move an item to Trash.
+        // This avoids Apple Events / Finder automation and generally preserves macOS behavior
+        // for per-volume Trash locations.
+        //
+        // Note: Apple documents this API as deprecated in favor of NSFileManager trashItemAtURL:...
+        // but it is still widely available on macOS for compatibility. If it's unavailable at runtime,
+        // we gracefully fall back to the managed/Finder approaches.
+        const string CoreServicesLib = "/System/Library/Frameworks/CoreServices.framework/CoreServices";
+
+        [DllImport(CoreServicesLib, EntryPoint = "FSPathMoveObjectToTrashSync")]
+        static extern int FSPathMoveObjectToTrashSync(
+            [MarshalAs(UnmanagedType.LPUTF8Str)] string sourcePath,
+            IntPtr targetPath,
+            uint options);
+
+        static bool TryMoveToTrashNative(string path)
         {
             try
             {
                 if (!File.Exists(path) && !Directory.Exists(path))
                     return false;
 
-                var trashDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".Trash");
-                Directory.CreateDirectory(trashDir);
+                // options = 0 for default behavior; targetPath can be NULL if we don't need the resulting path.
+                var status = FSPathMoveObjectToTrashSync(path, IntPtr.Zero, 0);
+                if (status == 0)
+                    return true;
 
-                var name = Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-                if (string.IsNullOrEmpty(name))
-                    name = Path.GetFileName(path);
-
-                if (string.IsNullOrEmpty(name))
-                    return false;
-
-                var targetPath = GetUniqueTrashPath(trashDir, name);
-                if (Directory.Exists(path))
-                    Directory.Move(path, targetPath);
-                else
-                    File.Move(path, targetPath);
-
-                return true;
+                Logger.Debug("FSPathMoveObjectToTrashSync failed for {Path} (OSStatus={Status})", path, status);
+                return false;
+            }
+            catch (DllNotFoundException ex)
+            {
+                Logger.Debug(ex, "CoreServices not available; falling back to managed/Finder trash for {Path}", path);
+                return false;
+            }
+            catch (EntryPointNotFoundException ex)
+            {
+                Logger.Debug(ex, "FSPathMoveObjectToTrashSync not available; falling back to managed/Finder trash for {Path}", path);
+                return false;
             }
             catch (Exception ex)
             {
-                Logger.Debug(ex, "Failed to move to ~/.Trash: {Path}", path);
+                Logger.Debug(ex, "Native trash move failed; falling back to managed/Finder trash for {Path}", path);
                 return false;
             }
-        }
-
-        static string GetUniqueTrashPath(string trashDir, string fileName)
-        {
-            var baseName = Path.GetFileNameWithoutExtension(fileName);
-            if (string.IsNullOrEmpty(baseName))
-                baseName = fileName;
-
-            var extension = Path.GetExtension(fileName);
-            var candidate = Path.Combine(trashDir, fileName);
-            var counter = 2;
-
-            while (File.Exists(candidate) || Directory.Exists(candidate))
-            {
-                candidate = Path.Combine(trashDir, $"{baseName} {counter}{extension}");
-                counter++;
-            }
-
-            return candidate;
         }
 
         static bool TryMoveToTrashWithFinder(string path)

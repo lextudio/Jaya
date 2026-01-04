@@ -5,6 +5,8 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.VisualTree;
+using Jaya.Shared.Models;
 using Jaya.Shared.Base;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,25 +16,33 @@ using Jaya.Ui.ViewModels;
 using Jaya.Shared;
 using Jaya.Shared.Services;
 using Avalonia.Threading;
+using Serilog;
 
 namespace Jaya.Ui.Views
 {
     public partial class ExplorerView : UserControl
     {
+        static readonly ILogger Logger = Log.ForContext<ExplorerView>();
+        Subscription<OpenRequestedEventArgs>? _openRequested;
+        Subscription<DeleteRequestedEventArgs>? _deleteRequested;
+
         public ExplorerView()
         {
             this.InitializeComponent();
             if (!Design.IsDesignMode)
             {
-                var vm = this.DataContext as ExplorerViewModel;
                 var eventAggregator = ServiceLocator.Instance.GetService<ICommandService>().EventAggregator;
-                eventAggregator.Subscribe<OpenRequestedEventArgs>(args =>
+                _openRequested = eventAggregator.Subscribe<OpenRequestedEventArgs>(args =>
                 {
                     // Attempt to open the selected item(s) by invoking ViewModel command on UI thread
                     Dispatcher.UIThread.Post(() =>
                     {
                         try
                         {
+                            var vm = DataContext as ExplorerViewModel;
+                            if (vm == null)
+                                return;
+
                             // Prefer selected item from details grid, then listboxes
                             var selected = DetailsDataGrid?.SelectedItem as Models.ExplorerItemModel
                                            ?? ListListBox?.SelectedItem as Models.ExplorerItemModel
@@ -46,38 +56,98 @@ namespace Jaya.Ui.Views
                         catch { }
                     });
                 });
-                eventAggregator.Subscribe<DeleteRequestedEventArgs>(args =>
+                _deleteRequested = eventAggregator.Subscribe<DeleteRequestedEventArgs>(args =>
                 {
                     Dispatcher.UIThread.Post(() =>
                     {
                         try
                         {
+                            var vm = DataContext as ExplorerViewModel;
+                            if (vm == null)
+                            {
+                                Logger.Debug("DeleteRequested ignored: ExplorerView DataContext not ready.");
+                                return;
+                            }
+
+                            var details = DetailsDataGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
+                            var list = ListListBox ?? this.FindControl<ListBox>("ListListBox");
+                            var icons = IconsListBox ?? this.FindControl<ListBox>("IconsListBox");
+                            var tiles = TilesListBox ?? this.FindControl<ListBox>("TilesListBox");
+                            var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
+
+                            Logger.Debug("DeleteRequested received. View visible: Details={Details} List={List} Icons={Icons} Tiles={Tiles} Content={Content}",
+                                details?.IsVisible,
+                                list?.IsVisible,
+                                icons?.IsVisible,
+                                tiles?.IsVisible,
+                                content?.IsVisible);
+
                             var selectedItems = GetSelectedItems();
+                            Logger.Debug("DeleteRequested selection count={Count} items={Items}",
+                                selectedItems.Count,
+                                DescribeSelection(selectedItems));
                             if (selectedItems.Count > 0)
                                 vm?.DeleteItemsCommand.Execute(selectedItems);
                         }
                         catch { }
                     });
                 });
+
+                DetachedFromVisualTree += ExplorerView_DetachedFromVisualTree;
             }
+        }
+
+        void ExplorerView_DetachedFromVisualTree(object sender, VisualTreeAttachmentEventArgs e)
+        {
+            _openRequested?.Dispose();
+            _deleteRequested?.Dispose();
+            _openRequested = null;
+            _deleteRequested = null;
+            DetachedFromVisualTree -= ExplorerView_DetachedFromVisualTree;
         }
 
         IReadOnlyList<Models.ExplorerItemModel> GetSelectedItems()
         {
-            if (DetailsDataGrid?.IsVisible == true)
-                return GetSelectedItems(DetailsDataGrid.SelectedItems, DetailsDataGrid.SelectedItem);
+            var details = DetailsDataGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
+            var list = ListListBox ?? this.FindControl<ListBox>("ListListBox");
+            var icons = IconsListBox ?? this.FindControl<ListBox>("IconsListBox");
+            var tiles = TilesListBox ?? this.FindControl<ListBox>("TilesListBox");
+            var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
 
-            if (ListListBox?.IsVisible == true)
-                return GetSelectedItems(ListListBox.SelectedItems, ListListBox.SelectedItem);
+            if (details?.IsVisible == true)
+                return GetSelectedItems(details.SelectedItems, details.SelectedItem);
 
-            if (IconsListBox?.IsVisible == true)
-                return GetSelectedItems(IconsListBox.SelectedItems, IconsListBox.SelectedItem);
+            if (list?.IsVisible == true)
+                return GetSelectedItems(list.SelectedItems, list.SelectedItem);
 
-            if (TilesListBox?.IsVisible == true)
-                return GetSelectedItems(TilesListBox.SelectedItems, TilesListBox.SelectedItem);
+            if (icons?.IsVisible == true)
+                return GetSelectedItems(icons.SelectedItems, icons.SelectedItem);
 
-            if (ContentListBox?.IsVisible == true)
-                return GetSelectedItems(ContentListBox.SelectedItems, ContentListBox.SelectedItem);
+            if (tiles?.IsVisible == true)
+                return GetSelectedItems(tiles.SelectedItems, tiles.SelectedItem);
+
+            if (content?.IsVisible == true)
+                return GetSelectedItems(content.SelectedItems, content.SelectedItem);
+
+            var selection = GetSelectedItems(details?.SelectedItems, details?.SelectedItem);
+            if (selection.Count > 0)
+                return selection;
+
+            selection = GetSelectedItems(list?.SelectedItems, list?.SelectedItem);
+            if (selection.Count > 0)
+                return selection;
+
+            selection = GetSelectedItems(icons?.SelectedItems, icons?.SelectedItem);
+            if (selection.Count > 0)
+                return selection;
+
+            selection = GetSelectedItems(tiles?.SelectedItems, tiles?.SelectedItem);
+            if (selection.Count > 0)
+                return selection;
+
+            selection = GetSelectedItems(content?.SelectedItems, content?.SelectedItem);
+            if (selection.Count > 0)
+                return selection;
 
             return new List<Models.ExplorerItemModel>();
         }
@@ -92,6 +162,30 @@ namespace Jaya.Ui.Views
                 results.Add(single);
 
             return results;
+        }
+
+        static string DescribeSelection(IReadOnlyList<Models.ExplorerItemModel> items)
+        {
+            if (items == null || items.Count == 0)
+                return "<none>";
+
+            var preview = items
+                .Take(3)
+                .Select(item =>
+                {
+                    var name = item.DisplayName ?? item.Label ?? "<unnamed>";
+                    var path = (item.Object as FileSystemObjectModel)?.Path;
+                    if (!string.IsNullOrWhiteSpace(path))
+                        return $"{name} @ {path}";
+                    return name;
+                })
+                .ToList();
+
+            var summary = string.Join(", ", preview);
+            if (items.Count > 3)
+                summary += $" (+{items.Count - 3} more)";
+
+            return summary;
         }
 
         private void InitializeComponent()

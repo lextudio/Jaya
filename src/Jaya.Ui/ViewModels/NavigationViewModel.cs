@@ -19,10 +19,10 @@ namespace Jaya.Ui.ViewModels
     public class NavigationViewModel : ViewModelBase
     {
         readonly SharedService? _shared;
-        readonly Subscription<SelectionChangedEventArgs> _onSelectionChanged;
+        readonly Subscription<SelectionChangedEventArgs>? _onSelectionChanged;
         static readonly ILogger Logger = Log.ForContext<NavigationViewModel>();
-        ICommand _populateCommand;
-        TreeNodeModel _selectedNode;
+        ICommand? _populateCommand;
+        TreeNodeModel? _selectedNode;
         bool _suppressPublish;
         ObservableCollection<TreeNodeModel> _favorites = new();
 
@@ -41,7 +41,8 @@ namespace Jaya.Ui.ViewModels
 
         ~NavigationViewModel()
         {
-            EventAggregator?.UnSubscribe(_onSelectionChanged);
+            if (_onSelectionChanged != null)
+                EventAggregator?.UnSubscribe(_onSelectionChanged);
         }
 
         #region properties
@@ -53,17 +54,17 @@ namespace Jaya.Ui.ViewModels
                 if (_populateCommand == null)
                     _populateCommand = new RelayCommand<TreeNodeModel>(PopulateAction);
 
-                return _populateCommand;
+                return _populateCommand!;
             }
         }
 
-        public PaneConfigModel PaneConfig => _shared.PaneConfiguration;
+        public PaneConfigModel PaneConfig => _shared!.PaneConfiguration;
 
-        public ApplicationConfigModel ApplicationConfig => _shared.ApplicationConfiguration;
+        public ApplicationConfigModel ApplicationConfig => _shared!.ApplicationConfiguration;
 
         public TreeNodeModel Node { get; }
 
-        public TreeNodeModel SelectedNode
+        public TreeNodeModel? SelectedNode
         {
             get => _selectedNode;
             set
@@ -164,8 +165,8 @@ namespace Jaya.Ui.ViewModels
                 try
                 {
                     // Resolve file system provider and account (if available) so favorites navigate correctly
-                    ProviderServiceBase fileService = null;
-                    AccountModelBase fileAccount = null;
+                    ProviderServiceBase? fileService = null;
+                    AccountModelBase? fileAccount = null;
                     try
                     {
                         var providers = GetService<ProviderService>().Providers;
@@ -377,7 +378,7 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
-        TreeNodeModel FindNodeForSelection(TreeNodeModel root, ProviderServiceBase service, AccountModelBase account, DirectoryModel directory)
+        TreeNodeModel? FindNodeForSelection(TreeNodeModel root, ProviderServiceBase? service, AccountModelBase? account, DirectoryModel? directory)
         {
             if (root == null)
                 return null;
