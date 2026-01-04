@@ -34,6 +34,10 @@ namespace Jaya.Ui.Services
         {
             _commandService.EventAggregator.UnSubscribe(_onSimpleCommand);
             _commandService.EventAggregator.UnSubscribe(_onParameterizedCommand);
+            if (ApplicationConfiguration != null)
+            {
+                ApplicationConfiguration.PropertyChanged -= ApplicationConfiguration_PropertyChanged;
+            }
         }
 
         #region properties
@@ -54,6 +58,12 @@ namespace Jaya.Ui.Services
             ToolbarConfiguration = _configService.GetOrDefault<ToolbarConfigModel>();
             PaneConfiguration = _configService.GetOrDefault<PaneConfigModel>();
             UpdateConfiguration = _configService.GetOrDefault<UpdateConfigModel>();
+            // Log changes to interesting configuration properties so UI binding issues can be diagnosed.
+            if (ApplicationConfiguration != null)
+            {
+                ApplicationConfiguration.PropertyChanged += ApplicationConfiguration_PropertyChanged;
+                Logger.Debug("Initial ApplicationConfiguration.IsFileNameExtensionVisible={IsFileNameExtensionVisible}", ApplicationConfiguration.IsFileNameExtensionVisible);
+            }
         }
 
         internal void SaveConfigurations()
@@ -156,6 +166,17 @@ namespace Jaya.Ui.Services
         void ParameterizedCommandAction(KeyValuePair<byte, object> parameter)
         {
             var command = (CommandType)parameter.Key;
+        }
+
+        void ApplicationConfiguration_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e == null || string.IsNullOrEmpty(e.PropertyName))
+                return;
+
+            if (e.PropertyName == nameof(ApplicationConfigModel.IsFileNameExtensionVisible))
+            {
+                Logger.Information("ApplicationConfiguration.{Property} changed to {Value}", e.PropertyName, ApplicationConfiguration?.IsFileNameExtensionVisible);
+            }
         }
 
         void LogPaneState(string source)

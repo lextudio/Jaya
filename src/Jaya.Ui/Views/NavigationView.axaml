@@ -24,6 +24,22 @@
         </Style>
     </UserControl.Styles>
 
+    <StackPanel>
+        <ListBox
+            Margin="4"
+            ItemsSource="{Binding Favorites}"
+            SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
+            Height="80">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Width="16" Height="16" Stretch="Uniform" Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}}" />
+                        <TextBlock Margin="6,0,0,0" Text="{Binding Label}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
         <TreeView
         Padding="0"
         BorderThickness="0"
@@ -96,4 +112,5 @@
                 </TreeDataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
-</UserControl>
+        </StackPanel>
+    </UserControl>

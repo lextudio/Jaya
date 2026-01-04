@@ -69,20 +69,23 @@
                                         <ia:InvokeCommandAction Command="{Binding $parent[DataGrid].DataContext.InvokeObjectCommand}" CommandParameter="{Binding}" />
                                     </ia:EventTriggerBehavior>
                                 </i:Interaction.Behaviors>
-                                <Panel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" IsVisible="{Binding Path=$parent[DataGrid].DataContext.ApplicationConfig.IsItemCheckBoxVisible}">
+                                  <Panel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" IsVisible="{Binding Path=$parent[DataGrid].DataContext.ApplicationConfig.IsItemCheckBoxVisible}">
                                   <Rectangle Width="{Binding #SelectionCheckBox.Bounds.Width}" Height="{Binding #SelectionCheckBox.Bounds.Height}"/>
                                   <CheckBox x:Name="SelectionCheckBox" IsChecked="{Binding $parent[DataGridRow].IsSelected}"/>
                                 </Panel>
                                 <Image
-                                    Classes="Icon"
-                                    IsVisible="{Binding IsService}"
-                                    Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}, ConverterParameter=48}" />
-                                <Image Classes="Icon" Source="{DynamicResource Icon.CloudFolder.Image}" IsVisible="{Binding IsAccount}" Width="48" Height="48" Stretch="Uniform" />
-                                <Image Classes="Icon" Source="{DynamicResource Icon.Computer.Image}" IsVisible="{Binding IsComputer}" Width="48" Height="48" Stretch="Uniform" />
-                                <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="48" Height="48" Stretch="Uniform" />
-                                <Image Classes="Icon" Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IsDirectory}" Width="48" Height="48" Stretch="Uniform" />
-                                <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="48" Height="48" Stretch="Uniform" />
-                                <TextBlock Width="220" Text="{Binding Label}" />
+                                  Classes="Icon"
+                                  IsVisible="{Binding IsService}"
+                                  Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}, ConverterParameter=16}" />
+                                <Image Classes="Icon" Source="{DynamicResource Icon.CloudFolder.Image}" IsVisible="{Binding IsAccount}" Width="16" Height="16" Stretch="Uniform" />
+                                <Image Classes="Icon" Source="{DynamicResource Icon.Computer.Image}" IsVisible="{Binding IsComputer}" Width="16" Height="16" Stretch="Uniform" />
+                                <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="16" Height="16" Stretch="Uniform" />
+                                <Image Classes="Icon" Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IsDirectory}" Width="16" Height="16" Stretch="Uniform" />
+                                <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="16" Height="16" Stretch="Uniform" />
+                                <TextBlock Width="220" Text="{Binding DisplayName}"
+                                       TextTrimming="CharacterEllipsis"
+                                       TextWrapping="NoWrap"
+                                       ToolTip.Tip="{Binding Label}" />
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -111,7 +114,7 @@
             </ListBox.ItemsPanel>
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type m:ExplorerItemModel}">
-                  <Panel>
+                      <Panel ToolTip.Tip="{Binding Label}">
                     <StackPanel Name="ObjectEntry" Background="#01000000">
                       <i:Interaction.Behaviors>
                         <ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #ObjectEntry}">
@@ -153,7 +156,7 @@
           </ListBox.ItemsPanel>
           <ListBox.ItemTemplate>
             <DataTemplate DataType="{x:Type m:ExplorerItemModel}">
-              <Panel>
+              <Panel ToolTip.Tip="{Binding Label}">
                 <StackPanel Name="ObjectEntry" Background="#01000000" Orientation="Horizontal">
                   <i:Interaction.Behaviors>
                     <ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #ObjectEntry}">
@@ -169,11 +172,14 @@
                     <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="16" Height="16" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IsDirectory}" Width="16" Height="16" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="16" Height="16" Stretch="Uniform" />
-                  <TextBlock
-                      Height="16"
-                      Text="{Binding Mode=OneWay, Path=Label}"
-                      TextAlignment="Center"
-                      TextWrapping="Wrap" />
+                      <TextBlock
+                        Height="16"
+                        Width="220"
+                        Text="{Binding Mode=OneWay, Path=Label}"
+                        TextAlignment="Center"
+                        TextWrapping="NoWrap"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTip.Tip="{Binding Label}" />
                 </StackPanel>
                 <Panel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" IsVisible="{Binding Path=$parent[ListBox].DataContext.ApplicationConfig.IsItemCheckBoxVisible}">
                   <CheckBox IsChecked="{Binding $parent[ListBoxItem].IsSelected}"/>
@@ -195,7 +201,7 @@
           </ListBox.ItemsPanel>
           <ListBox.ItemTemplate>
             <DataTemplate DataType="{x:Type m:ExplorerItemModel}">
-              <Panel>
+              <Panel ToolTip.Tip="{Binding Label}">
                 <StackPanel Width="240" Height="48" Name="ObjectEntry" Background="#01000000" Orientation="Horizontal">
                   <i:Interaction.Behaviors>
                     <ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #ObjectEntry}">
@@ -213,9 +219,11 @@
                     <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="48" Height="48" Stretch="Uniform" />
                   <UniformGrid Columns="1">
                     <TextBlock
-                        Text="{Binding Mode=OneWay, Path=Label}"
-                        TextAlignment="Left"
-                        TextWrapping="Wrap" />
+                      Text="{Binding Mode=OneWay, Path=Label}"
+                      TextAlignment="Left"
+                      TextWrapping="NoWrap"
+                      TextTrimming="CharacterEllipsis"
+                      ToolTip.Tip="{Binding Label}" />
                     <TextBlock Classes="SecondaryText"
                         Text="{Binding Mode=OneWay, Path=Object.Type}"
                         TextAlignment="Left"
@@ -244,8 +252,8 @@
           </ItemsPanelTemplate>
         </ListBox.ItemsPanel>
         <ListBox.ItemTemplate>
-          <DataTemplate DataType="{x:Type m:ExplorerItemModel}">
-            <Panel>
+            <DataTemplate DataType="{x:Type m:ExplorerItemModel}">
+            <Panel ToolTip.Tip="{Binding Label}">
               <DockPanel Background="#01000000">
                 <i:Interaction.Behaviors>
                   <ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #ObjectEntry}">
@@ -264,7 +272,8 @@
                     <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="32" Height="32" Stretch="Uniform" />
                 </Panel>
                 <UniformGrid Rows="2">
-                  <TextBlock Text="{Binding Mode=OneWay, Path=Label}" TextAlignment="Left" Classes="ContentViewFileName"/>
+                  <TextBlock Text="{Binding Mode=OneWay, Path=Label}" TextAlignment="Left" Classes="ContentViewFileName"
+                             TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip.Tip="{Binding Label}"/>
                   <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Size: " Classes="PropertyLabel"/>
                     <TextBlock Text="{Binding Object.SizeString}"/>

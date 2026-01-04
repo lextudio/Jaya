@@ -5,6 +5,8 @@
 using Jaya.Shared;
 using Serilog;
 using System.Linq;
+using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using Jaya.Shared.Base;
 using Jaya.Shared.Models;
 using Jaya.Ui.Models;
@@ -22,12 +24,14 @@ namespace Jaya.Ui.ViewModels
         ICommand _populateCommand;
         TreeNodeModel _selectedNode;
         bool _suppressPublish;
+        ObservableCollection<TreeNodeModel> _favorites = new();
 
         public NavigationViewModel()
         {
             _shared = GetService<SharedService>();
 
             Node = new TreeNodeModel(null, null, null);
+            Favorites = _favorites;
             if (!IsDesignMode)
                 PopulateCommand.Execute(Node);
 
@@ -90,6 +94,12 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
+        public ObservableCollection<TreeNodeModel> Favorites
+        {
+            get => _favorites;
+            private set => Set(ref _favorites, value);
+        }
+
         #endregion
 
         void OnNodeExpanded(TreeNodeModel node, bool isExpaded)
@@ -150,6 +160,102 @@ namespace Jaya.Ui.ViewModels
 
             if (node.Service == null)
             {
+                // Populate Favorites as a separate collection (ListBox above the tree)
+                try
+                {
+                    // Resolve file system provider and account (if available) so favorites navigate correctly
+                    ProviderServiceBase fileService = null;
+                    AccountModelBase fileAccount = null;
+                    try
+                    {
+                        var providers = GetService<ProviderService>().Providers;
+                        foreach (var p in providers)
+                        {
+                            if (p is ProviderServiceBase ps && ps.Name == "File System")
+                            {
+                                fileService = ps;
+                                break;
+                            }
+                        }
+
+                        if (fileService != null)
+                        {
+                            var accounts = await fileService.GetAccountsAsync();
+                            fileAccount = accounts?.FirstOrDefault();
+                        }
+                    }
+                    catch { }
+
+                    var favoritesLocal = new List<TreeNodeModel>();
+
+                    // Home directory entry
+                    var homePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    var homeDir = new DirectoryModel { Path = homePath, Name = homePath };
+
+                    TreeNodeModel homeNode;
+                    if (fileService != null && fileAccount != null)
+                    {
+                        homeNode = new TreeNodeModel(fileService, fileAccount, ItemType.Directory)
+                        {
+                            Label = "Home",
+                            FileSystemObject = homeDir
+                        };
+                    }
+                    else
+                    {
+                        // Use ItemType.File to avoid directory expand glyph while still carrying FileSystemObject
+                        homeNode = new TreeNodeModel(null, null, ItemType.File)
+                        {
+                            Label = "Home",
+                            FileSystemObject = homeDir
+                        };
+                    }
+
+                    favoritesLocal.Add(homeNode);
+
+                    // Downloads entry
+                    try
+                    {
+                        var downloadsPath = System.IO.Path.Combine(homePath, "Downloads");
+                        var downloadsDir = new DirectoryModel { Path = downloadsPath, Name = downloadsPath };
+                        TreeNodeModel downloadsNode;
+                        if (fileService != null && fileAccount != null)
+                        {
+                            downloadsNode = new TreeNodeModel(fileService, fileAccount, ItemType.Directory)
+                            {
+                                Label = "Downloads",
+                                FileSystemObject = downloadsDir
+                            };
+                        }
+                        else
+                        {
+                            // Use ItemType.File to avoid directory expand glyph while still carrying FileSystemObject
+                            downloadsNode = new TreeNodeModel(null, null, ItemType.File)
+                            {
+                                Label = "Downloads",
+                                FileSystemObject = downloadsDir
+                            };
+                        }
+                        favoritesLocal.Add(downloadsNode);
+                    }
+                    catch { }
+
+                    // Update the observable collection on UI thread
+                    Invoke(() =>
+                    {
+                        _favorites.Clear();
+                        foreach (var f in favoritesLocal)
+                            _favorites.Add(f);
+
+                        // Set initial selection to Home so app opens there — publish selection so Explorer loads it
+                        try { SelectedNode = homeNode; } catch { }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logger.Verbose(ex, "Failed to populate Favorites collection");
+                }
+
                 foreach (var service in GetService<ProviderService>().Providers)
                 {
                     var serviceInstance = service as ProviderServiceBase;

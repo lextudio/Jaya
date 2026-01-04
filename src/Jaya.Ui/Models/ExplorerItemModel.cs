@@ -18,6 +18,30 @@ namespace Jaya.Ui.Models
             Children = new ObservableCollection<ExplorerItemModel>();
             Object = obj;
             ImagePath = imagePath;
+
+            // Compute a display name that matches what the UI shows: prefer explicit label,
+            // otherwise use the underlying object's name and include extension for files.
+            string displayName = label;
+            if (Object is FileModel fileModel)
+            {
+                var baseName = !string.IsNullOrWhiteSpace(label) && label != "File" ? label : fileModel.Name;
+                if (!string.IsNullOrEmpty(fileModel.Extension))
+                {
+                    displayName = string.IsNullOrWhiteSpace(baseName)
+                        ? $".{fileModel.Extension}"
+                        : $"{baseName}.{fileModel.Extension}";
+                }
+                else
+                {
+                    displayName = string.IsNullOrWhiteSpace(baseName) ? fileModel.Name : baseName;
+                }
+            }
+            else if (Object is DirectoryModel dirModel)
+            {
+                displayName = string.IsNullOrWhiteSpace(label) ? dirModel.Name : label;
+            }
+
+            DisplayName = displayName;
         }
 
         #region properties
@@ -43,6 +67,12 @@ namespace Jaya.Ui.Models
         public bool IsHavingMetaData => IsAccount || IsDrive || IsDirectory;
 
         public string Label
+        {
+            get => Get<string>();
+            set => Set(value);
+        }
+
+        public string DisplayName
         {
             get => Get<string>();
             set => Set(value);

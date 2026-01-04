@@ -379,8 +379,6 @@
                             <ribbon:RibbonToggleButton
                                 ribbon:KeyTip.KeyTipKeys="HF"
                                 Content="File name extensions"
-                                Command="{Binding SimpleCommand}"
-                                CommandParameter="{x:Static local:CommandType.ToggleFileNameExtensions}"
                                 IsChecked="{Binding ApplicationConfig.IsFileNameExtensionVisible, Mode=TwoWay}"
                                 MaxSize="Medium"
                                 MinSize="Small">
@@ -391,8 +389,6 @@
                             <ribbon:RibbonToggleButton
                                 ribbon:KeyTip.KeyTipKeys="HH"
                                 Content="Hidden items"
-                                Command="{Binding SimpleCommand}"
-                                CommandParameter="{x:Static local:CommandType.ToggleHiddenItems}"
                                 IsChecked="{Binding ApplicationConfig.IsHiddenItemVisible, Mode=TwoWay}"
                                 MaxSize="Medium"
                                 MinSize="Small">

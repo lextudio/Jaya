@@ -68,12 +68,31 @@ namespace Jaya.Provider.FileSystem.Services
                     foreach (var fileInfo in info.GetFiles())
                     {
                         var file = new FileModel();
+                        // If file has no extension (e.g., dotfiles like ".DS_Store"), keep the full name.
+                        // If it has an extension, store name without extension and set the extension value.
                         if (string.IsNullOrEmpty(fileInfo.Extension))
+                        {
                             file.Name = fileInfo.Name;
+                        }
                         else
                         {
-                            file.Name = fileInfo.Name.Replace(fileInfo.Extension, string.Empty);
-                            file.Extension = fileInfo.Extension.Substring(1).ToLowerInvariant();
+                            // fileInfo.Extension includes the leading dot, e.g. ".txt".
+                            // Remove only the trailing extension segment rather than all occurrences.
+                            var baseName = fileInfo.Name.Substring(0, fileInfo.Name.Length - fileInfo.Extension.Length);
+
+                            // Defensive: if removing extension leaves empty base (dotfile like ".DS_Store"),
+                            // treat the whole name as the Name and leave Extension empty so UI preserves original casing.
+                            if (string.IsNullOrEmpty(baseName))
+                            {
+                                file.Name = fileInfo.Name;
+                                file.Extension = string.Empty;
+                            }
+                            else
+                            {
+                                file.Name = baseName;
+                                // Preserve extension casing — do not force lowercasing
+                                file.Extension = fileInfo.Extension.Substring(1);
+                            }
                         }
                         file.Path = fileInfo.FullName;
                         file.Size = fileInfo.Length;

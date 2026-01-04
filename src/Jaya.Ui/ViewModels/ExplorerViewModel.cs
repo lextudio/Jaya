@@ -103,10 +103,16 @@ namespace Jaya.Ui.ViewModels
                 }
 
                 case ItemType.Computer:
-                    directory = obj.Object as DirectoryModel;
+                    _account = obj.Object as AccountModelBase;
+                    // Use an empty DirectoryModel as the root placeholder so SelectionChanged
+                    // treats this the same way as account nodes in the tree.
+                    directory = new DirectoryModel();
                     break;
                 case ItemType.Account:
                     _account = obj.Object as AccountModelBase;
+                    // Use an empty DirectoryModel as the root placeholder so SelectionChanged
+                    // knows to load the account root directory.
+                    directory = new DirectoryModel();
                     break;
 
                 case ItemType.Service:
@@ -237,16 +243,17 @@ namespace Jaya.Ui.ViewModels
 
                 var objectType = child.Object?.GetType().Name ?? "<none>";
                 var fileModel = child.Object as FileModel;
-                var extension = fileModel?.Extension;
                 var fsObject = child.Object as FileSystemObjectModel;
+                var extension = fileModel?.Extension;
                 var size = fsObject?.SizeString;
 
                 path ??= fsObject?.Path;
                 id ??= fsObject?.Id;
 
                 FileSystemLogger.Debug(
-                    "Displayed item {Label} (ItemType={ItemType}, ObjectType={ObjectType}, Extension={Extension}, Size={Size}) path={Path} id={Id} under {Context}",
+                    "Displayed item {Label} as {DisplayName} (ItemType={ItemType}, ObjectType={ObjectType}, Extension={Extension}, Size={Size}) path={Path} id={Id} under {Context}",
                     label,
+                    child.DisplayName,
                     child.Type,
                     objectType,
                     string.IsNullOrEmpty(extension) ? "<none>" : extension,

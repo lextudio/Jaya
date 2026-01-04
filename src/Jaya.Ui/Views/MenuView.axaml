@@ -187,8 +187,6 @@
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem
-                Command="{Binding SimpleCommand}"
-                CommandParameter="{x:Static local:CommandType.ToggleFileNameExtensions}"
                 Header="File Name Extensions">
                 <MenuItem.Icon>
                     <ToggleButton IsChecked="{Binding ApplicationConfig.IsFileNameExtensionVisible, Mode=TwoWay}">
