@@ -11,7 +11,7 @@
 
 #define APP_PUBLISHER "Rubal Walia"
 #define APP_EMAIL "walia.rubal@gmail.com"
-#define APP_URL "https://github.com/waliarubal/Jaya"
+#define APP_URL "https://github.com/lextudio/Jaya"
 #define APP_EXECUTABLE "Jaya.Ui.exe"
 #define APP_ID "{395A0915-9AD7-4CB5-A72B-3369DF5656E4}"
 

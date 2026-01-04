@@ -1,16 +1,11 @@
 <p align="center">
-  <a href="https://github.com/nullvoid-creations/Jaya" target="_blank">
-    <img src="/docs/Logo.png" alt="JayaFM Logo" >
-  </a>
+  <img src="/docs/Logo.png" alt="JayaFM Logo" >
 </p>
 <h3 align="center">Jaya File Manager (JayaFM)</h3>
 <p align="center">
-  <img alt="Build status" src="https://github.com/nullvoid-creations/Jaya/workflows/build/badge.svg">
+  <img alt="Build status" src="https://github.com/lextudio/Jaya/workflows/build/badge.svg">
   <a href="https://gitter.im/JayaCrossPlat/Jaya?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge" target="_blank"><img alt="Gitter Chat" src="https://badges.gitter.im/JayaCrossPlat/Jaya.svg"></a>
-  <a href="https://github.com/nullvoid-creations/Jaya/stargazers" target="_blank"><img alt="GitHub stars" src="https://img.shields.io/github/stars/nullvoid-creations/Jaya"></a>
-  <a href="https://github.com/nullvoid-creations/Jaya/network" target="_blank"><img alt="GitHub forks" src="https://img.shields.io/github/forks/nullvoid-creations/Jaya"></a>
-  <a href="/LICENSE" target="_blank"><img alt="MIT license" src="https://img.shields.io/github/license/nullvoid-creations/Jaya"></a>
-  <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DEXCFJ6R48SR2" target="_blank"><img alt="Donate" src="https://img.shields.io/badge/Donate-PayPal-green.svg"></a>
+  <a href="/LICENSE" target="_blank"><img alt="MIT license" src="https://img.shields.io/github/license/lextudio/Jaya"></a>
   <a href="https://builtwithdot.net/project/482/jaya-cross-platform-file-explorer-net-core-csharp"><img src="https://builtwithdot.net/project/482/jaya-cross-platform-file-explorer-net-core-csharp/badge" /></a>
 </p>
 
@@ -26,9 +21,9 @@
 
 ## About The Project
 
-**Jaya File Manager** is a .NET Core based cross platform file manager application which runs on Windows, Mac and Linux. Its goal is very simple, *"Allow browsing and managing of several file systems simultaneously using a single application which should work and look alike on all desktop platforms it supports."*.
+**Jaya File Manager** is a .NET 10 based cross platform file manager application which runs on Windows, Mac and Linux. Its goal is very simple, *"Allow browsing and managing of several file systems simultaneously using a single application which should work and look alike on all desktop platforms it supports."*.
 
-Application is designed to be plug-able from the ground up i.e. anyone with experience of working with .NET Core will be able to add support for any new storage service by implementing a simple plugin. Support for below mentioned storage services are complete (or planned) as of now. If you would like addition of more storage services, please raise request [here](https://github.com/nullvoid-creations/Jaya/issues).
+Application is designed to be plug-able from the ground up i.e. anyone with experience of working with .NET will be able to add support for any new storage service by implementing a simple plugin. Support for below mentioned storage services are complete (or planned) as of now. If you would like addition of more storage services, please raise request [here](https://github.com/nullvoid-creations/Jaya/issues).
 - [x] File System
 - [x] Dropbox
 - [x] Google Drive
@@ -49,7 +44,7 @@ This project is in early beta at the moment so it's not suitable for general use
 
 This project would have not existed without the availbility of below mentioned fantastic frameworks and tools.
 
-* [.NET Core](https://github.com/dotnet/core)
+* [.NET](https://github.com/dotnet/runtime)
 * [Avalonia UI](https://avaloniaui.net/)
 * [Visual Studio](https://visualstudio.microsoft.com/vs/)
 * [Cake](https://cakebuild.net/)
@@ -77,25 +72,26 @@ Plugins UI (WIP)
 
 ## Roadmap
 
-See the [open issues](https://github.com/JayaFM/Jaya/issues) and [project boards](https://github.com/nullvoid-creations/Jaya/projects) for list of proposed features (and known issues). You are more than welcome to make feature requests and lodge any bugs you encounter. 
+See the [open issues](https://github.com/lextudio/Jaya/issues) for list of proposed features (and known issues). You are more than welcome to make feature requests and lodge any bugs you encounter. 
 
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are greatly appreciated.
 
-If you are a .NET Core developer then you can develop plugins to support additional storage services or squash any existing bugs. You may also add new features or work on the ones which are not yet implemented.
+If you are a .NET developer then you can develop plugins to support additional storage services or squash any existing bugs. You may also add new features or work on the ones which are not yet implemented.
 
 A designer! Not a problem, create new vector icons and images for the UI. Suggestions and improvements in UX are also welcome.
 
 None of the above, you can still buy the core contributors coffee or donate funds to procure Mac for development [here](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DEXCFJ6R48SR2).
 
+* [LeXtudio Inc.](https://github.com/lextudio): Current Maintainer
 * [Rubal Walia](https://github.com/waliarubal): Original Concept and Development
 * [Splitwirez](https://github.com/Splitwirez): UI and UX Specialist
 * [Giorgio Zoppi](https://github.com/giorgiozoppi): Development
 
 ## Getting Started (Technical)
 
-Technical users with programming experience can try things out, just open the project in Visual Studio 2017 IDE or Visual Studio 2019 IDE and run it in 'Debug' mode. Follow below mentioned steps to show your love and support towards project growth.
+Technical users with programming experience can try things out, just open the project in Visual Studio 2026 IDE or Visual Studio Code and run it in 'Debug' mode. Follow below mentioned steps to show your love and support towards project growth.
 
 1. Fork the Project.
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`).

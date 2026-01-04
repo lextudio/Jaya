@@ -11,7 +11,7 @@ namespace Jaya.Ui
     static class Constants
     {
         const string IMAGES_PATH_FORMAT = "avares://Jaya.Ui/Assets/Images/{0}";
-        const string REPO_URL = "https://github.com/waliarubal/Jaya/";
+        const string REPO_URL = "https://github.com/lextudio/jaya/";
 
         public const string APP_SHORT_NAME = "JayaFM";
         public const string APP_NAME = "Jaya File Manager";
@@ -28,7 +28,7 @@ namespace Jaya.Ui
         static Constants()
         {
             URL_DONATION = new Uri("https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DEXCFJ6R48SR2");
-            URL_LICENSE = new Uri("https://raw.githubusercontent.com/waliarubal/Jaya/dev/LICENSE");
+            URL_LICENSE = new Uri("https://raw.githubusercontent.com/lextudio/jaya/dev/LICENSE");
             URL_ISSUES = GetRepositoryUrl("issues");
             VERSION = Assembly.GetExecutingAssembly().GetName().Version;
             DATA_DIRECTORY = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), APP_SHORT_NAME);

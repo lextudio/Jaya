@@ -57,7 +57,7 @@ namespace Jaya.Ui.Services
             if (!http.DefaultRequestHeaders.Contains("User-Agent"))
                 http.DefaultRequestHeaders.Add("User-Agent", "Jaya-App");
 
-            var resp = await http.GetAsync("repos/waliarubal/Jaya/releases");
+            var resp = await http.GetAsync("repos/lextudio/jaya/releases");
             resp.EnsureSuccessStatusCode();
 
             var stream = await resp.Content.ReadAsStreamAsync();
