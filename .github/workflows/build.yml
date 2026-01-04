@@ -23,6 +23,8 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
 
     - name: Execute Build Script
       uses: cake-build/cake-action@v1.1.1
