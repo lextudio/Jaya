@@ -88,14 +88,14 @@ namespace Jaya.Provider.Dropbox.Services
                 if (entry.IsFolder)
                 {
                     var dir = new DirectoryModel();
-                    dir.Name = entry.Name;
-                    dir.Path = entry.PathDisplay;
+                    dir.Name = entry.Name ?? string.Empty;
+                    dir.Path = entry.PathDisplay ?? string.Empty;
                     model.Directories.Add(dir);
 
                 }
                 else if (entry.IsFile)
                 {
-                    var nameParts = SplitName(entry.Name);
+                    var nameParts = SplitName(entry.Name ?? string.Empty);
 
                     var fileInfo = entry.AsFile;
                     if (fileInfo != null)
@@ -129,9 +129,9 @@ namespace Jaya.Provider.Dropbox.Services
 
             var accountInfo = await client.Users.GetCurrentAccountAsync();
 
-            var provider = new AccountModel(accountInfo.AccountId, accountInfo.Name.DisplayName)
+            var provider = new AccountModel(accountInfo.AccountId ?? string.Empty, accountInfo.Name?.DisplayName ?? string.Empty)
             {
-                Email = accountInfo.Email,
+                Email = accountInfo.Email ?? string.Empty,
                 Token = token
             };
 

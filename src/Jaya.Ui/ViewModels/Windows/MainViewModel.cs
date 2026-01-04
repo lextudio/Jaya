@@ -14,7 +14,7 @@ namespace Jaya.Ui.ViewModels.Windows
     public class MainViewModel : ViewModelBase
     {
         readonly Subscription<SelectionChangedEventArgs> _onDirectoryChanged;
-        readonly SharedService _shared;
+        readonly SharedService? _shared;
         static readonly ILogger Logger = Log.ForContext<MainViewModel>();
         public MainViewModel()
         {

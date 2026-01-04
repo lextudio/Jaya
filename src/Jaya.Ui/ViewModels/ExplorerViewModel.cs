@@ -5,11 +5,14 @@
 using Jaya.Shared;
 using Jaya.Shared.Base;
 using Jaya.Shared.Models;
+using Jaya.Shared.Services;
 using Jaya.Ui.Models;
 using Jaya.Ui.Services;
 using Serilog;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -20,13 +23,14 @@ namespace Jaya.Ui.ViewModels
         static readonly ILogger FileSystemLogger = Log.ForContext("Category", "FileSystem")
                                                        .ForContext("Area", "FileSystem");
 
-        readonly Subscription<SelectionChangedEventArgs> _onSelectionChanged;
-        readonly SharedService _shared;
-        SelectionChangedEventArgs _lastSelectionArgs;
+        readonly Subscription<SelectionChangedEventArgs>? _onSelectionChanged;
+        readonly SharedService? _shared;
+        SelectionChangedEventArgs? _lastSelectionArgs;
 
-        ICommand _invokeObject;
-        ProviderServiceBase _service;
-        AccountModelBase _account;
+        ICommand? _invokeObject;
+        ICommand? _deleteItems;
+        ProviderServiceBase? _service;
+        AccountModelBase? _account;
 
         public ExplorerViewModel()
         {
@@ -40,7 +44,8 @@ namespace Jaya.Ui.ViewModels
 
         ~ExplorerViewModel()
         {
-            EventAggregator?.UnSubscribe(_onSelectionChanged);
+            if (_onSelectionChanged != null)
+                EventAggregator?.UnSubscribe(_onSelectionChanged);
             if (_shared?.ApplicationConfiguration != null)
                 _shared.ApplicationConfiguration.PropertyChanged -= ApplicationConfiguration_PropertyChanged;
         }
@@ -54,13 +59,24 @@ namespace Jaya.Ui.ViewModels
                 if (_invokeObject == null)
                     _invokeObject = new RelayCommand<ExplorerItemModel>(InvokeObject);
 
-                return _invokeObject;
+                return _invokeObject!;
             }
         }
 
-        public ApplicationConfigModel ApplicationConfig => _shared.ApplicationConfiguration;
+        public ICommand DeleteItemsCommand
+        {
+            get
+            {
+                if (_deleteItems == null)
+                    _deleteItems = new RelayCommand<IReadOnlyList<ExplorerItemModel>>(DeleteItems, isAsynchronous: true);
 
-        public PaneConfigModel PaneConfig => _shared.PaneConfiguration;
+                return _deleteItems!;
+            }
+        }
+
+        public ApplicationConfigModel ApplicationConfig => _shared!.ApplicationConfiguration;
+
+        public PaneConfigModel PaneConfig => _shared!.PaneConfiguration;
 
         public ExplorerItemModel Item
         {
@@ -134,6 +150,50 @@ namespace Jaya.Ui.ViewModels
             EventAggregator.Publish(eventArgs);
         }
 
+        void DeleteItems(IReadOnlyList<ExplorerItemModel> items)
+        {
+            if (items == null || items.Count == 0)
+                return;
+
+            if (_service == null || _account == null)
+                return;
+
+            if (_service is not IFileDeleteService deleteService)
+            {
+                FileSystemLogger.Warning("Delete requested but service does not support delete.");
+                return;
+            }
+
+            var targets = items
+                .Where(item => item != null && (item.IsFile || item.IsDirectory))
+                .Select(item => item.Object)
+                .OfType<FileSystemObjectModel>()
+                .Where(obj => !string.IsNullOrWhiteSpace(obj.Path))
+                .ToList();
+
+            if (targets.Count == 0)
+                return;
+
+            try
+            {
+                var deleted = deleteService.DeleteAsync(_account, targets, DeleteMode.Trash).GetAwaiter().GetResult();
+                FileSystemLogger.Information("Delete requested for {Count} items (anyDeleted={AnyDeleted})", targets.Count, deleted);
+            }
+            catch (Exception ex)
+            {
+                FileSystemLogger.Error(ex, "Failed to delete {Count} items", targets.Count);
+            }
+
+            if (_lastSelectionArgs != null)
+            {
+                try
+                {
+                    Invoke(() => SelectionChanged(_lastSelectionArgs));
+                }
+                catch { }
+            }
+        }
+
         static void OpenFile(string path)
         {
             if (OperatingSystem.IsWindows())
@@ -170,26 +230,26 @@ namespace Jaya.Ui.ViewModels
             if (_account == null)
             {
                 var accounts = await _service.GetAccountsAsync();
-                var serviceItem = new ExplorerItemModel(ItemType.Service, _service.Name, _service.ImagePath);
+                var serviceItem = new ExplorerItemModel(ItemType.Service, _service!.Name, _service.ImagePath);
 
                 foreach (var account in accounts)
                 {
                     await Task.Run(new Action(() =>
                     {
-                        var accountItem = new ExplorerItemModel(_service.IsRootDrive ? ItemType.Computer : ItemType.Account, account.Name, account);
+                        var accountItem = new ExplorerItemModel(_service!.IsRootDrive ? ItemType.Computer : ItemType.Account, account.Name, account);
                         serviceItem.Children.Add(accountItem);
                     }));
                 }
 
                 Item = serviceItem;
-                LogDisplayedItems($"Service {_service.Name}", serviceItem);
+                LogDisplayedItems($"Service {_service!.Name}", serviceItem);
             }
             else if (args.Directory != null)
             {
                 var directory = await args.Service.GetDirectoryAsync(args.Account, args.Directory);
-                var directoryItem = new ExplorerItemModel(directory.Type == FileSystemObjectType.Drive ? ItemType.Drive : ItemType.Directory, directory.Name, directory);
+                var directoryItem = new ExplorerItemModel(directory!.Type == FileSystemObjectType.Drive ? ItemType.Drive : ItemType.Directory, directory.Name, directory);
 
-                foreach (var subDirectory in directory.Directories)
+                    foreach (var subDirectory in directory.Directories)
                 {
                     await Task.Run(new Action(() =>
                     {

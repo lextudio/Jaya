@@ -14,7 +14,7 @@ namespace Jaya.Ui.ViewModels
 {
     public class OptionsViewModel : ViewModelBase
     {
-        readonly SharedService _shared;
+        readonly SharedService? _shared;
         static readonly ILogger Logger = Log.ForContext<OptionsViewModel>();
         bool _prevIsRibbonVisible;
         bool _prevIsStatusBarVisible;
@@ -44,9 +44,9 @@ namespace Jaya.Ui.ViewModels
 
         public IEnumerable<ThemeModel> Themes => ThemeManager.Instance.Themes;
 
-        public ApplicationConfigModel ApplicationConfig => _shared.ApplicationConfiguration;
+        public ApplicationConfigModel ApplicationConfig => _shared!.ApplicationConfiguration;
 
-        public PaneConfigModel PaneConfig => _shared.PaneConfiguration;
+        public PaneConfigModel PaneConfig => _shared!.PaneConfiguration;
 
         public ThemeModel SelectedThemePreview
         {
@@ -56,7 +56,7 @@ namespace Jaya.Ui.ViewModels
 
         void EnsureThemeLoaded()
         {
-            if (_shared.ApplicationConfiguration == null)
+            if (_shared?.ApplicationConfiguration == null)
                 return;
 
             var currentTheme = _shared.ApplicationConfiguration.Theme;
@@ -133,7 +133,7 @@ namespace Jaya.Ui.ViewModels
                 return;
 
             Logger.Information("Committing theme {Theme}", SelectedThemePreview.Name);
-            _shared.ApplicationConfiguration.Theme = SelectedThemePreview;
+            _shared!.ApplicationConfiguration.Theme = SelectedThemePreview;
             ThemeManager.Instance.ApplyTheme(SelectedThemePreview);
             // Log any changes made in the options dialog for diagnostics
             try
@@ -167,7 +167,7 @@ namespace Jaya.Ui.ViewModels
                 Logger.Warning(ex, "Failed to log options changes");
             }
 
-            _shared.SaveConfigurations();
+            _shared!.SaveConfigurations();
 
             // update snapshot
             if (_shared != null)
@@ -188,12 +188,12 @@ namespace Jaya.Ui.ViewModels
 
         public void DiscardChanges()
         {
-            SelectedThemePreview = _shared.ApplicationConfiguration.Theme ?? ThemeManager.Instance.SelectedTheme;
+            SelectedThemePreview = _shared!.ApplicationConfiguration.Theme ?? ThemeManager.Instance.SelectedTheme;
             Logger.Information("Discarding options dialog changes");
             // Log that changes were discarded and current effective state
             try
             {
-                var pane = _shared.PaneConfiguration;
+                var pane = _shared!.PaneConfiguration;
                 var toolbar = _shared.ToolbarConfiguration;
                 if (pane != null)
                     Logger.Debug("Options discarded: IsRibbonVisible={Ribbon}, IsStatusBarVisible={Status}, IsMenuHeaderVisible={Menu}", pane.IsRibbonVisible, pane.IsStatusBarVisible, pane.IsMenuHeaderVisible);

@@ -12,7 +12,6 @@ namespace Jaya.Provider.S3.Services
 {
     public class S3Service : ProviderServiceBase
     {
-        static readonly IAmazonS3? client;
         readonly ConfigModel _config = new ConfigModel();
         
         public S3Service()
@@ -39,7 +38,8 @@ namespace Jaya.Provider.S3.Services
         {
             var config = GetConfiguration<ConfigModel>();
 
-            var isRemoved = config.Accounts.Remove(account as AccountModel);
+            var acc = account as AccountModel;
+            var isRemoved = acc != null && config.Accounts.Remove(acc);
             if (isRemoved)
                 SetConfiguration(config);
 

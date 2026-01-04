@@ -6,6 +6,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Jaya.Shared.Base;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
 using Jaya.Ui.ViewModels;
@@ -44,7 +46,52 @@ namespace Jaya.Ui.Views
                         catch { }
                     });
                 });
+                eventAggregator.Subscribe<DeleteRequestedEventArgs>(args =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        try
+                        {
+                            var selectedItems = GetSelectedItems();
+                            if (selectedItems.Count > 0)
+                                vm?.DeleteItemsCommand.Execute(selectedItems);
+                        }
+                        catch { }
+                    });
+                });
             }
+        }
+
+        IReadOnlyList<Models.ExplorerItemModel> GetSelectedItems()
+        {
+            if (DetailsDataGrid?.IsVisible == true)
+                return GetSelectedItems(DetailsDataGrid.SelectedItems, DetailsDataGrid.SelectedItem);
+
+            if (ListListBox?.IsVisible == true)
+                return GetSelectedItems(ListListBox.SelectedItems, ListListBox.SelectedItem);
+
+            if (IconsListBox?.IsVisible == true)
+                return GetSelectedItems(IconsListBox.SelectedItems, IconsListBox.SelectedItem);
+
+            if (TilesListBox?.IsVisible == true)
+                return GetSelectedItems(TilesListBox.SelectedItems, TilesListBox.SelectedItem);
+
+            if (ContentListBox?.IsVisible == true)
+                return GetSelectedItems(ContentListBox.SelectedItems, ContentListBox.SelectedItem);
+
+            return new List<Models.ExplorerItemModel>();
+        }
+
+        static IReadOnlyList<Models.ExplorerItemModel> GetSelectedItems(IList? selectedItems, object? selectedItem)
+        {
+            var results = new List<Models.ExplorerItemModel>();
+            if (selectedItems != null)
+                results.AddRange(selectedItems.OfType<Models.ExplorerItemModel>());
+
+            if (results.Count == 0 && selectedItem is Models.ExplorerItemModel single)
+                results.Add(single);
+
+            return results;
         }
 
         private void InitializeComponent()

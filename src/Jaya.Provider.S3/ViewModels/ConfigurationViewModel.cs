@@ -11,13 +11,13 @@ namespace Jaya.Provider.S3.ViewModels
 {
     public class ConfigurationViewModel : ViewModelBase
     {
-        readonly S3Service _amazonS3Service;
+        readonly S3Service? _amazonS3Service;
         readonly ConfigModel _config = new ConfigModel();
         ICommand? _addAccount, _removeAccount;
 
         public ConfigurationViewModel()
         {
-            _amazonS3Service = GetProvider<S3Service>();
+            _amazonS3Service = GetProvider<S3Service>()!;
 
           //  _config = _amazonS3Service.;
                     Accounts = new ObservableCollection<AccountModelBase>(new List<AccountModelBase>());
@@ -37,9 +37,9 @@ namespace Jaya.Provider.S3.ViewModels
             }
         }
 
-        public AccountModel SelectedAccount
+        public AccountModel? SelectedAccount
         {
-            get => Get<AccountModel>();
+            get => Get<AccountModel?>();
             set => Set(value);
         }
 
@@ -51,7 +51,7 @@ namespace Jaya.Provider.S3.ViewModels
 
         async void RemoveAccountAction(AccountModelBase account)
         {
-            var isRemoved = await _amazonS3Service.RemoveAccount(account);
+            var isRemoved = await _amazonS3Service!.RemoveAccount(account);
             if (isRemoved)
             {
                 Accounts.Remove(account);
@@ -61,7 +61,7 @@ namespace Jaya.Provider.S3.ViewModels
 
         async void AddAccountAction()
         {
-            var account = await _amazonS3Service.AddAccount(null);
+            var account = await _amazonS3Service!.AddAccount(null);
             if (account != null)
                 Accounts.Add(account);
         }

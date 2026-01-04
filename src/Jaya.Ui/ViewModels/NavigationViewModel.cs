@@ -18,7 +18,7 @@ namespace Jaya.Ui.ViewModels
 {
     public class NavigationViewModel : ViewModelBase
     {
-        readonly SharedService _shared;
+        readonly SharedService? _shared;
         readonly Subscription<SelectionChangedEventArgs> _onSelectionChanged;
         static readonly ILogger Logger = Log.ForContext<NavigationViewModel>();
         ICommand _populateCommand;

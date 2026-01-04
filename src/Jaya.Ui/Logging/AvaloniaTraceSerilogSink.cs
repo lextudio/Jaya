@@ -60,10 +60,10 @@ namespace Jaya.Ui.Logging
 
         public bool IsEnabled(AvaloniaLogEventLevel level, string area) => ShouldLog(level, area);
 
-        public void Log(AvaloniaLogEventLevel level, string area, object source, string messageTemplate)
-            => Log(level, area, source, messageTemplate, Array.Empty<object>());
+        public void Log(AvaloniaLogEventLevel level, string area, object? source, string messageTemplate)
+            => Log(level, area, source, messageTemplate, Array.Empty<object?>());
 
-        public void Log(AvaloniaLogEventLevel level, string area, object source, string messageTemplate, object[] propertyValues)
+        public void Log(AvaloniaLogEventLevel level, string area, object? source, string messageTemplate, object?[]? propertyValues)
         {
             if (!ShouldLog(level, area))
                 return;
@@ -101,7 +101,7 @@ namespace Jaya.Ui.Logging
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public override void Write(string message)
+        public override void Write(string? message)
         {
             if (string.IsNullOrWhiteSpace(message))
                 return;
@@ -109,7 +109,7 @@ namespace Jaya.Ui.Logging
             _logger.Information(message);
         }
 
-        public override void WriteLine(string message)
+        public override void WriteLine(string? message)
         {
             if (string.IsNullOrWhiteSpace(message))
                 return;

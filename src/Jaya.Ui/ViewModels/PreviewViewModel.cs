@@ -10,7 +10,7 @@ namespace Jaya.Ui.ViewModels
 {
     public class PreviewViewModel : ViewModelBase
     {
-        readonly SharedService _shared;
+        readonly SharedService? _shared;
 
         public PreviewViewModel()
         {

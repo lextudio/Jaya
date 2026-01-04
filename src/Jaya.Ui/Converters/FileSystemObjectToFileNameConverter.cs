@@ -13,14 +13,14 @@ namespace Jaya.Ui.Converters
 {
     public class FileSystemObjectToFileNameConverter : IValueConverter
     {
-        readonly SharedService _shared;
+        readonly SharedService? _shared;
 
         public FileSystemObjectToFileNameConverter()
         {
             _shared = ServiceLocator.Instance.GetService<SharedService>();
         }
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var fso = value as FileSystemObjectModel;
             if (fso == null)
@@ -34,7 +34,11 @@ namespace Jaya.Ui.Converters
 
                 case FileSystemObjectType.File:
                     var file = fso as FileModel;
-                    if (_shared.ApplicationConfiguration.IsFileNameExtensionVisible)
+                    if (file == null)
+                        return null;
+
+                    var config = _shared?.ApplicationConfiguration;
+                    if (config != null && config.IsFileNameExtensionVisible)
                         return string.Format("{0}.{1}", file.Name, file.Extension);
                     else
                         return file.Name;
@@ -44,7 +48,7 @@ namespace Jaya.Ui.Converters
             }
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

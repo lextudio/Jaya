@@ -9,7 +9,7 @@ namespace Jaya.Ui.Converters
     {
         public static readonly TreeNodeLabelConverter Instance = new TreeNodeLabelConverter();
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var node = value as TreeNodeModel;
             if (node == null)
@@ -30,7 +30,7 @@ namespace Jaya.Ui.Converters
             return string.Empty;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }

@@ -13,11 +13,11 @@ namespace Jaya.Ui.Models
 {
     public class TreeNodeModel : ModelBase
     {
-        TreeNodeModel _dummyChild;
-        readonly SharedService _shared;
+        TreeNodeModel? _dummyChild;
+        readonly SharedService? _shared;
 
         public delegate void TreeNodeExpanded(TreeNodeModel node, bool isExpaded);
-        public event TreeNodeExpanded NodeExpanded;
+        public event TreeNodeExpanded? NodeExpanded;
 
         public TreeNodeModel(ProviderServiceBase service, AccountModelBase account, ItemType? nodeType)
         {
@@ -29,13 +29,14 @@ namespace Jaya.Ui.Models
             if (Service != null && Account != null)
             {
                 _shared = ServiceLocator.Instance.GetService<SharedService>();
-                _shared.ApplicationConfiguration.PropertyChanged += OnApplicationConfigChanged;
+                if (_shared?.ApplicationConfiguration != null)
+                    _shared.ApplicationConfiguration.PropertyChanged += OnApplicationConfigChanged;
             }
         }
 
         ~TreeNodeModel()
         {
-            if (_shared != null)
+            if (_shared?.ApplicationConfiguration != null)
                 _shared.ApplicationConfiguration.PropertyChanged -= OnApplicationConfigChanged;
         }
 
@@ -155,8 +156,11 @@ namespace Jaya.Ui.Models
             if (!IsHavingDummyChild)
                 return;
 
-            Children.Remove(_dummyChild);
-            _dummyChild = null;
+            if (_dummyChild != null)
+            {
+                Children.Remove(_dummyChild);
+                _dummyChild = null;
+            }
         }
 
         public override string ToString()

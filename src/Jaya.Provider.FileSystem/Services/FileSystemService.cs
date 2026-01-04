@@ -21,7 +21,7 @@ using System.IO.Pipelines;
 
 namespace Jaya.Provider.FileSystem.Services
 {
-    public class FileSystemService : ProviderServiceBase, IProviderService
+    public class FileSystemService : ProviderServiceBase, IProviderService, IFileDeleteService
     {
         readonly INativeFileSystemService _impl;
         readonly System.Collections.Concurrent.ConcurrentDictionary<string, Task<DirectoryModel?>> _inflight = new();
@@ -68,7 +68,9 @@ namespace Jaya.Provider.FileSystem.Services
         {
             Log.Debug("Fetching directory for key={Key} on thread {Thread}", key, Environment.CurrentManagedThreadId);
             var result = await _impl.GetDirectoryAsync(account, directory);
-            AddToCache(account, result);
+            if (result != null)
+                AddToCache(account, result);
+
             return result;
         }
 
@@ -95,6 +97,14 @@ namespace Jaya.Provider.FileSystem.Services
         public override Task FormatAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
             throw new NotImplementedException();
+        }
+
+        public Task<bool> DeleteAsync(AccountModelBase account, IEnumerable<FileSystemObjectModel> items, DeleteMode mode)
+        {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
+            return _impl.DeleteAsync(items, mode);
         }
     }
 }

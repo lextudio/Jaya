@@ -76,6 +76,7 @@ namespace Jaya.Ui
         TogglePaneDetails,
         ToggleItemCheckBoxes,
         ToggleFileNameExtensions,
-        ToggleHiddenItems
+        ToggleHiddenItems,
+        Delete
     }
 }

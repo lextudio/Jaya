@@ -125,6 +125,8 @@
                                 </ribbon:RibbonToggleButton.Icon>
                             </ribbon:RibbonToggleButton>
                             <ribbon:RibbonButton
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.Delete}"
                                 ribbon:KeyTip.KeyTipKeys="D"
                                 Content="Delete"
                                 MaxSize="Large"

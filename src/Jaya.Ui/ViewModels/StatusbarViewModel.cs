@@ -12,11 +12,11 @@ namespace Jaya.Ui.ViewModels
 {
     public class StatusbarViewModel : ViewModelBase
     {
-        readonly Subscription<SelectionChangedEventArgs> _onSelectionChanged;
-        readonly SharedService _shared;
-        ProviderServiceBase _service;
-        AccountModelBase _account;
-        DirectoryModel _directory;
+        readonly Subscription<SelectionChangedEventArgs>? _onSelectionChanged;
+        readonly SharedService? _shared;
+        ProviderServiceBase? _service;
+        AccountModelBase? _account;
+        DirectoryModel? _directory;
 
         public StatusbarViewModel()
         {
@@ -26,10 +26,11 @@ namespace Jaya.Ui.ViewModels
 
         ~StatusbarViewModel()
         {
-            EventAggregator?.UnSubscribe(_onSelectionChanged);
+            if (_onSelectionChanged != null)
+                EventAggregator?.UnSubscribe(_onSelectionChanged);
         }
 
-        public PaneConfigModel PaneConfig => _shared.PaneConfiguration;
+        public PaneConfigModel PaneConfig => _shared!.PaneConfiguration;
 
         public long Count
         {
@@ -52,11 +53,11 @@ namespace Jaya.Ui.ViewModels
             }
             else if (args.Directory != null)
             {
-                _directory = await _service.GetDirectoryAsync(_account, args.Directory);
+                _directory = await _service!.GetDirectoryAsync(_account!, args.Directory);
 
-                if (_directory.Directories != null)
+                if (_directory?.Directories != null)
                     count += _directory.Directories.Count;
-                if (_directory.Files != null)
+                if (_directory?.Files != null)
                     count += _directory.Files.Count;
             }
             else

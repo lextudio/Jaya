@@ -4,6 +4,7 @@
 //
 using Jaya.Shared;
 using Jaya.Shared.Services;
+using Jaya.Ui;
 using Jaya.Ui.Models;
 using Serilog;
 using System.Collections.Generic;
@@ -140,6 +141,13 @@ namespace Jaya.Ui.Services
                     try
                     {
                         _commandService.EventAggregator.Publish(new OpenRequestedEventArgs());
+                    }
+                    catch { }
+                    break;
+                case CommandType.Delete:
+                    try
+                    {
+                        _commandService.EventAggregator.Publish(new DeleteRequestedEventArgs());
                     }
                     catch { }
                     break;

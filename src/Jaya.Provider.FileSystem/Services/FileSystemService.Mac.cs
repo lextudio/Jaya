@@ -24,7 +24,8 @@ namespace Jaya.Provider.FileSystem.Services
             {
                 var model = new DirectoryModel();
 
-                if (string.IsNullOrEmpty(directory.Path))
+                var dirPath = directory?.Path ?? string.Empty;
+                if (string.IsNullOrEmpty(dirPath))
                 {
                     model.Directories = new List<DirectoryModel>();
 
@@ -49,11 +50,11 @@ namespace Jaya.Provider.FileSystem.Services
                         Log.Warning(ex, "Mac volume enumeration failed");
                     }
 
-                    return model;
+                        return model;
                 }
 
                 // Fallback to simple directory enumeration for non-root queries
-                DirectoryInfo info = new DirectoryInfo(directory.Path);
+                DirectoryInfo info = new DirectoryInfo(directory?.Path ?? string.Empty);
                 model.Name = string.IsNullOrEmpty(info.Name) ? info.FullName : info.Name;
                 model.Path = info.FullName;
                 model.Created = info.CreationTime;
@@ -106,8 +107,8 @@ namespace Jaya.Provider.FileSystem.Services
                 }
                 catch (UnauthorizedAccessException ex)
                 {
-                    Log.Warning(ex, "Unauthorized access listing files in {Path}", directory.Path);
-                    MarkAccessDenied(model, directory.Path);
+                    Log.Warning(ex, "Unauthorized access listing files in {Path}", directory?.Path);
+                    MarkAccessDenied(model, directory?.Path ?? string.Empty);
                 }
 
                 model.Directories = new List<DirectoryModel>();
@@ -128,11 +129,39 @@ namespace Jaya.Provider.FileSystem.Services
                 }
                 catch (UnauthorizedAccessException ex)
                 {
-                    Log.Warning(ex, "Unauthorized access listing directories in {Path}", directory.Path);
-                    MarkAccessDenied(model, directory.Path);
+                    Log.Warning(ex, "Unauthorized access listing directories in {Path}", directory?.Path);
+                    MarkAccessDenied(model, directory?.Path ?? string.Empty);
                 }
 
                 return model;
+            });
+        }
+
+        public Task<bool> DeleteAsync(IEnumerable<FileSystemObjectModel> items, DeleteMode mode)
+        {
+            if (items == null)
+                throw new ArgumentNullException(nameof(items));
+
+            return Task.Run(() =>
+            {
+                var paths = items
+                    .Select(item => item?.Path)
+                    .Where(path => !string.IsNullOrWhiteSpace(path))
+                    .Distinct(StringComparer.Ordinal)
+                    .ToList();
+
+                if (paths.Count == 0)
+                    return false;
+
+                var anyDeleted = false;
+                foreach (var path in paths)
+                {
+                    var deleted = mode == DeleteMode.Trash ? TryMoveToTrash(path!) : TryDelete(path!);
+                    if (deleted)
+                        anyDeleted = true;
+                }
+
+                return anyDeleted;
             });
         }
 
@@ -203,6 +232,140 @@ namespace Jaya.Provider.FileSystem.Services
                 return;
 
             model.AccessErrorMessage = $"Access to {path} is denied.";
+        }
+
+        static bool TryMoveToTrash(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return false;
+
+            if (TryMoveToUserTrash(path))
+                return true;
+
+            return TryMoveToTrashWithFinder(path);
+        }
+
+        static bool TryMoveToUserTrash(string path)
+        {
+            try
+            {
+                if (!File.Exists(path) && !Directory.Exists(path))
+                    return false;
+
+                var trashDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".Trash");
+                Directory.CreateDirectory(trashDir);
+
+                var name = Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                if (string.IsNullOrEmpty(name))
+                    name = Path.GetFileName(path);
+
+                if (string.IsNullOrEmpty(name))
+                    return false;
+
+                var targetPath = GetUniqueTrashPath(trashDir, name);
+                if (Directory.Exists(path))
+                    Directory.Move(path, targetPath);
+                else
+                    File.Move(path, targetPath);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Debug(ex, "Failed to move to ~/.Trash: {Path}", path);
+                return false;
+            }
+        }
+
+        static string GetUniqueTrashPath(string trashDir, string fileName)
+        {
+            var baseName = Path.GetFileNameWithoutExtension(fileName);
+            if (string.IsNullOrEmpty(baseName))
+                baseName = fileName;
+
+            var extension = Path.GetExtension(fileName);
+            var candidate = Path.Combine(trashDir, fileName);
+            var counter = 2;
+
+            while (File.Exists(candidate) || Directory.Exists(candidate))
+            {
+                candidate = Path.Combine(trashDir, $"{baseName} {counter}{extension}");
+                counter++;
+            }
+
+            return candidate;
+        }
+
+        static bool TryMoveToTrashWithFinder(string path)
+        {
+            try
+            {
+                var script = $"tell application \"Finder\" to delete POSIX file \"{EscapeAppleScriptString(path)}\"";
+                var psi = new ProcessStartInfo("osascript")
+                {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                psi.ArgumentList.Add("-e");
+                psi.ArgumentList.Add(script);
+
+                using var process = Process.Start(psi);
+                if (process == null)
+                    return false;
+
+                process.WaitForExit();
+                if (process.ExitCode != 0)
+                {
+                    var error = process.StandardError.ReadToEnd();
+                    if (!string.IsNullOrWhiteSpace(error))
+                        Logger.Warning("Finder trash failed for {Path}: {Error}", path, error);
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning(ex, "Finder trash failed for {Path}", path);
+                return false;
+            }
+        }
+
+        static string EscapeAppleScriptString(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return string.Empty;
+
+            return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        }
+
+        static bool TryDelete(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return false;
+
+            try
+            {
+                if (Directory.Exists(path))
+                {
+                    Directory.Delete(path, true);
+                    return true;
+                }
+
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning(ex, "Failed to delete {Path}", path);
+            }
+
+            return false;
         }
     }
 }

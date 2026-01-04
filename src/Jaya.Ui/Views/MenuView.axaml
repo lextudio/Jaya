@@ -68,7 +68,10 @@
             <MenuItem Header="Move To..." />
             <MenuItem Header="Copy To..." />
             <Separator />
-            <MenuItem Header="Delete">
+            <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Delete}"
+                Header="Delete">
                 <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.Delete.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>

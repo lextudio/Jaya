@@ -17,22 +17,22 @@ namespace Jaya.Ui.Converters
 {
     public class FileSystemObjectToImageConverter : IValueConverter
     {
-        readonly MemoryCacheService _cache;
+        readonly MemoryCacheService? _cache;
 
         public FileSystemObjectToImageConverter()
         {
             _cache = ServiceLocator.Instance.GetService<MemoryCacheService>();
         }
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var fso = value as FileSystemObjectModel;
             if (fso == null)
                 return null;
 
             var iconSize = 48;
-            if (parameter != null)
-                iconSize = int.Parse(parameter as string);
+            if (parameter is string p && int.TryParse(p, out var parsedSize))
+                iconSize = parsedSize;
 
             Uri uri;
             switch (fso.Type)
@@ -52,51 +52,58 @@ namespace Jaya.Ui.Converters
                     return null;
             }
 
-            try
-            {
-                return new Bitmap(uri.ToString());
-            }
-            catch
-            {
-                return null;
-            }
+                try
+                {
+                    if (uri == null)
+                        return null;
+
+                    return new Bitmap(uri.ToString());
+                }
+                catch
+                {
+                    return null;
+                }
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
 
-        Bitmap AddOrGetFromCache(Uri uri, Uri fallbackUri = null)
+        Bitmap? AddOrGetFromCache(Uri uri, Uri? fallbackUri = null)
         {
-            if (_cache.TryGetValue(uri, out Bitmap image))
-                return image;
+            if (uri == null)
+                return null;
+
+            if (_cache != null && _cache.TryGetValue(uri, out Bitmap cachedImage))
+                return cachedImage;
+
+            Bitmap? image = null;
 
             try
             {
                 image = new Bitmap(uri.ToString());
-                _cache.Set(uri, image);
-
+                _cache?.Set(uri, image);
+                return image;
             }
             catch (Exception)
             {
                 if (fallbackUri == null)
                     return null;
 
-                if (_cache.TryGetValue(fallbackUri, out image))
+                if (_cache != null && _cache.TryGetValue(fallbackUri, out Bitmap cachedFallback))
                 {
-                    _cache.Set(uri, image);
-                    return image;
+                    _cache?.Set(uri, cachedFallback);
+                    return cachedFallback;
                 }
 
                 image = new Bitmap(fallbackUri.ToString());
-                _cache.Set(fallbackUri, image);
+                _cache?.Set(fallbackUri, image);
+                return image;
             }
-
-            return image;
         }
 
-        Bitmap GetFileImage(FileModel fso, int iconSize)
+        Bitmap? GetFileImage(FileModel fso, int iconSize)
         {
             var fallbackUri = new Uri(Constants.GetImageUrl(string.Format("File-{0}.png", iconSize)), UriKind.RelativeOrAbsolute);
 

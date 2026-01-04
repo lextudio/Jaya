@@ -53,7 +53,10 @@
                 <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
             <Border Classes="Separator" />
-            <Button ToolTip.Tip="Delete">
+            <Button
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Delete}"
+                ToolTip.Tip="Delete">
                 <Image Source="{DynamicResource Icon.Delete.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
             <Button ToolTip.Tip="Rename">

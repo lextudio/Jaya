@@ -7,6 +7,7 @@
     xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
     xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
     xmlns:j="https://github.com/lextudio/jaya"
+    xmlns:local="clr-namespace:Jaya.Ui;assembly=Jaya.Ui"
     xmlns:m="clr-namespace:Jaya.Ui.Models;assembly=Jaya.Ui"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:Jaya.Ui.ViewModels;assembly=Jaya.Ui"
@@ -21,6 +22,12 @@
         <c:BooleanToTreeNodeVisibilityConverter x:Key="TreeNodeVisibilityConverter" />
         <j:BitmapValueConverter x:Key="BitmapValueConverter" />
     </UserControl.Resources>
+    <UserControl.KeyBindings>
+        <KeyBinding
+            Gesture="Delete"
+            Command="{Binding SimpleCommand}"
+            CommandParameter="{x:Static local:CommandType.Delete}" />
+    </UserControl.KeyBindings>
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />

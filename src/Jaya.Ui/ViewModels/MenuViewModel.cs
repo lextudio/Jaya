@@ -12,13 +12,13 @@ namespace Jaya.Ui.ViewModels
 {
     public class MenuViewModel : ViewModelBase
     {
-        readonly SharedService _shared;
+        readonly SharedService? _shared;
         ICommand _openWindow;
 
         public MenuViewModel()
         {
             _shared = GetService<SharedService>();
-            SimpleCommand = new RelayCommand<byte>(_shared.SimpleCommandAction);
+            SimpleCommand = new RelayCommand<byte>(_shared!.SimpleCommandAction);
         }
 
         public ToolbarConfigModel ToolbarConfig => _shared.ToolbarConfiguration;
