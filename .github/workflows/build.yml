@@ -49,7 +49,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: |
-            publish/setup.exe
-            publish/windows/*
-            publish/linux/*
-            publish/osx/*
+            Jaya/publish/setup.exe
+            Jaya/publish/windows/*
+            Jaya/publish/linux/*
+            Jaya/publish/osx/*

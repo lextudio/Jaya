@@ -32,7 +32,7 @@ namespace Jaya.Provider.FileSystem.Services
                 var plistXml = RunDiskUtil(mp);
 
                 // If we didn't get mount-level info, try to resolve the underlying device node (via df)
-                string resolvedDeviceNode = null;
+                string? resolvedDeviceNode = null;
                 if (string.IsNullOrWhiteSpace(plistXml))
                 {
                     try

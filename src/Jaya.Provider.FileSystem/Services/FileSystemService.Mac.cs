@@ -35,7 +35,7 @@ namespace Jaya.Provider.FileSystem.Services
                     try
                     {
                         var volumes = MacDriveEnumerator.GetSystemAndExternalVolumes();
-                        Logger.Verbose("Found {VolumeCount} mac volumes", volumes?.Count() ?? 0);
+                        Logger.Verbose("Found {VolumeCount} mac volumes", volumes.Count);
                         foreach (var volume in volumes)
                         {
                             var drive = new DirectoryModel(true)
@@ -186,14 +186,14 @@ namespace Jaya.Provider.FileSystem.Services
         static string GetMacVolumeName(MacVolume volume)
         {
             if (!string.IsNullOrEmpty(volume.VolumeName))
-                return volume.VolumeName;
+                return volume.VolumeName ?? string.Empty;
 
             if (volume.MountPoint == "/")
                 return "Macintosh HD";
 
             var trimmed = volume.MountPoint?.TrimEnd(Path.DirectorySeparatorChar);
             var fallback = string.IsNullOrEmpty(trimmed) ? volume.MountPoint : Path.GetFileName(trimmed);
-            return string.IsNullOrEmpty(fallback) ? volume.MountPoint : fallback;
+            return string.IsNullOrEmpty(fallback) ? (volume.MountPoint ?? string.Empty) : fallback ?? string.Empty;
         }
 
         static bool IsMacVolumeExternal(MacVolume volume)

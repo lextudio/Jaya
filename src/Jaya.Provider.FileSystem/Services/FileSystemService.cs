@@ -47,15 +47,19 @@ namespace Jaya.Provider.FileSystem.Services
 
         public override async Task<DirectoryModel?> GetDirectoryAsync(AccountModelBase account, DirectoryModel? directory = null)
         {
-            Log.Debug("FileSystemService.GetDirectoryAsync called: Account={Account}, Path={Path}", account?.Name, directory?.Path);
-            var model = GetFromCache(account, directory);
+            if (account == null)
+                throw new ArgumentNullException(nameof(account));
+
+            Log.Debug("FileSystemService.GetDirectoryAsync called: Account={Account}, Path={Path}", account.Name, directory?.Path);
+            var accountNonNull = account;
+            var model = GetFromCache(accountNonNull, directory);
             if (model != null)
                 return model;
 
             var key = $"{account?.Name ?? "__null"}:{directory?.Path ?? "__root"}";
 
             // If there's already an in-flight request for the same key, return it
-            var task = _inflight.GetOrAdd(key, _ => FetchAndCacheAsync(account, directory, key));
+            var task = _inflight.GetOrAdd(key, _ => FetchAndCacheAsync(accountNonNull, directory, key));
             try
             {
                 return await task;
@@ -76,12 +80,12 @@ namespace Jaya.Provider.FileSystem.Services
             return result;
         }
 
-        protected override Task<AccountModelBase> AddAccountAsync(AccountModelBase account = null)
+        protected override Task<AccountModelBase?> AddAccountAsync(AccountModelBase? account = null)
         {
             throw new NotImplementedException();
         }
 
-        protected override Task<bool> RemoveAccountAsync(AccountModelBase account)
+        protected override Task<bool> RemoveAccountAsync(AccountModelBase? account)
         {
             throw new NotImplementedException();
         }
