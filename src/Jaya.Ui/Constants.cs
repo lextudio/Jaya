@@ -65,6 +65,7 @@ namespace Jaya.Ui
     public enum CommandType : byte
     {
         Exit,
+        Open,
         ToggleToolbars,
         ToggleToolbarFile,
         ToggleToolbarEdit,

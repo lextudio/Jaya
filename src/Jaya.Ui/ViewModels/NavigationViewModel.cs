@@ -17,9 +17,11 @@ namespace Jaya.Ui.ViewModels
     public class NavigationViewModel : ViewModelBase
     {
         readonly SharedService _shared;
+        readonly Subscription<SelectionChangedEventArgs> _onSelectionChanged;
         static readonly ILogger Logger = Log.ForContext<NavigationViewModel>();
         ICommand _populateCommand;
         TreeNodeModel _selectedNode;
+        bool _suppressPublish;
 
         public NavigationViewModel()
         {
@@ -28,6 +30,14 @@ namespace Jaya.Ui.ViewModels
             Node = new TreeNodeModel(null, null, null);
             if (!IsDesignMode)
                 PopulateCommand.Execute(Node);
+
+            if (!IsDesignMode)
+                _onSelectionChanged = EventAggregator?.Subscribe<SelectionChangedEventArgs>(OnExternalSelectionChanged);
+        }
+
+        ~NavigationViewModel()
+        {
+            EventAggregator?.UnSubscribe(_onSelectionChanged);
         }
 
         #region properties
@@ -54,13 +64,26 @@ namespace Jaya.Ui.ViewModels
             get => _selectedNode;
             set
             {
+                if (ReferenceEquals(_selectedNode, value))
+                    return;
+
                 _selectedNode = value;
+                RaisePropertyChanged(nameof(SelectedNode));
 
                 if (value == null)
                     return;
 
-                Log.ForContext<NavigationViewModel>().Information("Node selected: Label={Label}, Service={Service}, Path={Path}",
-                    value.Label, value.Service?.Name, (value.FileSystemObject as DirectoryModel)?.Path);
+                Logger.Information("NavigationViewModel.SelectedNode setter invoked: Label={Label}, Service={Service}, Account={Account}, Path={Path}",
+                    value.Label,
+                    value.Service?.Name,
+                    value.Account?.Name,
+                    (value.FileSystemObject as DirectoryModel)?.Path);
+
+                if (_suppressPublish)
+                {
+                    Logger.Debug("Suppressed publish for programmatic SelectedNode change.");
+                    return;
+                }
 
                 var args = new SelectionChangedEventArgs(value.Service, value.Account, value.FileSystemObject as DirectoryModel);
                 EventAggregator.Publish(args);
@@ -214,6 +237,85 @@ namespace Jaya.Ui.ViewModels
 
                     RemoveChildNode(node, accountNode);
                     break;
+                }
+            }
+        }
+
+        void OnExternalSelectionChanged(SelectionChangedEventArgs args)
+        {
+            if (args == null)
+                return;
+
+            // Find the node matching the service/account/directory
+            var target = FindNodeForSelection(Node, args.Service, args.Account, args.Directory);
+            if (target != null)
+            {
+                // Expand ancestors so the node becomes visible in the tree
+                ExpandAncestors(Node, target);
+
+                // Set SelectedNode (this will publish selection again via setter)
+                try
+                {
+                    _suppressPublish = true;
+                    SelectedNode = target;
+                }
+                finally
+                {
+                    _suppressPublish = false;
+                }
+            }
+            else
+            {
+                Logger.Debug("OnExternalSelectionChanged: matching navigation node not found for Service={Service}, Account={Account}, Directory={Directory}",
+                    args.Service?.Name, args.Account?.Name, args.Directory?.Path ?? args.Directory?.Name);
+            }
+        }
+
+        TreeNodeModel FindNodeForSelection(TreeNodeModel root, ProviderServiceBase service, AccountModelBase account, DirectoryModel directory)
+        {
+            if (root == null)
+                return null;
+
+            // Check current node
+            if (Equals(root.Service, service) && Equals(root.Account, account))
+            {
+                if (directory == null && (root.FileSystemObject == null || string.IsNullOrEmpty((root.FileSystemObject as DirectoryModel)?.Path)))
+                    return root;
+
+                if (directory != null && root.FileSystemObject is DirectoryModel d && string.Equals(d.Path, directory.Path))
+                    return root;
+            }
+
+            // Search children
+            foreach (var child in root.Children)
+            {
+                var found = FindNodeForSelection(child, service, account, directory);
+                if (found != null)
+                    return found;
+            }
+
+            return null;
+        }
+
+        void ExpandAncestors(TreeNodeModel root, TreeNodeModel target)
+        {
+            if (root == null || target == null)
+                return;
+
+            // If target is a direct child, expand root and return
+            if (root.Children.Contains(target))
+            {
+                root.IsExpanded = true;
+                return;
+            }
+
+            foreach (var child in root.Children)
+            {
+                ExpandAncestors(child, target);
+                if (child.IsExpanded && (child.Children.Contains(target) || child.Children.Count > 0 && child.Children.Contains(target)))
+                {
+                    root.IsExpanded = true;
+                    return;
                 }
             }
         }

@@ -28,7 +28,7 @@
         Padding="0"
         BorderThickness="0"
         ItemsSource="{Binding Node.Children, Mode=OneWay}"
-        SelectedItem="{Binding SelectedNode, Mode=OneWayToSource}"
+        SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
         SelectionMode="Single">
             <TreeView.ItemTemplate>
                 <TreeDataTemplate DataType="{x:Type m:TreeNodeModel}" ItemsSource="{Binding Children}">

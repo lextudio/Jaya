@@ -2,13 +2,13 @@
 // Copyright (c) Rubal Walia. All rights reserved.
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
+#nullable enable
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
 using System;
 using System.Linq;
-using Avalonia;
 using Avalonia.Media;
 
 namespace Jaya.Ui.Views

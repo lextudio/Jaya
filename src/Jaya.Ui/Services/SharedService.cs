@@ -123,6 +123,16 @@ namespace Jaya.Ui.Services
                 case CommandType.Exit:
                     App.Lifetime.Shutdown();
                     break;
+
+                case CommandType.Open:
+                    // Publish an open-requested event so interested view-models (ExplorerViewModel)
+                    // or services can handle opening the selected item(s).
+                    try
+                    {
+                        _commandService.EventAggregator.Publish(new OpenRequestedEventArgs());
+                    }
+                    catch { }
+                    break;
             }
             if (persistToolbar)
             {

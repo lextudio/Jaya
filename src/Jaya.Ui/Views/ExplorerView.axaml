@@ -56,7 +56,8 @@
         <!--  details view   -->
         <DataGrid
             IsReadOnly="True"
-            IsVisible="{Binding PaneConfig.IsDetailsView, Mode=OneWay}"
+          x:Name="DetailsDataGrid"
+          IsVisible="{Binding PaneConfig.IsDetailsView, Mode=OneWay}"
             SelectionMode="Extended">
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="Name">
@@ -99,8 +100,8 @@
         </DataGrid>
 
         <!--  icons view   -->
-        <ListBox Classes="IconsView"
-            IsVisible="{Binding PaneConfig.IsThumbnailView, Mode=OneWay}"
+        <ListBox x:Name="IconsListBox" Classes="IconsView"
+          IsVisible="{Binding PaneConfig.IsThumbnailView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             SelectionMode="Multiple">
             <ListBox.ItemsPanel>
@@ -141,8 +142,8 @@
         </ListBox>
 
         <!--  list view   -->
-        <ListBox Classes="ListView"
-            IsVisible="{Binding PaneConfig.IsListView, Mode=OneWay}"
+        <ListBox x:Name="ListListBox" Classes="ListView"
+          IsVisible="{Binding PaneConfig.IsListView, Mode=OneWay}"
             ScrollViewer.VerticalScrollBarVisibility="Disabled"
             SelectionMode="Multiple">
           <ListBox.ItemsPanel>
@@ -183,8 +184,8 @@
         </ListBox>
 
         <!--  tiles view   -->
-        <ListBox Classes="TilesView"
-            IsVisible="{Binding PaneConfig.IsTilesView, Mode=OneWay}"
+        <ListBox x:Name="TilesListBox" Classes="TilesView"
+          IsVisible="{Binding PaneConfig.IsTilesView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             SelectionMode="Multiple">
           <ListBox.ItemsPanel>
@@ -233,8 +234,8 @@
           </ListBox.ItemTemplate>
         </ListBox>
 
-      <ListBox Classes="ContentView"
-            IsVisible="{Binding PaneConfig.IsContentView, Mode=OneWay}"
+      <ListBox x:Name="ContentListBox" Classes="ContentView"
+        IsVisible="{Binding PaneConfig.IsContentView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             SelectionMode="Multiple">
         <ListBox.ItemsPanel>

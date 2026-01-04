@@ -3,6 +3,7 @@
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
 using Jaya.Shared;
+using Serilog;
 using Jaya.Shared.Models;
 using Jaya.Shared.Services;
 using Jaya.Ui.ViewModels.Windows;
@@ -12,8 +13,10 @@ using System.Collections.Generic;
 
 namespace Jaya.Ui.Services
 {
-    public sealed class NavigationService: IService
+    public sealed class NavigationService : IService
     {
+        static readonly ILogger Logger = Log.ForContext<NavigationService>();
+
         readonly CommandService _commandService;
         readonly Stack<SelectionChangedEventArgs> _backwardStack, _forwardStack;
         readonly Subscription<SelectionChangedEventArgs> _onSelectionChanged;
@@ -86,34 +89,72 @@ namespace Jaya.Ui.Services
 
         void NavigateBack()
         {
-            var item = _backwardStack.Pop();
-            _forwardStack.Push(item);
+            if (_backwardStack.Count <= 1)
+            {
+                Logger.Information("NavigateBack invoked but no previous selection available. BackCount={BackCount}", _backwardStack.Count);
+                return;
+            }
 
-            NavigateBackCommand.IsEnabled = _backwardStack.Count > 0;
+            // Pop current selection and move it to forward stack
+            var current = _backwardStack.Pop();
+            _forwardStack.Push(current);
+
+            // The new top of backward stack is the previous selection we should navigate to
+            var target = _backwardStack.Peek();
+
+            NavigateBackCommand.IsEnabled = _backwardStack.Count > 1;
             NavigateForwardCommand.IsEnabled = true;
 
-            var args = item.Clone(NavigationDirection.Backward);
+            Logger.Information("NavigateBack: target Service={Service}, Account={Account}, Directory={Directory}. BackCount={BackCount}, ForwardCount={ForwardCount}",
+                target.Service?.Name,
+                target.Account?.Name,
+                target.Directory?.Path ?? target.Directory?.Name,
+                _backwardStack.Count,
+                _forwardStack.Count);
+
+            var args = target.Clone(NavigationDirection.Backward);
             _commandService.EventAggregator.Publish(args);
         }
 
         void NavigateForward()
         {
-            var item = _forwardStack.Pop();
-            _backwardStack.Push(item);
+            if (_forwardStack.Count == 0)
+            {
+                Logger.Information("NavigateForward invoked but forward stack is empty.");
+                return;
+            }
+
+            // Pop the next item to navigate to
+            var next = _forwardStack.Pop();
+            _backwardStack.Push(next);
 
             NavigateBackCommand.IsEnabled = true;
             NavigateForwardCommand.IsEnabled = _forwardStack.Count > 0;
 
-            var args = item.Clone(NavigationDirection.Forward);
+            Logger.Information("NavigateForward: target Service={Service}, Account={Account}, Directory={Directory}. BackCount={BackCount}, ForwardCount={ForwardCount}",
+                next.Service?.Name,
+                next.Account?.Name,
+                next.Directory?.Path ?? next.Directory?.Name,
+                _backwardStack.Count,
+                _forwardStack.Count);
+
+            var args = next.Clone(NavigationDirection.Forward);
             _commandService.EventAggregator.Publish(args);
         }
 
         void SelectionChanged(SelectionChangedEventArgs args)
         {
+            Logger.Information("NavigationService.SelectionChanged: Direction={Direction}, Service={Service}, Account={Account}, Directory={Directory}",
+                args.Direction,
+                args.Service?.Name,
+                args.Account?.Name,
+                args.Directory?.Path ?? args.Directory?.Name);
+
             if (args.Direction == NavigationDirection.Unknown)
             {
                 _backwardStack.Push(args);
                 NavigateBackCommand.IsEnabled = true;
+                Logger.Debug("Selection pushed to back stack. NewBackCount={Count}", _backwardStack.Count);
             }
 
             _directoryChangedArgs = args;
