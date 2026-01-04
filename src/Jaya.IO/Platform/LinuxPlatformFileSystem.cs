@@ -48,6 +48,37 @@ internal class LinuxPlatformFileSystem : IPlatformFileSystem
         return Task.FromResult(false);
     }
 
+    public Task<bool> TryNativeRenameAsync(string source, string dest, bool overwrite, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(dest))
+                return Task.FromResult(false);
+
+            if (cancellationToken.IsCancellationRequested)
+                return Task.FromResult(false);
+
+            if (File.Exists(dest) || Directory.Exists(dest))
+            {
+                if (overwrite)
+                {
+                    try { if (Directory.Exists(dest)) Directory.Delete(dest, true); else File.Delete(dest); } catch { }
+                }
+                else return Task.FromResult(false);
+            }
+
+            var res = rename(source, dest);
+            return Task.FromResult(res == 0);
+        }
+        catch
+        {
+            return Task.FromResult(false);
+        }
+    }
+
+    [System.Runtime.InteropServices.DllImport("libc", EntryPoint = "rename", SetLastError = true)]
+    static extern int rename([System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPUTF8Str)] string oldpath, [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPUTF8Str)] string newpath);
+
     static bool TryMoveToTrashFreedesktop(string path)
     {
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);

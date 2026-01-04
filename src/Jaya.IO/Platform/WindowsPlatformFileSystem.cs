@@ -88,6 +88,52 @@ internal class WindowsPlatformFileSystem : IPlatformFileSystem
         }
     }
 
+    public Task<bool> TryNativeRenameAsync(string source, string dest, bool overwrite, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(dest))
+                return Task.FromResult(false);
+
+            if (cancellationToken.IsCancellationRequested)
+                return Task.FromResult(false);
+
+            if (Directory.Exists(source))
+            {
+                if (Directory.Exists(dest))
+                {
+                    if (overwrite)
+                    {
+                        Directory.Delete(dest, true);
+                    }
+                    else return Task.FromResult(false);
+                }
+                Directory.Move(source, dest);
+                return Task.FromResult(true);
+            }
+
+            if (File.Exists(source))
+            {
+                if (File.Exists(dest))
+                {
+                    if (overwrite)
+                    {
+                        File.Delete(dest);
+                    }
+                    else return Task.FromResult(false);
+                }
+                File.Move(source, dest);
+                return Task.FromResult(true);
+            }
+
+            return Task.FromResult(false);
+        }
+        catch
+        {
+            return Task.FromResult(false);
+        }
+    }
+
     const uint FO_DELETE = 0x0003;
     const ushort FOF_ALLOWUNDO = 0x0040;
     const ushort FOF_NOCONFIRMATION = 0x0010;

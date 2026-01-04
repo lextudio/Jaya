@@ -198,6 +198,109 @@ internal class PlatformFileSystem : IFileSystem
         }
     }
 
+    public async Task<RenameResult> RenameAsync(string sourcePath, string destinationPath, bool overwrite = false, IProgress<TransferProgressReport>? progress = null, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || string.IsNullOrWhiteSpace(destinationPath))
+            return new RenameResult(false, null, "Invalid path");
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        try
+        {
+            // Ensure destination directory exists
+            var destDir = Path.GetDirectoryName(destinationPath) ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(destDir) && !Directory.Exists(destDir))
+                Directory.CreateDirectory(destDir);
+
+            // Try native rename first
+            var nativeOk = await _platform.TryNativeRenameAsync(sourcePath, destinationPath, overwrite, cancellationToken).ConfigureAwait(false);
+            if (nativeOk)
+                return new RenameResult(true, destinationPath, null);
+
+            // If destination exists and caller didn't request overwrite, treat as conflict rather than silently creating a unique name.
+            if (!overwrite && (File.Exists(destinationPath) || Directory.Exists(destinationPath)))
+                return new RenameResult(false, null, "Destination exists", true);
+
+            // Fallback: perform explicit file copy-to-destination followed by delete for files,
+            // or use TransferEngine for directories and then rename the moved directory if necessary.
+            try
+            {
+                if (File.Exists(sourcePath))
+                {
+                    // Copy file contents to destination
+                    using (var src = File.Open(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        // Ensure parent exists
+                        var destParent = Path.GetDirectoryName(destinationPath) ?? string.Empty;
+                        if (!string.IsNullOrWhiteSpace(destParent) && !Directory.Exists(destParent))
+                            Directory.CreateDirectory(destParent);
+
+                        if (File.Exists(destinationPath))
+                        {
+                            if (overwrite) File.Delete(destinationPath);
+                            else return new RenameResult(false, null, "Destination exists", true);
+                        }
+
+                        using var dst = File.Create(destinationPath);
+                        await src.CopyToAsync(dst, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    // Delete source
+                    try { File.Delete(sourcePath); } catch { }
+                    return new RenameResult(true, destinationPath, null);
+                }
+
+                // Directory fallback: use TransferEngine to move into destination parent, then rename if necessary
+                var sources = new[] { sourcePath };
+                var parent = Path.GetDirectoryName(destinationPath) ?? string.Empty;
+                var results = await _transfer.TransferAsync(sources, parent, TransferMode.Move, progress, cancellationToken).ConfigureAwait(false);
+                var first = results.FirstOrDefault();
+                if (first != null && first.Success && !string.IsNullOrWhiteSpace(first.DestinationPath))
+                {
+                    if (!string.Equals(first.DestinationPath, destinationPath, StringComparison.Ordinal))
+                    {
+                        try
+                        {
+                            if (Directory.Exists(first.DestinationPath))
+                            {
+                                if (Directory.Exists(destinationPath))
+                                {
+                                    if (overwrite) Directory.Delete(destinationPath, true);
+                                    else return new RenameResult(false, null, "Destination exists", true);
+                                }
+                                Directory.Move(first.DestinationPath, destinationPath);
+                                return new RenameResult(true, destinationPath, null);
+                            }
+                            else if (File.Exists(first.DestinationPath))
+                            {
+                                if (File.Exists(destinationPath))
+                                {
+                                    if (overwrite) File.Delete(destinationPath);
+                                    else return new RenameResult(false, null, "Destination exists", true);
+                                }
+                                File.Move(first.DestinationPath, destinationPath);
+                                return new RenameResult(true, destinationPath, null);
+                            }
+                        }
+                        catch { }
+                    }
+
+                    return new RenameResult(true, first.DestinationPath, null);
+                }
+
+                return new RenameResult(false, null, "Rename failed");
+            }
+            catch (Exception ex)
+            {
+                return new RenameResult(false, null, ex.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            return new RenameResult(false, null, ex.Message);
+        }
+    }
+
     static FileAccessRights GetWindowsAccessRights(string path)
     {
         var rights = FileAccessRights.Read;

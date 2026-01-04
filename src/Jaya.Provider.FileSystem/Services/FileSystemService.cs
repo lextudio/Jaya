@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace Jaya.Provider.FileSystem.Services
 {
-    public class FileSystemService : ProviderServiceBase, IProviderService, IFileDeleteService, IFileTransferService
+    public class FileSystemService : ProviderServiceBase, IProviderService, IFileDeleteService, IFileTransferService, Jaya.Shared.Services.IFileRenameService
     {
         static readonly ILogger Logger = Log.ForContext<FileSystemService>();
         readonly IFileSystem _fileSystem;
@@ -242,6 +242,36 @@ namespace Jaya.Provider.FileSystem.Services
             }
 
             return createdItems;
+        }
+
+        public async Task<FileSystemObjectModel?> RenameAsync(AccountModelBase account, FileSystemObjectModel item, string newName, bool overwrite = false, IProgress<TransferProgressReport>? progress = null, CancellationToken cancellationToken = default)
+        {
+            if (account == null) throw new ArgumentNullException(nameof(account));
+            if (item == null) throw new ArgumentNullException(nameof(item));
+            if (string.IsNullOrWhiteSpace(newName)) throw new ArgumentNullException(nameof(newName));
+
+            var parentDir = Path.GetDirectoryName(item.Path) ?? string.Empty;
+            var destination = Path.Combine(parentDir, newName);
+
+            try
+            {
+                var result = await _fileSystem.RenameAsync(item.Path, destination, overwrite: overwrite, progress: null, cancellationToken).ConfigureAwait(false);
+                if (!result.Success)
+                {
+                    // If conflict, try to compute unique destination and return null to let UI decide
+                    return null;
+                }
+
+                if (string.IsNullOrWhiteSpace(result.DestinationPath))
+                    return null;
+
+                return CreateFileSystemObject(result.DestinationPath);
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning(ex, "Rename failed from {Source} to {Dest}", item.Path, destination);
+                return null;
+            }
         }
 
         static TransferProgressReport? MapProgress(Io.TransferProgressReport report, string targetPath)

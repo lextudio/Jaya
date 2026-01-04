@@ -95,5 +95,8 @@ namespace Jaya.IO.Tests
 
         public Task<FileAccessRights> GetAccessRightsAsync(string path, CancellationToken cancellationToken = default)
             => _inner.GetAccessRightsAsync(path, cancellationToken);
+
+        public Task<Jaya.IO.RenameResult> RenameAsync(string sourcePath, string destinationPath, bool overwrite = false, IProgress<TransferProgressReport>? progress = null, CancellationToken cancellationToken = default)
+            => _inner.RenameAsync(sourcePath, destinationPath, overwrite, progress, cancellationToken);
     }
 }

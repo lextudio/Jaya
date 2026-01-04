@@ -30,11 +30,15 @@ namespace Jaya.Ui.ViewModels
         SelectionChangedEventArgs? _lastSelectionArgs;
 
         ICommand? _invokeObject;
+        ICommand? _renameItem;
+        ICommand? _commitRename;
+        ICommand? _cancelRename;
         ICommand? _deleteItems;
         ICommand? _cutItems;
         ICommand? _copyItems;
         ICommand? _pasteItems;
         ProviderServiceBase? _service;
+        bool _applyOverwriteToAll = false;
         AccountModelBase? _account;
         List<FileSystemObjectModel> _clipboardItems = new();
         TransferMode _clipboardMode = TransferMode.Copy;
@@ -67,6 +71,17 @@ namespace Jaya.Ui.ViewModels
                     _invokeObject = new RelayCommand<ExplorerItemModel>(InvokeObject);
 
                 return _invokeObject!;
+            }
+        }
+
+        public ICommand RenameItemCommand
+        {
+            get
+            {
+                if (_renameItem == null)
+                    _renameItem = new RelayCommand<ExplorerItemModel>(StartRename);
+
+                return _renameItem!;
             }
         }
 
@@ -111,6 +126,26 @@ namespace Jaya.Ui.ViewModels
                     _pasteItems = new RelayCommand(PasteItems);
 
                 return _pasteItems!;
+            }
+        }
+
+        public ICommand CommitRenameCommand
+        {
+            get
+            {
+                if (_commitRename == null)
+                    _commitRename = new RelayCommand<ExplorerItemModel>(CommitRename, isAsynchronous: true);
+                return _commitRename!;
+            }
+        }
+
+        public ICommand CancelRenameCommand
+        {
+            get
+            {
+                if (_cancelRename == null)
+                    _cancelRename = new RelayCommand<ExplorerItemModel>(CancelRename);
+                return _cancelRename!;
             }
         }
 
@@ -245,6 +280,167 @@ namespace Jaya.Ui.ViewModels
         void CutItems(IReadOnlyList<ExplorerItemModel> items)
         {
             StoreClipboard(items, TransferMode.Move);
+        }
+
+        void StartRename(ExplorerItemModel? item)
+        {
+            if (item == null)
+                return;
+
+            if (!item.IsFile && !item.IsDirectory)
+                return;
+
+            // initialize edit name and toggle edit mode
+            item.EditableName = item.DisplayName;
+            item.IsEditing = true;
+        }
+
+        async void CommitRename(ExplorerItemModel? item)
+        {
+            if (item == null)
+                return;
+
+            if (_service == null || _account == null)
+                return;
+
+            if (!item.IsFile && !item.IsDirectory)
+                return;
+
+            var newName = item.EditableName?.Trim();
+            if (string.IsNullOrWhiteSpace(newName) || newName == item.DisplayName)
+            {
+                item.IsEditing = false;
+                return;
+            }
+
+            var fso = item.Object as FileSystemObjectModel;
+            if (fso == null || string.IsNullOrWhiteSpace(fso.Path))
+            {
+                item.IsEditing = false;
+                return;
+            }
+
+            try
+            {
+                // Check for local conflict (destination exists)
+                var parentDir = System.IO.Path.GetDirectoryName(fso.Path) ?? string.Empty;
+                var destPath = System.IO.Path.Combine(parentDir, newName);
+                ConflictPromptViewModel? cvm = null;
+                if (System.IO.File.Exists(destPath) || System.IO.Directory.Exists(destPath))
+                {
+                    // Show conflict prompt
+                    var conflictDialog = new Views.ConflictPromptView();
+                    cvm = conflictDialog.DataContext as ConflictPromptViewModel;
+                    var owner = App.Lifetime?.MainWindow;
+                    if (owner != null)
+                        await conflictDialog.ShowDialog(owner);
+                    else
+                        conflictDialog.Show();
+
+                    var choice = cvm?.Result ?? ConflictResult.Cancel;
+                    if (choice == ConflictResult.Cancel)
+                    {
+                        item.IsEditing = false;
+                        return;
+                    }
+
+                    if (choice == ConflictResult.KeepBoth)
+                    {
+                        // compute unique name
+                        var unique = GetUniqueNameInFolder(parentDir, newName);
+                        newName = unique;
+                        destPath = System.IO.Path.Combine(parentDir, newName);
+                    }
+
+                    // If Overwrite selected, we'll pass the desired name and let provider handle overwrite if supported.
+                }
+                // determine overwrite flag
+                bool overwrite = _applyOverwriteToAll;
+                // if we previously showed a dialog, cvm variable will carry user's choice
+
+                if (_service is not Jaya.Shared.Services.IFileRenameService renameService)
+                    return;
+
+                // if user selected overwrite in the dialog, set overwrite accordingly
+                if (cvm != null && cvm.Result == ConflictResult.Overwrite)
+                {
+                    overwrite = true;
+                    if (cvm.ApplyToAll)
+                        _applyOverwriteToAll = true;
+                }
+
+                var progress = new Progress<TransferProgressReport>(report => { });
+                var result = await renameService.RenameAsync(_account, fso, newName, overwrite, progress, System.Threading.CancellationToken.None);
+                if (result != null)
+                {
+                    Invoke(() =>
+                    {
+                        var comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+                        var existing = Item?.Children?.FirstOrDefault(c =>
+                            (c.Object as FileSystemObjectModel)?.Path != null &&
+                            comparer.Equals((c.Object as FileSystemObjectModel)!.Path, fso.Path));
+
+                        if (existing != null)
+                        {
+                            var index = Item.Children.IndexOf(existing);
+                            if (index >= 0)
+                            {
+                                var newLabel = result switch
+                                {
+                                    Jaya.Shared.Models.FileModel file => file.Name + (string.IsNullOrEmpty(file.Extension) ? string.Empty : "." + file.Extension),
+                                    Jaya.Shared.Models.DirectoryModel dir => dir.Name,
+                                    _ => result.Name
+                                };
+
+                                var newItem = new ExplorerItemModel(existing.Type, newLabel, result, existing.ImagePath);
+                                Item.Children[index] = newItem;
+                            }
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                FileSystemLogger.Warning(ex, "Rename failed for {Path}", fso.Path);
+            }
+            finally
+            {
+                item.IsEditing = false;
+            }
+        }
+
+        void CancelRename(ExplorerItemModel? item)
+        {
+            if (item == null)
+                return;
+            item.IsEditing = false;
+        }
+
+        string GetUniqueNameInFolder(string folder, string name)
+        {
+            // If no conflict, return original name
+            var dest = System.IO.Path.Combine(folder, name);
+            if (!System.IO.File.Exists(dest) && !System.IO.Directory.Exists(dest))
+                return name;
+
+            var baseName = name;
+            var ext = string.Empty;
+            if (System.IO.Path.HasExtension(name))
+            {
+                ext = System.IO.Path.GetExtension(name);
+                baseName = name.Substring(0, name.Length - ext.Length);
+            }
+
+            for (int i = 1; i < 10000; i++)
+            {
+                var candidate = $"{baseName} ({i}){ext}";
+                var candidatePath = System.IO.Path.Combine(folder, candidate);
+                if (!System.IO.File.Exists(candidatePath) && !System.IO.Directory.Exists(candidatePath))
+                    return candidate;
+            }
+
+            // fallback
+            return name + " (copy)";
         }
 
         void CopyItems(IReadOnlyList<ExplorerItemModel> items)

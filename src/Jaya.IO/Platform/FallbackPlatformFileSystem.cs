@@ -26,4 +26,9 @@ internal class FallbackPlatformFileSystem : IPlatformFileSystem
         // No native support in fallback
         return Task.FromResult(false);
     }
+
+    public Task<bool> TryNativeRenameAsync(string source, string dest, bool overwrite, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(false);
+    }
 }

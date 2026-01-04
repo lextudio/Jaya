@@ -12,6 +12,7 @@
     xmlns:m="clr-namespace:Jaya.Ui.Models;assembly=Jaya.Ui"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:Jaya.Ui.ViewModels;assembly=Jaya.Ui"
+    xmlns:beh="clr-namespace:Jaya.Ui.Behaviors;assembly=Jaya.Ui"
     d:DesignHeight="480"
     d:DesignWidth="640"
     j:ViewModelLocator.AutoWireViewModel="True"
@@ -28,6 +29,7 @@
             Gesture="Delete"
             Command="{Binding SimpleCommand}"
             CommandParameter="{x:Static local:CommandType.Delete}" />
+        <KeyBinding Gesture="F2" Command="{Binding RenameItemCommand}" CommandParameter="{Binding ElementName=ExplorerRoot, Path=DataContext.Item}" />
         <KeyBinding
             Gesture="Ctrl+X"
             Command="{Binding SimpleCommand}"
@@ -204,11 +206,25 @@
                                 <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="16" Height="16" Stretch="Uniform" />
                                 <Image Classes="Icon" Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IsDirectory}" Width="16" Height="16" Stretch="Uniform" />
                                 <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="16" Height="16" Stretch="Uniform" />
-                                    <TextBlock Text="{Binding DisplayName}"
-                                      TextWrapping="NoWrap"
-                                      ToolTip.Tip="{Binding Label}"
-                                      HorizontalAlignment="Stretch"
-                                      VerticalAlignment="Center" />
+                                    <Grid>
+                                      <TextBlock Name="NameText" Text="{Binding DisplayName}"
+                                        TextWrapping="NoWrap"
+                                        ToolTip.Tip="{Binding Label}"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Center"
+                                        IsVisible="{Binding IsEditing, Mode=OneWay, Converter={x:Static c:BooleanInverseConverter.Instance}}" />
+                                      <TextBox Name="NameEdit" Text="{Binding EditableName, Mode=TwoWay}"
+                                               IsVisible="{Binding IsEditing}"
+                                               Width="300"
+                                               Height="22"
+                                               Tag="{Binding}"
+                                               beh:FocusOnEdit.IsEnabled="True">
+                                        <TextBox.KeyBindings>
+                                          <KeyBinding Gesture="Enter" Command="{Binding $parent[DataGrid].DataContext.CommitRenameCommand}" CommandParameter="{Binding}" />
+                                          <KeyBinding Gesture="Escape" Command="{Binding $parent[DataGrid].DataContext.CancelRenameCommand}" CommandParameter="{Binding}" />
+                                        </TextBox.KeyBindings>
+                                      </TextBox>
+                                    </Grid>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -253,11 +269,15 @@
                         <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="48" Height="48" Stretch="Uniform" />
                         <Image Classes="Icon" Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IsDirectory}" Width="48" Height="48" Stretch="Uniform" />
                         <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="48" Height="48" Stretch="Uniform" />
-                      <TextBlock
-                          Width="54"
-                          Text="{Binding Mode=OneWay, Path=Label}"
-                          TextAlignment="Center"
-                          TextWrapping="Wrap" />
+                      <Grid>
+                        <TextBlock Width="54" Text="{Binding Mode=OneWay, Path=Label}" TextAlignment="Center" TextWrapping="Wrap" IsVisible="{Binding IsEditing, Converter={x:Static c:BooleanInverseConverter.Instance}}" />
+                        <TextBox Width="54" Text="{Binding EditableName, Mode=TwoWay}" IsVisible="{Binding IsEditing}" beh:FocusOnEdit.IsEnabled="True">
+                          <TextBox.KeyBindings>
+                            <KeyBinding Gesture="Enter" Command="{Binding $parent[ListBox].DataContext.CommitRenameCommand}" CommandParameter="{Binding}" />
+                            <KeyBinding Gesture="Escape" Command="{Binding $parent[ListBox].DataContext.CancelRenameCommand}" CommandParameter="{Binding}" />
+                          </TextBox.KeyBindings>
+                        </TextBox>
+                      </Grid>
                     </StackPanel>
                     <Panel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" IsVisible="{Binding Path=$parent[ListBox].DataContext.ApplicationConfig.IsItemCheckBoxVisible}">
                       <CheckBox IsChecked="{Binding $parent[ListBoxItem].IsSelected}"/>
@@ -295,14 +315,15 @@
                     <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="16" Height="16" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IsDirectory}" Width="16" Height="16" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="16" Height="16" Stretch="Uniform" />
-                      <TextBlock
-                        Height="16"
-                        Width="220"
-                        Text="{Binding Mode=OneWay, Path=Label}"
-                        TextAlignment="Center"
-                        TextWrapping="NoWrap"
-                        TextTrimming="CharacterEllipsis"
-                        ToolTip.Tip="{Binding Label}" />
+                      <Grid>
+                        <TextBlock Height="16" Width="220" Text="{Binding Mode=OneWay, Path=Label}" TextAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Label}" IsVisible="{Binding IsEditing, Converter={x:Static c:BooleanInverseConverter.Instance}}" />
+                        <TextBox Height="16" Width="220" Text="{Binding EditableName, Mode=TwoWay}" IsVisible="{Binding IsEditing}" beh:FocusOnEdit.IsEnabled="True">
+                          <TextBox.KeyBindings>
+                            <KeyBinding Gesture="Enter" Command="{Binding $parent[ListBox].DataContext.CommitRenameCommand}" CommandParameter="{Binding}" />
+                            <KeyBinding Gesture="Escape" Command="{Binding $parent[ListBox].DataContext.CancelRenameCommand}" CommandParameter="{Binding}" />
+                          </TextBox.KeyBindings>
+                        </TextBox>
+                      </Grid>
                 </StackPanel>
                 <Panel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" IsVisible="{Binding Path=$parent[ListBox].DataContext.ApplicationConfig.IsItemCheckBoxVisible}">
                   <CheckBox IsChecked="{Binding $parent[ListBoxItem].IsSelected}"/>
@@ -341,12 +362,15 @@
                     <Image Classes="Icon" Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IsDirectory}" Width="48" Height="48" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="48" Height="48" Stretch="Uniform" />
                   <UniformGrid Columns="1">
-                    <TextBlock
-                      Text="{Binding Mode=OneWay, Path=Label}"
-                      TextAlignment="Left"
-                      TextWrapping="NoWrap"
-                      TextTrimming="CharacterEllipsis"
-                      ToolTip.Tip="{Binding Label}" />
+                    <Grid>
+                      <TextBlock Text="{Binding Mode=OneWay, Path=Label}" TextAlignment="Left" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Label}" IsVisible="{Binding IsEditing, Converter={x:Static c:BooleanInverseConverter.Instance}}" />
+                      <TextBox Text="{Binding EditableName, Mode=TwoWay}" IsVisible="{Binding IsEditing}" beh:FocusOnEdit.IsEnabled="True">
+                        <TextBox.KeyBindings>
+                          <KeyBinding Gesture="Enter" Command="{Binding $parent[ListBox].DataContext.CommitRenameCommand}" CommandParameter="{Binding}" />
+                          <KeyBinding Gesture="Escape" Command="{Binding $parent[ListBox].DataContext.CancelRenameCommand}" CommandParameter="{Binding}" />
+                        </TextBox.KeyBindings>
+                      </TextBox>
+                    </Grid>
                     <TextBlock Classes="SecondaryText"
                         Text="{Binding Mode=OneWay, Path=Object.Type}"
                         TextAlignment="Left"
@@ -395,8 +419,15 @@
                     <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="32" Height="32" Stretch="Uniform" />
                 </Panel>
                 <UniformGrid Rows="2">
-                  <TextBlock Text="{Binding Mode=OneWay, Path=Label}" TextAlignment="Left" Classes="ContentViewFileName"
-                             TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip.Tip="{Binding Label}"/>
+                  <Grid>
+                    <TextBlock Text="{Binding Mode=OneWay, Path=Label}" TextAlignment="Left" Classes="ContentViewFileName" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip.Tip="{Binding Label}" IsVisible="{Binding IsEditing, Converter={x:Static c:BooleanInverseConverter.Instance}}"/>
+                    <TextBox Text="{Binding EditableName, Mode=TwoWay}" IsVisible="{Binding IsEditing}" beh:FocusOnEdit.IsEnabled="True">
+                      <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding $parent[ListBox].DataContext.CommitRenameCommand}" CommandParameter="{Binding}" />
+                        <KeyBinding Gesture="Escape" Command="{Binding $parent[ListBox].DataContext.CancelRenameCommand}" CommandParameter="{Binding}" />
+                      </TextBox.KeyBindings>
+                    </TextBox>
+                  </Grid>
                   <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Size: " Classes="PropertyLabel"/>
                     <TextBlock Text="{Binding Object.SizeString}"/>

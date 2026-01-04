@@ -86,6 +86,18 @@ namespace Jaya.Ui.Models
 
         public ObservableCollection<ExplorerItemModel> Children { get; }
 
+        public bool IsEditing
+        {
+            get => Get<bool>();
+            set => Set(value);
+        }
+
+        public string? EditableName
+        {
+            get => Get<string?>();
+            set => Set(value);
+        }
+
         public string AccessErrorMessage => (Object as DirectoryModel)?.AccessErrorMessage ?? string.Empty;
 
         public bool HasAccessError => !string.IsNullOrWhiteSpace(AccessErrorMessage);

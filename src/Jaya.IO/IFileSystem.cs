@@ -24,7 +24,10 @@ namespace Jaya.IO
         Task<Stream> OpenWriteAsync(string path, FileMode mode = FileMode.Create, CancellationToken cancellationToken = default);
 
         Task<FileAccessRights> GetAccessRightsAsync(string path, CancellationToken cancellationToken = default);
+        Task<RenameResult> RenameAsync(string sourcePath, string destinationPath, bool overwrite = false, IProgress<TransferProgressReport>? progress = null, CancellationToken cancellationToken = default);
     }
+
+    public record RenameResult(bool Success, string? DestinationPath, string? Error, bool Conflict = false);
 
     public static class FileSystem
     {

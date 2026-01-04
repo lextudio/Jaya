@@ -57,4 +57,39 @@ internal class ManagedTestTrashPlatform : IPlatformFileSystem
     {
         return Task.FromResult(false);
     }
+
+    public Task<bool> TryNativeRenameAsync(string source, string dest, bool overwrite, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(dest))
+                return Task.FromResult(false);
+
+            if (File.Exists(source))
+            {
+                if (File.Exists(dest))
+                {
+                    if (overwrite) File.Delete(dest); else return Task.FromResult(false);
+                }
+                File.Move(source, dest);
+                return Task.FromResult(true);
+            }
+
+            if (Directory.Exists(source))
+            {
+                if (Directory.Exists(dest))
+                {
+                    if (overwrite) Directory.Delete(dest, true); else return Task.FromResult(false);
+                }
+                Directory.Move(source, dest);
+                return Task.FromResult(true);
+            }
+
+            return Task.FromResult(false);
+        }
+        catch
+        {
+            return Task.FromResult(false);
+        }
+    }
 }

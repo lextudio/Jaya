@@ -132,4 +132,37 @@ internal class MacPlatformFileSystem : IPlatformFileSystem
         if (string.IsNullOrEmpty(value)) return string.Empty;
         return value.Replace("\\", "\\\\").Replace("\"", "\\\"");
     }
+
+    public Task<bool> TryNativeRenameAsync(string source, string dest, bool overwrite, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(source) || string.IsNullOrWhiteSpace(dest))
+                return Task.FromResult(false);
+
+            if (cancellationToken.IsCancellationRequested)
+                return Task.FromResult(false);
+
+            // If destination exists and overwrite requested, remove it first
+            if (File.Exists(dest) || Directory.Exists(dest))
+            {
+                if (overwrite)
+                {
+                    try { if (Directory.Exists(dest)) Directory.Delete(dest, true); else File.Delete(dest); } catch { }
+                }
+                else return Task.FromResult(false);
+            }
+
+            // Use libc rename syscall via standard C library
+            var result = rename(source, dest);
+            return Task.FromResult(result == 0);
+        }
+        catch
+        {
+            return Task.FromResult(false);
+        }
+    }
+
+    [DllImport("libc", EntryPoint = "rename", SetLastError = true)]
+    static extern int rename([MarshalAs(UnmanagedType.LPUTF8Str)] string oldpath, [MarshalAs(UnmanagedType.LPUTF8Str)] string newpath);
 }

@@ -168,6 +168,50 @@ public class MockFileSystem : Jaya.IO.IFileSystem
     public Task<FileAccessRights> GetAccessRightsAsync(string path, CancellationToken cancellationToken = default)
         => Task.FromResult(FileAccessRights.Read | FileAccessRights.Write | FileAccessRights.Execute | FileAccessRights.Delete);
 
+    public Task<Jaya.IO.RenameResult> RenameAsync(string sourcePath, string destinationPath, bool overwrite = false, IProgress<TransferProgressReport>? progress = null, CancellationToken cancellationToken = default)
+    {
+        var src = Normalize(sourcePath);
+        var dst = Normalize(destinationPath);
+
+        try
+        {
+            // Destination exists handling
+            var dstIsFile = _files.ContainsKey(dst);
+            var dstIsDir = _dirs.ContainsKey(dst);
+            if ((dstIsFile || dstIsDir) && !overwrite)
+                return Task.FromResult(new Jaya.IO.RenameResult(false, null, "Destination exists", true));
+
+            if (dstIsFile)
+            {
+                if (overwrite) _files.TryRemove(dst, out _);
+            }
+            if (dstIsDir)
+            {
+                if (overwrite) _dirs.TryRemove(dst, out _);
+            }
+
+            if (_files.ContainsKey(src))
+            {
+                _files[dst] = _files[src];
+                _files.TryRemove(src, out _);
+                return Task.FromResult(new Jaya.IO.RenameResult(true, dst, null));
+            }
+
+            if (_dirs.ContainsKey(src))
+            {
+                _dirs.TryAdd(dst, _dirs[src]);
+                _dirs.TryRemove(src, out _);
+                return Task.FromResult(new Jaya.IO.RenameResult(true, dst, null));
+            }
+
+            return Task.FromResult(new Jaya.IO.RenameResult(false, null, "Source does not exist"));
+        }
+        catch (System.Exception ex)
+        {
+            return Task.FromResult(new Jaya.IO.RenameResult(false, null, ex.Message));
+        }
+    }
+
     static string Normalize(string path)
     {
         if (string.IsNullOrEmpty(path))

@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:Jaya.Ui.ViewModels"
+             x:Class="Jaya.Ui.Views.RenameView">
+  <UserControl.DataContext>
+    <vm:RenameViewModel />
+  </UserControl.DataContext>
+
+  <StackPanel Margin="12" Spacing="8">
+    <TextBlock Text="Enter new name:" />
+    <TextBox Name="NameBox" Text="{Binding Name, Mode=TwoWay}" Width="360" />
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+      <Button Content="OK" Command="{Binding OkCommand}" />
+      <Button Content="Cancel" Command="{Binding CancelCommand}" />
+    </StackPanel>
+  </StackPanel>
+</UserControl>
