@@ -64,6 +64,8 @@ namespace Jaya.Ui.Views
                             dataGrid.AddHandler(DragDrop.DropEvent, DetailsDataGrid_Drop, Avalonia.Interactivity.RoutingStrategies.Tunnel);
                             dataGrid.AddHandler(DragDrop.DragOverEvent, DetailsDataGrid_DragOver, Avalonia.Interactivity.RoutingStrategies.Bubble);
                             dataGrid.AddHandler(DragDrop.DropEvent, DetailsDataGrid_Drop, Avalonia.Interactivity.RoutingStrategies.Bubble);
+                            // Clear selection when clicking empty space in Details view
+                            dataGrid.AddHandler(Avalonia.Input.InputElement.PointerPressedEvent, DetailsDataGrid_PointerPressed, Avalonia.Interactivity.RoutingStrategies.Bubble);
                             Logger.Debug("Drag-drop handlers attached successfully (Tunnel + Bubble)");
                         }
                     }
@@ -643,6 +645,32 @@ namespace Jaya.Ui.Views
             }
         }
 
+        void DetailsDataGrid_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+        {
+            try
+            {
+                var src = e.Source as Avalonia.Visual;
+                var foundRow = false;
+                while (src != null)
+                {
+                    if (src is Avalonia.Controls.DataGridRow)
+                    {
+                        foundRow = true;
+                        break;
+                    }
+                    src = (src as Visual)?.GetVisualParent() as Avalonia.Visual;
+                }
+
+                if (!foundRow)
+                {
+                    var dg = sender as Avalonia.Controls.DataGrid;
+                    if (dg != null)
+                        dg.SelectedItems?.Clear();
+                }
+            }
+            catch { }
+        }
+        
         static Models.ExplorerItemModel? FindExplorerItemModel(Avalonia.Visual? visual)
         {
             var depth = 0;
