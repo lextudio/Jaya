@@ -743,13 +743,15 @@ namespace Jaya.Ui.Views
                 }
 
                 Logger.Debug("StartDragOperation: initiating drag with {Count} paths", paths.Length);
+                #pragma warning disable CS0618
                 var data = new Avalonia.Input.DataObject();
                 data.Set("Jaya.Paths", paths);
 
                 if (_dragStartArgs != null)
                     await DragDrop.DoDragDrop(_dragStartArgs, data, DragDropEffects.Move | DragDropEffects.Copy);
                 else
-                    await DragDrop.DoDragDrop((Avalonia.Input.PointerEventArgs?)null, data, DragDropEffects.Move | DragDropEffects.Copy);
+                    await DragDrop.DoDragDrop((Avalonia.Input.PointerEventArgs)null!, data, DragDropEffects.Move | DragDropEffects.Copy);
+                #pragma warning restore CS0618
                 Logger.Debug("StartDragOperation: drag operation completed");
             }
             catch (Exception ex)
@@ -839,6 +841,7 @@ namespace Jaya.Ui.Views
             try
             {
                 // Accept if our data object contains Jaya.Paths
+                #pragma warning disable CS0618
                 if (e.Data != null && e.Data.Contains("Jaya.Paths"))
                 {
                     if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
@@ -882,13 +885,14 @@ namespace Jaya.Ui.Views
             Logger.Debug("ProcessDropAsync: entry point reached");
             try
             {
+                #pragma warning disable CS0618
                 if (e.Data == null || !e.Data.Contains("Jaya.Paths"))
                 {
                     Logger.Debug("Drop rejected: no Jaya.Paths in data");
                     return;
                 }
-
                 var obj = e.Data.Get("Jaya.Paths") as string[];
+                #pragma warning restore CS0618
                 if (obj == null || obj.Length == 0)
                 {
                     Logger.Debug("Drop rejected: empty paths");
@@ -1086,7 +1090,7 @@ namespace Jaya.Ui.Views
                 if (content?.IsVisible == true) { Logger.Debug("PerformSelectAll: using ContentListBox"); SelectAllInItemsControl(content); return; }
 
                 // Fallback: operate on the first control that actually has items
-                var firstWithItems = new (string name, object ctrl)[] {
+                var firstWithItems = new (string name, object? ctrl)[] {
                     ("DetailsDataGrid", details as object),
                     ("ListListBox", list as object),
                     ("IconsListBox", icons as object),
@@ -1104,7 +1108,7 @@ namespace Jaya.Ui.Views
                     else if (pair.ctrl is ListBox lb2)
                         items = lb2.Items;
                     if (items == null) return false;
-                    return items.Cast<object?>().Any();
+                    return (items ?? Array.Empty<object>()).Cast<object?>().Any();
                 });
 
                 if (firstWithItems.ctrl != null)
@@ -1148,7 +1152,7 @@ namespace Jaya.Ui.Views
                 if (content?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing ContentListBox"); content.SelectedItems?.Clear(); content.SelectedItem = null; return; }
 
                 // Fallback: clear the first control that has items
-                var firstWithItems = new (string name, object ctrl)[] {
+                var firstWithItems = new (string name, object? ctrl)[] {
                     ("DetailsDataGrid", details as object),
                     ("ListListBox", list as object),
                     ("IconsListBox", icons as object),
@@ -1158,7 +1162,7 @@ namespace Jaya.Ui.Views
                 {
                     var c = pair.ctrl as IEnumerable;
                     if (c == null) return false;
-                    return c.Cast<object?>().Any();
+                    return (c ?? Array.Empty<object>()).Cast<object?>().Any();
                 });
 
                 if (firstWithItems.ctrl != null)
@@ -1201,7 +1205,7 @@ namespace Jaya.Ui.Views
                 if (content?.IsVisible == true) { Logger.Debug("PerformInvertSelection: using ContentListBox"); InvertSelectionInItemsControl(content); return; }
 
                 // Fallback: operate on the first control that actually has items
-                var firstWithItems = new (string name, object ctrl)[] {
+                var firstWithItems = new (string name, object? ctrl)[] {
                     ("DetailsDataGrid", details as object),
                     ("ListListBox", list as object),
                     ("IconsListBox", icons as object),
@@ -1211,7 +1215,7 @@ namespace Jaya.Ui.Views
                 {
                     var c = pair.ctrl as IEnumerable;
                     if (c == null) return false;
-                    return c.Cast<object?>().Any();
+                    return (c ?? Array.Empty<object>()).Cast<object?>().Any();
                 });
 
                 if (firstWithItems.ctrl != null)
@@ -1232,7 +1236,7 @@ namespace Jaya.Ui.Views
             {
                 IEnumerable items = dg.ItemsSource as IEnumerable ?? Array.Empty<object>();
                 var itemsSourceUsed = "ItemsSource";
-                if (!items.Cast<object?>().Any())
+                if (!(items ?? Array.Empty<object>()).Cast<object?>().Any())
                 {
                     // fallback to ViewModel's Item.Children if available
                     if (dg.DataContext is ExplorerViewModel evm && evm.Item?.Children != null)
@@ -1241,9 +1245,9 @@ namespace Jaya.Ui.Views
                         itemsSourceUsed = "ViewModel.Item.Children";
                     }
                 }
-                Logger.Debug("InvertSelectionInItemsControl: DataGrid.{Source} type={Type} isEmpty={IsEmpty}", itemsSourceUsed, items?.GetType().FullName ?? "(null)", !items.Cast<object?>().Any());
+                Logger.Debug("InvertSelectionInItemsControl: DataGrid.{Source} type={Type} isEmpty={IsEmpty}", itemsSourceUsed, items?.GetType().FullName ?? "(null)", !(items ?? Array.Empty<object>()).Cast<object?>().Any());
                 var idx = 0;
-                foreach (var it in items.Cast<object?>().Take(5))
+                foreach (var it in (items ?? Array.Empty<object>()).Cast<object?>().Take(5))
                 {
                     if (it is Models.ExplorerItemModel em)
                     {
@@ -1257,7 +1261,7 @@ namespace Jaya.Ui.Views
                 if (dg.SelectedItems != null)
                 {
                     var sidx = 0;
-                    foreach (var sit in dg.SelectedItems.Cast<object?>().Take(5))
+                    foreach (var sit in (dg.SelectedItems ?? Array.Empty<object>()).Cast<object?>().Take(5))
                     {
                         if (sit is Models.ExplorerItemModel sem)
                         {
@@ -1269,27 +1273,27 @@ namespace Jaya.Ui.Views
                         sidx++;
                     }
                 }
-                var total = items.Cast<object?>().Count();
+                var total = (items ?? Array.Empty<object>()).Cast<object?>().Count();
                 var before = dg.SelectedItems?.Count ?? 0;
                 Logger.Debug("SelectAllInItemsControl: DataGrid totalItems={Total} selectedBefore={Before}", total, before);
                 dg.SelectedItems?.Clear();
-                foreach (var it in items)
+                foreach (var it in items ?? Array.Empty<object>())
                 {
                     if (it is Models.ExplorerItemModel m)
                         dg.SelectedItems?.Add(m);
                 }
                 var after = dg.SelectedItems?.Count ?? 0;
                 Logger.Debug("SelectAllInItemsControl: DataGrid selectedAfter={After}", after);
-                var first = items.Cast<object?>().FirstOrDefault();
+                var first = (items ?? Array.Empty<object>()).Cast<object?>().FirstOrDefault();
                 if (first is Models.ExplorerItemModel fm)
                     dg.SelectedItem = fm;
             }
             else if (control is ListBox lb)
             {
                 var items = lb.Items as IEnumerable ?? Array.Empty<object>();
-                Logger.Debug("InvertSelectionInItemsControl: ListBox.Items type={Type} isEmpty={IsEmpty}", items?.GetType().FullName ?? "(null)", !items.Cast<object?>().Any());
+                Logger.Debug("InvertSelectionInItemsControl: ListBox.Items type={Type} isEmpty={IsEmpty}", items?.GetType().FullName ?? "(null)", !(items ?? Array.Empty<object>()).Cast<object?>().Any());
                 var idx = 0;
-                foreach (var it in items.Cast<object?>().Take(5))
+                foreach (var it in (items ?? Array.Empty<object>()).Cast<object?>().Take(5))
                 {
                     if (it is Models.ExplorerItemModel em)
                     {
@@ -1303,7 +1307,7 @@ namespace Jaya.Ui.Views
                 if (lb.SelectedItems != null)
                 {
                     var sidx = 0;
-                    foreach (var sit in lb.SelectedItems.Cast<object?>().Take(5))
+                        foreach (var sit in (lb.SelectedItems ?? Array.Empty<object>()).Cast<object?>().Take(5))
                     {
                         if (sit is Models.ExplorerItemModel sem)
                         {
@@ -1315,18 +1319,18 @@ namespace Jaya.Ui.Views
                         sidx++;
                     }
                 }
-                var total = items.Cast<object?>().Count();
+                var total = (items ?? Array.Empty<object>()).Cast<object?>().Count();
                 var before = lb.SelectedItems?.Count ?? 0;
                 Logger.Debug("SelectAllInItemsControl: ListBox totalItems={Total} selectedBefore={Before}", total, before);
                 lb.SelectedItems?.Clear();
-                foreach (var it in items)
+                foreach (var it in items ?? Array.Empty<object>())
                 {
                     if (it is Models.ExplorerItemModel m)
                         lb.SelectedItems?.Add(m);
                 }
                 var after = lb.SelectedItems?.Count ?? 0;
                 Logger.Debug("SelectAllInItemsControl: ListBox selectedAfter={After}", after);
-                var first = items.Cast<object?>().FirstOrDefault();
+                var first = (items ?? Array.Empty<object>()).Cast<object?>().FirstOrDefault();
                 if (first is Models.ExplorerItemModel fm)
                     lb.SelectedItem = fm;
             }
@@ -1341,7 +1345,7 @@ namespace Jaya.Ui.Views
             {
                 IEnumerable items = dg.ItemsSource as IEnumerable ?? Array.Empty<object>();
                 var itemsSourceUsed = "ItemsSource";
-                if (!items.Cast<object?>().Any())
+                if (!(items ?? Array.Empty<object>()).Cast<object?>().Any())
                 {
                     if (dg.DataContext is ExplorerViewModel evm && evm.Item?.Children != null)
                     {
@@ -1349,16 +1353,14 @@ namespace Jaya.Ui.Views
                         itemsSourceUsed = "ViewModel.Item.Children";
                     }
                 }
-                var total = items.Cast<object?>().Count();
+                var total = (items ?? Array.Empty<object>()).Cast<object?>().Count();
                 var before = dg.SelectedItems?.Count ?? 0;
                 var toSelect = new List<Models.ExplorerItemModel>();
-                foreach (var it in items)
+                foreach (var it in items ?? Array.Empty<object>())
                 {
                     if (it is Models.ExplorerItemModel m)
                     {
-                        if (dg.SelectedItems != null && dg.SelectedItems.Contains(m))
-                            ; // currently selected -> will be deselected
-                        else
+                        if (!(dg.SelectedItems != null && dg.SelectedItems.Contains(m)))
                             toSelect.Add(m);
                     }
                 }
@@ -1374,16 +1376,14 @@ namespace Jaya.Ui.Views
             else if (control is ListBox lb)
             {
                 var items = lb.Items as IEnumerable ?? Array.Empty<object>();
-                var total = items.Cast<object?>().Count();
+                var total = (items ?? Array.Empty<object>()).Cast<object?>().Count();
                 var before = lb.SelectedItems?.Count ?? 0;
                 var toSelect = new List<Models.ExplorerItemModel>();
-                foreach (var it in items)
+                foreach (var it in items ?? Array.Empty<object>())
                 {
                     if (it is Models.ExplorerItemModel m)
                     {
-                        if (lb.SelectedItems != null && lb.SelectedItems.Contains(m))
-                            ;
-                        else
+                        if (!(lb.SelectedItems != null && lb.SelectedItems.Contains(m)))
                             toSelect.Add(m);
                     }
                 }

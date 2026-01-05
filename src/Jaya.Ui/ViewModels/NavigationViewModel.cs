@@ -1138,9 +1138,24 @@ namespace Jaya.Ui.ViewModels
                     {
                         var serviceInstance = service as ProviderServiceBase;
 
-                        var serviceNode = new TreeNodeModel(service as ProviderServiceBase, null, ItemType.Service)
+                        // log provider discovered
+                        Log.ForContext<NavigationViewModel>().Information("Discovered provider: Name={Name}, Type={Type}, IsEnabled={IsEnabled}",
+                            service?.Name ?? string.Empty,
+                            service?.GetType().Name ?? string.Empty,
+                            serviceInstance?.IsEnabled ?? false);
+
+                        // skip disabled providers
+                        if (serviceInstance != null && !serviceInstance.IsEnabled)
                         {
-                            Label = service.Name, ImagePath = service.ImagePath
+                            Log.ForContext<NavigationViewModel>().Information("Skipping disabled provider: Name={Name}, Type={Type}", service?.Name, service?.GetType().Name);
+                            continue;
+                        }
+
+                        var svc = service;
+                        var serviceNode = new TreeNodeModel(svc as ProviderServiceBase, null, ItemType.Service)
+                        {
+                            Label = svc?.Name ?? string.Empty,
+                            ImagePath = svc?.ImagePath ?? string.Empty
                         };
                         serviceNode.NodeExpanded += OnNodeExpanded;
                         serviceNode.AddDummyChild();
@@ -1150,6 +1165,52 @@ namespace Jaya.Ui.ViewModels
                         {
                             serviceInstance.AccountAdded += (AccountModelBase account) => OnAccountAction(account, AccountAction.Added, serviceNode);
                             serviceInstance.AccountRemoved += (AccountModelBase account) => OnAccountAction(account, AccountAction.Removed, serviceNode);
+
+                            // subscribe to IsEnabled changes so we can add/remove nodes dynamically
+                            serviceInstance.PropertyChanged += (s, e) =>
+                            {
+                                if (e.PropertyName == nameof(ProviderServiceBase.IsEnabled))
+                                {
+                                    // log the change
+                                    Log.ForContext<NavigationViewModel>().Information("Provider IsEnabled changed: Name={Name}, NewValue={IsEnabled}", serviceInstance.Name, serviceInstance.IsEnabled);
+
+                                    // run on UI thread
+                                    Invoke(async () =>
+                                    {
+                                        if (serviceInstance.IsEnabled)
+                                        {
+                                            Log.ForContext<NavigationViewModel>().Information("Enabling provider node: Name={Name}", serviceInstance.Name);
+                                            // add node if it doesn't exist
+                                            var exists = Node?.Children != null && Node.Children.Any(n => (n.Service?.GetHashCode() ?? 0) == serviceInstance.GetHashCode());
+                                            if (!exists)
+                                            {
+                                                var newNode = new TreeNodeModel(serviceInstance, null, ItemType.Service)
+                                                {
+                                                    Label = serviceInstance.Name,
+                                                    ImagePath = serviceInstance.ImagePath
+                                                };
+                                                newNode.NodeExpanded += OnNodeExpanded;
+                                                newNode.AddDummyChild();
+                                                var parentNode = Node;
+                                                if (parentNode != null)
+                                                    await AddChildNodeAsync(parentNode, newNode);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Log.ForContext<NavigationViewModel>().Information("Disabling provider node: Name={Name}", serviceInstance.Name);
+                                            // remove existing node(s)
+                                            var toRemove = Node?.Children?.Where(n => (n.Service?.GetHashCode() ?? 0) == serviceInstance.GetHashCode()).ToList() ?? new System.Collections.Generic.List<TreeNodeModel>();
+                                            var parentNode2 = Node;
+                                            if (parentNode2 != null)
+                                            {
+                                                foreach (var rem in toRemove)
+                                                    RemoveChildNode(parentNode2, rem);
+                                            }
+                                        }
+                                    });
+                                }
+                            };
                         }
                     }
                 }

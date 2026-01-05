@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/settings.json",
+  "title": "Jaya settings.json (monolithic)",
+  "description": "Single-file configuration for Jaya with all sections in one schema.",
+  "type": "object",
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "application": { "$ref": "#/$defs/application" },
+    "pane": { "$ref": "#/$defs/pane" },
+    "toolbar": { "$ref": "#/$defs/toolbar" },
+    "update": { "$ref": "#/$defs/update" },
+    "providers": {
+      "type": "object",
+      "description": "Per-provider configuration keyed by provider id or name",
+      "additionalProperties": {
+        "oneOf": [
+          { "$ref": "#/$defs/providers_filesystem" },
+          { "$ref": "#/$defs/providers_dropbox" },
+          { "$ref": "#/$defs/providers_googledrive" },
+          { "$ref": "#/$defs/providers_s3" },
+          { "$ref": "#/$defs/providers_ftp" },
+          { "$ref": "#/$defs/provider_base" }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "directorySortSetting": {
+      "type": "object",
+      "properties": {
+        "sortMember": { "type": "string" },
+        "ascending": { "type": "boolean" }
+      },
+      "required": ["sortMember"],
+      "additionalProperties": false
+    },
+
+    "application": {
+      "type": "object",
+      "title": "ApplicationConfigModel",
+      "properties": {
+        "isItemCheckBoxVisible": { "type": "boolean" },
+        "isFileNameExtensionVisible": { "type": "boolean" },
+        "isHiddenItemVisible": { "type": "boolean" },
+        "detailsViewSortSettings": {
+          "type": "object",
+          "description": "Per-directory sort settings keyed by directory id or path",
+          "additionalProperties": { "$ref": "#/$defs/directorySortSetting" }
+        },
+        "detailsViewSortDefault": { "$ref": "#/$defs/directorySortSetting" },
+        "widthPx": { "type": "number" },
+        "heightPx": { "type": "number" },
+        "preferIterm": { "type": "boolean" },
+        "themeName": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+
+    "pane": {
+      "type": "object",
+      "title": "PaneConfigModel",
+      "properties": {
+        "navigationPaneWidthPx": { "type": "number" },
+        "previewOrDetailsPanePaneWidthPx": { "type": "number" },
+        "isNavigationPaneVisible": { "type": "boolean" },
+        "isPreviewPaneVisible": { "type": "boolean" },
+        "isDetailsPaneVisible": { "type": "boolean" },
+        "isDetailsView": { "type": "boolean" },
+        "isThumbnailView": { "type": "boolean" },
+        "isListView": { "type": "boolean" },
+        "isTilesView": { "type": "boolean" },
+        "isContentView": { "type": "boolean" },
+        "isStatusBarVisible": { "type": "boolean" },
+        "isRibbonVisible": { "type": "boolean" },
+        "isRibbonCollapsed": { "type": "boolean" },
+        "isMenuHeaderVisible": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+
+    "toolbar": {
+      "type": "object",
+      "title": "ToolbarConfigModel",
+      "properties": {
+        "isVisible": { "type": "boolean" },
+        "isFileVisible": { "type": "boolean" },
+        "isEditVisible": { "type": "boolean" },
+        "isViewVisible": { "type": "boolean" },
+        "isHelpVisible": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+
+    "release": {
+      "type": "object",
+      "title": "ReleaseModel",
+      "properties": {
+        "name": { "type": ["string", "null"] },
+        "prerelease": { "type": "boolean" },
+        "draft": { "type": "boolean" },
+        "published_at": { "type": "string", "format": "date-time" },
+        "body": { "type": ["string", "null"] },
+        "assets": { "type": ["array", "null"], "items": { "type": "object" } }
+      },
+      "additionalProperties": true
+    },
+
+    "update": {
+      "type": "object",
+      "title": "UpdateConfigModel",
+      "properties": {
+        "checked": { "type": "string", "format": "date-time" },
+        "update": { "$ref": "#/$defs/release" },
+        "downloadDirectory": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+
+    "account": {
+      "type": "object",
+      "title": "AccountModelBase",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "imagePath": { "type": "string" },
+        "isEnabled": { "type": "boolean" }
+      },
+      "required": ["id", "name"],
+      "additionalProperties": true
+    },
+
+    "theme": {
+      "type": "object",
+      "title": "ThemeModel",
+      "properties": {
+        "name": { "type": "string" },
+        "variant": { "type": "string", "enum": ["Light", "Dark"] },
+        "styles": { "type": "array", "items": { "type": "object" } }
+      },
+      "required": ["name"],
+      "additionalProperties": true
+    },
+
+    "filesystemObject": {
+      "type": "object",
+      "title": "FileSystemObjectModel",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "path": { "type": "string" },
+        "size": { "type": ["integer", "null"] },
+        "type": { "type": "string", "enum": ["File", "Directory", "Drive"] },
+        "created": { "type": ["string", "null"], "format": "date-time" },
+        "accessed": { "type": ["string", "null"], "format": "date-time" },
+        "modified": { "type": ["string", "null"], "format": "date-time" },
+        "isHidden": { "type": "boolean" },
+        "isSystem": { "type": "boolean" },
+        "isExternalDrive": { "type": "boolean" }
+      },
+      "required": ["id", "name"],
+      "additionalProperties": true
+    },
+
+    "provider_base": {
+      "type": "object",
+      "title": "ProviderConfigModel",
+      "properties": {
+        "isEnabled": { "type": "boolean", "description": "Whether provider is enabled by the user" }
+      },
+      "additionalProperties": true
+    },
+
+    "providers_filesystem": {
+      "type": "object",
+      "title": "FileSystem Provider Config",
+      "properties": {
+        "isEnabled": { "type": "boolean" },
+        "isProtectedFileVisible": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+
+    "providers_dropbox": {
+      "type": "object",
+      "title": "Dropbox Provider Config",
+      "properties": {
+        "isEnabled": { "type": "boolean" },
+        "accounts": { "type": "array", "items": { "$ref": "#/$defs/account" } }
+      },
+      "additionalProperties": false
+    },
+
+    "providers_googledrive": {
+      "type": "object",
+      "title": "Google Drive Provider Config",
+      "properties": {
+        "isEnabled": { "type": "boolean" },
+        "pageSize": { "type": "integer" },
+        "accounts": { "type": "array", "items": { "$ref": "#/$defs/account" } }
+      },
+      "additionalProperties": false
+    },
+
+    "providers_ftp": {
+      "type": "object",
+      "title": "FTP Provider Config",
+      "properties": {
+        "isEnabled": { "type": "boolean" },
+        "accounts": { "type": "array", "items": { "$ref": "#/$defs/account" } }
+      },
+      "additionalProperties": false
+    },
+
+    "providers_s3": {
+      "type": "object",
+      "title": "S3 Provider Config",
+      "properties": {
+        "isEnabled": { "type": "boolean" },
+        "pageSize": { "type": "integer" },
+        "accounts": { "type": "array", "items": { "$ref": "#/$defs/account" } }
+      },
+      "additionalProperties": false
+    }
+  }
+}

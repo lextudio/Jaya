@@ -15,6 +15,7 @@ namespace Jaya.Shared.Services
         T GetOrDefault<T>(string? key = null) where T : ConfigModelBase;
 
         void Set<T>(T value, string? key = null);
+        void FlushSave();
         
     }
 }

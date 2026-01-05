@@ -1064,7 +1064,7 @@ namespace Jaya.Ui.ViewModels
                     _ => created.Name
                 };
 
-                Item.Children.Add(new ExplorerItemModel(itemType, label, created));
+                Item!.Children!.Add(new ExplorerItemModel(itemType, label, created));
                 existingPaths.Add(created.Path);
                 addedPaths?.Add(created.Path);
             }
@@ -1122,19 +1122,20 @@ namespace Jaya.Ui.ViewModels
                 var items = new List<FileSystemObjectModel>();
                 if (Item?.Children != null)
                 {
-                    var lookup = Item.Children
-                        .Select(c => c.Object as FileSystemObjectModel)
-                        .Where(f => f != null && !string.IsNullOrWhiteSpace(f.Path))
-                        .ToDictionary(f => f.Path!, f => f, StringComparer.OrdinalIgnoreCase);
+                        var lookup = Item.Children
+                                .Select(c => c.Object as FileSystemObjectModel)
+                                .OfType<FileSystemObjectModel>()
+                                .Where(f => !string.IsNullOrWhiteSpace(f.Path))
+                                .ToDictionary(f => f.Path!, f => f, StringComparer.OrdinalIgnoreCase);
 
-                    foreach (var p in sourcePaths)
-                    {
-                        if (p != null && lookup.TryGetValue(p, out var found))
-                            items.Add(found);
-                    }
+                        foreach (var p in sourcePaths)
+                        {
+                            if (p != null && lookup.TryGetValue(p, out var found) && found != null)
+                                items.Add(found);
+                        }
                 }
 
-                var results = await transferService.TransferAsync(_account, items, targetDirectory, mode, progress, cancellation.Token);
+                var results = await transferService.TransferAsync(_account, items, targetDirectory ?? new DirectoryModel(), mode, progress, cancellation.Token);
                 FileSystemLogger.Information("Drop transfer requested for {Count} items (created={Created})", items.Count, results?.Count ?? 0);
 
                 if (results != null && results.Count > 0)

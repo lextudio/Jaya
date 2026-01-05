@@ -122,9 +122,9 @@ namespace Jaya.Ui.Models
         {
             return new ApplicationConfigModel
             {
-                WidthPx = 800,
-                HeightPx = 600,
-                ThemeName = "Dark",
+                WidthPx = 1280,
+                HeightPx = 720,
+                ThemeName = "Light",
                 PreferIterm = false,
                 DetailsViewSortSettings = new Dictionary<string, DirectorySortSetting>(),
                 DetailsViewSortDefault = null

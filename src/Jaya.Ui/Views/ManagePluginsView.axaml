@@ -35,7 +35,7 @@
                         </Grid.ColumnDefinitions>
                         <Image Source="{Binding ImagePath, Mode=OneWay, Converter={StaticResource BitmapValueConverter}}" />
                         <TextBlock Grid.Column="1" Text="{Binding Name, Mode=OneWay}" />
-                        <CheckBox Grid.Column="2" />
+                        <CheckBox Grid.Column="2" IsChecked="{Binding IsEnabled, Mode=TwoWay}" />
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>

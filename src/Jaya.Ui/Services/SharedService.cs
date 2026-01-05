@@ -112,12 +112,22 @@ namespace Jaya.Ui.Services
 
         internal void SaveConfigurations()
         {
-            _configService.Set(ApplicationConfiguration);
-            _configService.Set(ToolbarConfiguration);
-            _configService.Set(PaneConfiguration);
-            _configService.Set(UpdateConfiguration);
-            Logger.Information("Saved configuration snapshot: DetailsViewSortSettings count={Count}",
-                ApplicationConfiguration?.DetailsViewSortSettings?.Count ?? 0);
+                _configService.Set(ApplicationConfiguration);
+                _configService.Set(ToolbarConfiguration);
+                _configService.Set(PaneConfiguration);
+                _configService.Set(UpdateConfiguration);
+                // Ensure all in-memory changes are flushed to disk on normal shutdown.
+                try
+                {
+                    _configService.FlushSave();
+                }
+                catch (System.Exception ex)
+                {
+                    Logger.Warning(ex, "Failed flushing configuration on shutdown");
+                }
+
+                Logger.Information("Saved configuration snapshot: DetailsViewSortSettings count={Count}",
+                    ApplicationConfiguration?.DetailsViewSortSettings?.Count ?? 0);
         }
 
         public void SimpleCommandAction(byte type)

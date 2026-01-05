@@ -3,6 +3,7 @@
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
 using Jaya.Shared.Models;
+using Serilog;
 using Jaya.Shared.Services;
 using System;
 using System.Collections.Generic;
@@ -13,6 +14,8 @@ namespace Jaya.Shared.Base
 {
     public abstract class ProviderServiceBase : ModelBase, IProviderService
     {
+        static readonly ILogger Logger = Log.ForContext<ProviderServiceBase>();
+
         IMemoryCacheService? _cache;
         IConfigurationService? _config;
         IPlatformService? _platform;
@@ -25,7 +28,44 @@ namespace Jaya.Shared.Base
 
         protected ProviderServiceBase()
         {
-            
+            // Default to disabled for security; enable filesystem provider by default.
+            // Use ModelBase.Set directly to avoid triggering the IsEnabled setter (which persists)
+            // before the derived class has an opportunity to set `Name`.
+            Set<bool>(false, nameof(IsEnabled), raiseNotification: false);
+
+            try
+            {
+                Logger.Information("Loading provider config for {ProviderType}", this.GetType().Name);
+
+                // Compute the configuration key in the same way SetConfiguration/GetConfiguration would.
+                var key = !string.IsNullOrEmpty(Name) ? Name : this.GetType().Name;
+
+                // Use ConfigurationService.Get<T> (not GetOrDefault) so we can detect an absent persisted section (null).
+                var cfg = ConfigurationService.Get<Jaya.Shared.Models.ProviderConfigModel>(key);
+                if (cfg != null)
+                {
+                    // Use Set to avoid persistence during construction
+                    Set<bool>(cfg.IsEnabled, nameof(IsEnabled), raiseNotification: false);
+                    Logger.Information("Loaded provider config: {ProviderType} IsEnabled={IsEnabled}", this.GetType().Name, cfg.IsEnabled);
+                }
+                else
+                {
+                    // No persisted config - enable FileSystem provider by default.
+                    if (this.GetType().Name.Contains("FileSystem", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Set<bool>(true, nameof(IsEnabled), raiseNotification: false);
+                        Logger.Information("No persisted config for {ProviderType}; enabling FileSystem provider by default", this.GetType().Name);
+                    }
+                    else
+                    {
+                        Logger.Information("No persisted config for {ProviderType}; leaving disabled by default", this.GetType().Name);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning(ex, "Failed loading provider configuration for {ProviderType}", this.GetType().Name);
+            }
         }
 
         #region properties
@@ -94,7 +134,30 @@ namespace Jaya.Shared.Base
         public bool IsEnabled
         {
             get => Get<bool>();
-            set => Set(value);
+            set
+            {
+                if (Set(value))
+                {
+                    try
+                    {
+                        if (string.IsNullOrEmpty(Name))
+                        {
+                            Logger.Debug("Skipping persistence for provider config because Name is not set yet: {ProviderType}", this.GetType().Name);
+                        }
+                        else
+                        {
+                            Logger.Information("Persisting provider config: {ProviderType} IsEnabled={IsEnabled}", this.GetType().Name, value);
+                            var cfg = new Jaya.Shared.Models.ProviderConfigModel { IsEnabled = value };
+                            SetConfiguration(cfg);
+                            Logger.Information("Persisted provider config for {ProviderType}", this.GetType().Name);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning(ex, "Failed persisting provider configuration for {ProviderType}", this.GetType().Name);
+                    }
+                }
+            }
         }
 
         #endregion
@@ -144,15 +207,17 @@ namespace Jaya.Shared.Base
 
         public T GetConfiguration<T>() where T : ConfigModelBase
         {
-            if (string.IsNullOrEmpty(Name))
-                return ConfigModelBase.Empty<T>();
-
-            return ConfigurationService.GetOrDefault<T>(Name);
+            // Use the provider Name property as the configuration key when available.
+            // If Name is not set yet (derived constructor hasn't run), fall back to the provider
+            // type name so configuration is still loaded/saved per-provider.
+            var key = !string.IsNullOrEmpty(Name) ? Name : this.GetType().Name;
+            return ConfigurationService.GetOrDefault<T>(key);
         }
 
         protected void SetConfiguration<T>(T configuration) where T : ConfigModelBase
         {
-            ConfigurationService.Set<T>(configuration, Name);
+            var key = !string.IsNullOrEmpty(Name) ? Name : this.GetType().Name;
+            ConfigurationService.Set<T>(configuration, key);
         }
 
         public async Task<AccountModelBase?> AddAccount(AccountModelBase? account)
