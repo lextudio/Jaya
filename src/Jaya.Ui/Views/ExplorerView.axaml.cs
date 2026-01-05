@@ -36,6 +36,7 @@ namespace Jaya.Ui.Views
         {
             this.InitializeComponent();
             this.AddHandler(KeyDownEvent, ExplorerView_KeyDown, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+            this.AddHandler(Avalonia.Input.InputElement.PointerPressedEvent, ExplorerView_PointerPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             if (!Design.IsDesignMode)
             {
                 // Attach MenuItem click handlers to close context menus immediately when an item is clicked.
@@ -219,6 +220,49 @@ namespace Jaya.Ui.Views
             catch { }
         }
 
+        void ExplorerView_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+        {
+            try
+            {
+                // If focus is inside an inline TextBox and the pointer press occurred outside
+                // of any TextBox within the items area, move focus to a safe focus target
+                // so the inline editor loses focus and commits/cancels via LostFocus.
+                var top = Avalonia.Controls.TopLevel.GetTopLevel(this);
+                var focused = top?.FocusManager?.GetFocusedElement() as Avalonia.Controls.Control;
+                if (focused is Avalonia.Controls.TextBox tb)
+                {
+                    // Use the event's Source (the visual that received the pointer) and walk up
+                    // the visual parent chain to see whether we clicked inside the same TextBox.
+                    var visual = e.Source as Avalonia.Visual;
+                    bool clickedInsideTextBox = false;
+                    while (visual != null)
+                    {
+                        if (ReferenceEquals(visual, tb))
+                        {
+                            clickedInsideTextBox = true;
+                            break;
+                        }
+                        visual = Avalonia.VisualTree.VisualExtensions.GetVisualParent(visual) as Avalonia.Visual;
+                    }
+
+                    if (!clickedInsideTextBox)
+                    {
+                        // Prefer focusing a visible items control to keep keyboard navigation sensible
+                        Avalonia.Controls.Control? focusTarget = null;
+                        if (DetailsDataGrid?.IsVisible == true) focusTarget = DetailsDataGrid;
+                        else if (ListListBox?.IsVisible == true) focusTarget = ListListBox;
+                        else if (IconsListBox?.IsVisible == true) focusTarget = IconsListBox;
+                        else if (TilesListBox?.IsVisible == true) focusTarget = TilesListBox;
+                        else if (ContentListBox?.IsVisible == true) focusTarget = ContentListBox;
+                        else focusTarget = this;
+
+                        try { focusTarget?.Focus(); } catch { }
+                    }
+                }
+            }
+            catch { }
+        }
+
         void AttachMenuItemHandlers(Control root)
         {
             // Find all ContextMenu instances defined in the control's resources and visual tree
@@ -262,6 +306,30 @@ namespace Jaya.Ui.Views
             _deleteRequested = null;
             _selectItemsRequested = null;
             DetachedFromVisualTree -= ExplorerView_DetachedFromVisualTree;
+        }
+
+        void InlineEdit_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            try
+            {
+                if (sender is Avalonia.Controls.TextBox tb)
+                {
+                    var model = tb.DataContext as Models.ExplorerItemModel;
+                    if (model == null)
+                        return;
+
+                    // Only commit if the model is in editing state
+                    if (!model.IsEditing)
+                        return;
+
+                    var vm = this.DataContext as ExplorerViewModel;
+                    if (vm?.CommitRenameCommand != null && vm.CommitRenameCommand.CanExecute(model))
+                    {
+                        vm.CommitRenameCommand.Execute(model);
+                    }
+                }
+            }
+            catch { }
         }
 
         IReadOnlyList<Models.ExplorerItemModel> GetSelectedItems()

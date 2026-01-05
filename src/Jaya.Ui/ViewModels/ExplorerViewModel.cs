@@ -300,6 +300,8 @@ namespace Jaya.Ui.ViewModels
             if (item == null)
                 return;
 
+            var itemLocal = item!;
+
             // capture service/account to local variables and validate to avoid nullable warnings
             var serviceLocal = _service;
             var accountLocal = _account;
@@ -310,16 +312,16 @@ namespace Jaya.Ui.ViewModels
                 return;
 
             var newName = item.EditableName?.Trim();
-            if (string.IsNullOrWhiteSpace(newName) || newName == item.DisplayName)
+            if (string.IsNullOrWhiteSpace(newName) || newName == itemLocal.DisplayName)
             {
-                item.IsEditing = false;
+                itemLocal.IsEditing = false;
                 return;
             }
 
             var fso = item.Object as FileSystemObjectModel;
             if (fso == null || string.IsNullOrWhiteSpace(fso.Path))
             {
-                item.IsEditing = false;
+                itemLocal.IsEditing = false;
                 return;
             }
 
@@ -345,7 +347,7 @@ namespace Jaya.Ui.ViewModels
                     var choice = cvm?.Result ?? ConflictResult.Cancel;
                     if (choice == ConflictResult.Cancel)
                     {
-                        item.IsEditing = false;
+                        itemLocal.IsEditing = false;
                         return;
                     }
 
@@ -376,8 +378,13 @@ namespace Jaya.Ui.ViewModels
                 }
 
                 var progress = new Progress<TransferProgressReport>(report => { });
-                FileSystemLogger.Debug("CommitRename: calling provider.RenameAsync account={Account} sourcePath={Source} newName={NewName} overwrite={Overwrite}", accountLocal?.Name, fso.Path, newName, overwrite);
-                var result = await renameService.RenameAsync(accountLocal, fso, newName, overwrite, progress, System.Threading.CancellationToken.None);
+
+                // Create non-null local copies for use after await to satisfy nullable analysis.
+                var accountForCall = accountLocal!;
+                var fsoPath = fso.Path ?? string.Empty;
+
+                FileSystemLogger.Debug("CommitRename: calling provider.RenameAsync account={Account} sourcePath={Source} newName={NewName} overwrite={Overwrite}", accountForCall.Name, fsoPath, newName, overwrite);
+                var result = await renameService.RenameAsync(accountForCall, fso, newName, overwrite, progress, System.Threading.CancellationToken.None);
                 FileSystemLogger.Debug("CommitRename: provider.RenameAsync returned resultName={Result}", result?.Path);
                 if (result != null)
                 {
@@ -390,7 +397,7 @@ namespace Jaya.Ui.ViewModels
                             if (obj == null || string.IsNullOrWhiteSpace(obj.Path))
                                 return false;
 
-                            return comparer.Equals(obj.Path, fso.Path);
+                            return comparer.Equals(obj.Path, fsoPath);
                         });
 
                         if (existing != null)
@@ -409,9 +416,7 @@ namespace Jaya.Ui.ViewModels
                                 };
 
                                 var newItem = new ExplorerItemModel(existing.Type, newLabel, result, existing.ImagePath);
-                                var children = Item?.Children;
-                                if (children != null && index >= 0)
-                                    children[index] = newItem;
+
                             }
                         }
                     });
@@ -787,6 +792,7 @@ namespace Jaya.Ui.ViewModels
                         break;
                     case FileModel file:
                         label ??= file.Name;
+
                         path ??= file.Path;
                         id ??= file.Id;
                         break;
