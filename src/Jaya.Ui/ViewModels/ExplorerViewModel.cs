@@ -91,22 +91,20 @@ namespace Jaya.Ui.ViewModels
 
         public void SaveDirectorySort(string? directoryPath, string sortMember, bool ascending)
         {
-            if (string.IsNullOrWhiteSpace(directoryPath) || string.IsNullOrWhiteSpace(sortMember))
+            if (string.IsNullOrWhiteSpace(sortMember))
                 return;
 
-            var key = NormalizeSortKey(directoryPath);
-            if (string.IsNullOrWhiteSpace(key))
-                return;
-
-            var settings = ApplicationConfig.DetailsViewSortSettings;
-            settings[key] = new DirectorySortSetting
+            var setting = new DirectorySortSetting
             {
                 SortMember = sortMember,
                 Ascending = ascending
             };
-            FileSystemLogger.Information("Saved details sort: Path={Path} Key={Key} Member={Member} Ascending={Ascending}",
-                directoryPath,
-                key,
+            ApplicationConfig.DetailsViewSortDefault = setting;
+            ApplicationConfig.DetailsViewSortSettings?.Clear();
+            FileSystemLogger.Information("Saved global details sort: Member={Member} Ascending={Ascending}",
+                sortMember,
+                ascending);
+            FileSystemLogger.Information("Updated default details sort: Member={Member} Ascending={Ascending}",
                 sortMember,
                 ascending);
             try
@@ -122,28 +120,16 @@ namespace Jaya.Ui.ViewModels
 
         public (string sortMember, bool ascending)? GetDirectorySort(string? directoryPath)
         {
-            if (string.IsNullOrWhiteSpace(directoryPath))
-                return null;
-
-            var key = NormalizeSortKey(directoryPath);
-            if (string.IsNullOrWhiteSpace(key))
-                return null;
-
-            var settings = ApplicationConfig.DetailsViewSortSettings;
-            if (settings.TryGetValue(key, out var v))
+            var fallback = ApplicationConfig.DetailsViewSortDefault;
+            if (fallback != null && !string.IsNullOrWhiteSpace(fallback.SortMember))
             {
-                FileSystemLogger.Information("Loaded details sort: Path={Path} Key={Key} Member={Member} Ascending={Ascending}",
-                    directoryPath,
-                    key,
-                    v.SortMember,
-                    v.Ascending);
-                return (v.SortMember, v.Ascending);
+                FileSystemLogger.Information("Using global details sort: Member={Member} Ascending={Ascending}",
+                    fallback.SortMember,
+                    fallback.Ascending);
+                return (fallback.SortMember, fallback.Ascending);
             }
 
-            FileSystemLogger.Information("No saved details sort for path: Path={Path} Key={Key} KnownCount={Count}",
-                directoryPath,
-                key,
-                settings.Count);
+            FileSystemLogger.Information("No global details sort configured.");
 
             return null;
         }

@@ -52,6 +52,13 @@ namespace Jaya.Ui.Models
             set => Set(value);
         }
 
+        [JsonPropertyName("detailsViewSortDefault")]
+        public DirectorySortSetting? DetailsViewSortDefault
+        {
+            get => Get<DirectorySortSetting?>();
+            set => Set(value);
+        }
+
         [JsonPropertyName("widthPx")]
         public double WidthPx
         {
@@ -119,7 +126,8 @@ namespace Jaya.Ui.Models
                 HeightPx = 600,
                 ThemeName = "Dark",
                 PreferIterm = false,
-                DetailsViewSortSettings = new Dictionary<string, DirectorySortSetting>()
+                DetailsViewSortSettings = new Dictionary<string, DirectorySortSetting>(),
+                DetailsViewSortDefault = null
             };
         }
     }
