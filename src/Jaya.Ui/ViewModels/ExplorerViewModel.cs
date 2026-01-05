@@ -28,6 +28,7 @@ namespace Jaya.Ui.ViewModels
 
         readonly Subscription<SelectionChangedEventArgs>? _onSelectionChanged;
         readonly Subscription<NewFolderRequestedEventArgs>? _onNewFolder;
+        readonly Subscription<OpenTerminalRequestedEventArgs>? _onOpenTerminalRequested;
         readonly SharedService? _shared;
         SelectionChangedEventArgs? _lastSelectionArgs;
 
@@ -51,6 +52,7 @@ namespace Jaya.Ui.ViewModels
             _shared = GetService<SharedService>();
             _onSelectionChanged = EventAggregator?.Subscribe<SelectionChangedEventArgs>(SelectionChanged);
             _onNewFolder = EventAggregator?.Subscribe<NewFolderRequestedEventArgs>(NewFolderRequested);
+            _onOpenTerminalRequested = EventAggregator?.Subscribe<OpenTerminalRequestedEventArgs>(OnOpenTerminalRequested);
             // If navigation service already has a selection (published before this VM subscribed), apply it now
             try
             {
@@ -75,6 +77,8 @@ namespace Jaya.Ui.ViewModels
                 EventAggregator?.UnSubscribe(_onSelectionChanged);
             if (_onNewFolder != null)
                 EventAggregator?.UnSubscribe(_onNewFolder);
+            if (_onOpenTerminalRequested != null)
+                EventAggregator?.UnSubscribe(_onOpenTerminalRequested);
             if (_shared?.ApplicationConfiguration != null)
                 _shared.ApplicationConfiguration.PropertyChanged -= ApplicationConfiguration_PropertyChanged;
         }
@@ -799,6 +803,18 @@ namespace Jaya.Ui.ViewModels
             catch (Exception ex)
             {
                 FileSystemLogger.Warning(ex, "NewFolderRequested handler failed");
+            }
+        }
+
+        void OnOpenTerminalRequested(OpenTerminalRequestedEventArgs? args)
+        {
+            try
+            {
+                OpenTerminal(null);
+            }
+            catch (Exception ex)
+            {
+                FileSystemLogger.Warning(ex, "OpenTerminalRequested handler failed");
             }
         }
 

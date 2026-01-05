@@ -2,7 +2,9 @@
 // Copyright (c) Rubal Walia. All rights reserved.
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
+using Jaya.Shared;
 using Jaya.Shared.Base;
+using Jaya.Ui;
 using Jaya.Ui.Models;
 using Jaya.Ui.Services;
 using System.Windows.Input;
@@ -13,6 +15,7 @@ namespace Jaya.Ui.ViewModels
     {
         readonly SharedService? _shared;
         ICommand? _openWindow;
+        ICommand? _openTerminal;
 
         public ToolbarViewModel()
         {
@@ -47,6 +50,26 @@ namespace Jaya.Ui.ViewModels
 
                 return _openWindow!;
             }
+        }
+
+        public ICommand OpenTerminalCommand
+        {
+            get
+            {
+                if (_openTerminal == null)
+                    _openTerminal = new RelayCommand(OpenTerminalAction);
+
+                return _openTerminal!;
+            }
+        }
+
+        void OpenTerminalAction()
+        {
+            try
+            {
+                EventAggregator?.Publish(new OpenTerminalRequestedEventArgs());
+            }
+            catch { }
         }
     }
 }

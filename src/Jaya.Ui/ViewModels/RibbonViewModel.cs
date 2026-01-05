@@ -4,6 +4,7 @@
 //
 using Jaya.Shared;
 using Jaya.Shared.Base;
+using Jaya.Ui;
 using Jaya.Ui.Models;
 using Jaya.Ui.Services;
 using System.Windows.Input;
@@ -15,6 +16,7 @@ namespace Jaya.Ui.ViewModels
         readonly SharedService? _shared;
         ICommand? _openWindow;
         ICommand? _toggleRibbon;
+        ICommand? _openTerminal;
 
         public RibbonViewModel()
         {
@@ -60,9 +62,29 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
+        public ICommand OpenTerminalCommand
+        {
+            get
+            {
+                if (_openTerminal == null)
+                    _openTerminal = new RelayCommand(OpenTerminalAction);
+
+                return _openTerminal!;
+            }
+        }
+
         void ToggleRibbonAction()
         {
             PaneConfig.IsRibbonCollapsed = !PaneConfig.IsRibbonCollapsed;
+        }
+
+        void OpenTerminalAction()
+        {
+            try
+            {
+                EventAggregator?.Publish(new OpenTerminalRequestedEventArgs());
+            }
+            catch { }
         }
     }
 }
