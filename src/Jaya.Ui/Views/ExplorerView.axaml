@@ -23,6 +23,7 @@
     </Design.DataContext>
     <UserControl.Resources>
         <c:BooleanToTreeNodeVisibilityConverter x:Key="TreeNodeVisibilityConverter" />
+        <c:FileSystemObjectToFileNameConverter x:Key="FileNameConverter" />
         <j:BitmapValueConverter x:Key="BitmapValueConverter" />
     </UserControl.Resources>
     <UserControl.KeyBindings>
@@ -301,9 +302,9 @@
                                 <Image Classes="Icon" Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IsDirectory}" Width="16" Height="16" Stretch="Uniform" />
                                 <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="16" Height="16" Stretch="Uniform" />
                                     <Grid>
-                                      <TextBlock Name="NameText" Text="{Binding DisplayName}"
+                                      <TextBlock Name="NameText" Text="{Binding ., Converter={StaticResource FileNameConverter}}"
                                         TextWrapping="NoWrap"
-                                        ToolTip.Tip="{Binding Label}"
+                                        ToolTip.Tip="{Binding ., Converter={StaticResource FileNameConverter}}"
                                         HorizontalAlignment="Stretch"
                                         VerticalAlignment="Center"
                                         IsVisible="{Binding IsEditing, Mode=OneWay, Converter={x:Static c:BooleanInverseConverter.Instance}}" />
@@ -371,7 +372,7 @@
             </ListBox.ItemsPanel>
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type m:ExplorerItemModel}">
-                      <Panel ToolTip.Tip="{Binding Label}">
+                      <Panel ToolTip.Tip="{Binding ., Converter={StaticResource FileNameConverter}}">
                     <StackPanel Name="ObjectEntry" Background="#01000000">
                       <i:Interaction.Behaviors>
                         <ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #ObjectEntry}">
@@ -388,7 +389,7 @@
                         <Image Classes="Icon" Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IsDirectory}" Width="48" Height="48" Stretch="Uniform" />
                         <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="48" Height="48" Stretch="Uniform" />
                       <Grid>
-                        <TextBlock Width="54" Text="{Binding Mode=OneWay, Path=Label}" TextAlignment="Center" TextWrapping="Wrap" IsVisible="{Binding IsEditing, Converter={x:Static c:BooleanInverseConverter.Instance}}" />
+                        <TextBlock Width="54" Text="{Binding ., Converter={StaticResource FileNameConverter}}" TextAlignment="Center" TextWrapping="Wrap" IsVisible="{Binding IsEditing, Converter={x:Static c:BooleanInverseConverter.Instance}}" />
                         <TextBox Width="54" Text="{Binding EditableName, Mode=TwoWay}" IsVisible="{Binding IsEditing}" LostFocus="InlineEdit_LostFocus" beh:FocusOnEdit.IsEnabled="True">
                           <TextBox.KeyBindings>
                             <KeyBinding Gesture="Enter" Command="{Binding $parent[ListBox].DataContext.CommitRenameCommand}" CommandParameter="{Binding}" />
@@ -440,7 +441,7 @@
           </ListBox.ItemsPanel>
           <ListBox.ItemTemplate>
             <DataTemplate DataType="{x:Type m:ExplorerItemModel}">
-              <Panel ToolTip.Tip="{Binding Label}">
+              <Panel ToolTip.Tip="{Binding ., Converter={StaticResource FileNameConverter}}">
                 <StackPanel Name="ObjectEntry" Background="#01000000" Orientation="Horizontal">
                   <i:Interaction.Behaviors>
                     <ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #ObjectEntry}">
@@ -457,7 +458,7 @@
                     <Image Classes="Icon" Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IsDirectory}" Width="16" Height="16" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="16" Height="16" Stretch="Uniform" />
                       <Grid>
-                        <TextBlock Height="16" Width="220" Text="{Binding Mode=OneWay, Path=Label}" TextAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Label}" IsVisible="{Binding IsEditing, Converter={x:Static c:BooleanInverseConverter.Instance}}" />
+                        <TextBlock Height="16" Width="220" Text="{Binding ., Converter={StaticResource FileNameConverter}}" TextAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding ., Converter={StaticResource FileNameConverter}}" IsVisible="{Binding IsEditing, Converter={x:Static c:BooleanInverseConverter.Instance}}" />
                         <TextBox Height="16" Width="220" Text="{Binding EditableName, Mode=TwoWay}" IsVisible="{Binding IsEditing}" LostFocus="InlineEdit_LostFocus" beh:FocusOnEdit.IsEnabled="True">
                           <TextBox.KeyBindings>
                             <KeyBinding Gesture="Enter" Command="{Binding $parent[ListBox].DataContext.CommitRenameCommand}" CommandParameter="{Binding}" />
@@ -509,7 +510,7 @@
           </ListBox.ItemsPanel>
           <ListBox.ItemTemplate>
             <DataTemplate DataType="{x:Type m:ExplorerItemModel}">
-              <Panel ToolTip.Tip="{Binding Label}">
+              <Panel ToolTip.Tip="{Binding ., Converter={StaticResource FileNameConverter}}">
                 <StackPanel Width="240" Height="48" Name="ObjectEntry" Background="#01000000" Orientation="Horizontal">
                   <i:Interaction.Behaviors>
                     <ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #ObjectEntry}">
@@ -527,7 +528,7 @@
                     <Image Classes="Icon" Source="{DynamicResource Icon.TextFile.Image}" IsVisible="{Binding IsFile}" Width="48" Height="48" Stretch="Uniform" />
                   <UniformGrid Columns="1">
                     <Grid>
-                      <TextBlock Text="{Binding Mode=OneWay, Path=Label}" TextAlignment="Left" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Label}" IsVisible="{Binding IsEditing, Converter={x:Static c:BooleanInverseConverter.Instance}}" />
+                      <TextBlock Text="{Binding ., Converter={StaticResource FileNameConverter}}" TextAlignment="Left" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding ., Converter={StaticResource FileNameConverter}}" IsVisible="{Binding IsEditing, Converter={x:Static c:BooleanInverseConverter.Instance}}" />
                       <TextBox Text="{Binding EditableName, Mode=TwoWay}" IsVisible="{Binding IsEditing}" LostFocus="InlineEdit_LostFocus" beh:FocusOnEdit.IsEnabled="True">
                         <TextBox.KeyBindings>
                           <KeyBinding Gesture="Enter" Command="{Binding $parent[ListBox].DataContext.CommitRenameCommand}" CommandParameter="{Binding}" />
@@ -587,7 +588,7 @@
         </ListBox.ItemsPanel>
         <ListBox.ItemTemplate>
             <DataTemplate DataType="{x:Type m:ExplorerItemModel}">
-            <Panel ToolTip.Tip="{Binding Label}">
+            <Panel ToolTip.Tip="{Binding ., Converter={StaticResource FileNameConverter}}">
               <DockPanel Background="#01000000">
                 <i:Interaction.Behaviors>
                   <ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #ObjectEntry}">
@@ -607,7 +608,7 @@
                 </Panel>
                 <UniformGrid Rows="2">
                   <Grid>
-                    <TextBlock Text="{Binding Mode=OneWay, Path=Label}" TextAlignment="Left" Classes="ContentViewFileName" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip.Tip="{Binding Label}" IsVisible="{Binding IsEditing, Converter={x:Static c:BooleanInverseConverter.Instance}}"/>
+                    <TextBlock Text="{Binding ., Converter={StaticResource FileNameConverter}}" TextAlignment="Left" Classes="ContentViewFileName" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip.Tip="{Binding ., Converter={StaticResource FileNameConverter}}" IsVisible="{Binding IsEditing, Converter={x:Static c:BooleanInverseConverter.Instance}}"/>
                     <TextBox Text="{Binding EditableName, Mode=TwoWay}" IsVisible="{Binding IsEditing}" LostFocus="InlineEdit_LostFocus" beh:FocusOnEdit.IsEnabled="True">
                       <TextBox.KeyBindings>
                         <KeyBinding Gesture="Enter" Command="{Binding $parent[ListBox].DataContext.CommitRenameCommand}" CommandParameter="{Binding}" />
