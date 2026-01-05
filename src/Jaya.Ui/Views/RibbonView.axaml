@@ -325,8 +325,6 @@
                             <ribbon:RibbonToggleButton
                                 ribbon:KeyTip.KeyTipKeys="N"
                                 Content="Navigation pane"
-                                Command="{Binding SimpleCommand}"
-                                CommandParameter="{x:Static local:CommandType.TogglePaneNavigation}"
                                 IsChecked="{Binding PaneConfig.IsNavigationPaneVisible, Mode=TwoWay}"
                                 MaxSize="Large"
                                 MinSize="Small">
@@ -340,8 +338,6 @@
                             <ribbon:RibbonToggleButton
                                 ribbon:KeyTip.KeyTipKeys="P"
                                 Content="Preview pane"
-                                Command="{Binding SimpleCommand}"
-                                CommandParameter="{x:Static local:CommandType.TogglePanePreview}"
                                 IsChecked="{Binding PaneConfig.IsPreviewPaneVisible, Mode=TwoWay}"
                                 MaxSize="Medium"
                                 MinSize="Small">
@@ -352,8 +348,6 @@
                             <ribbon:RibbonToggleButton
                                 ribbon:KeyTip.KeyTipKeys="D"
                                 Content="Details pane"
-                                Command="{Binding SimpleCommand}"
-                                CommandParameter="{x:Static local:CommandType.TogglePaneDetails}"
                                 IsChecked="{Binding PaneConfig.IsDetailsPaneVisible, Mode=TwoWay}"
                                 MaxSize="Medium"
                                 MinSize="Small">
@@ -395,8 +389,6 @@
                             <ribbon:RibbonToggleButton
                                 ribbon:KeyTip.KeyTipKeys="HT"
                                 Content="Item check boxes"
-                                Command="{Binding SimpleCommand}"
-                                CommandParameter="{x:Static local:CommandType.ToggleItemCheckBoxes}"
                                 IsChecked="{Binding ApplicationConfig.IsItemCheckBoxVisible, Mode=TwoWay}"
                                 MaxSize="Medium"
                                 MinSize="Small">
@@ -428,36 +420,26 @@
                         <ribbon:RibbonGroupBox Header="Toolbars">
                             <ribbon:RibbonToggleButton
                                 Content="Show Toolbars"
-                                Command="{Binding SimpleCommand}"
-                                CommandParameter="{x:Static local:CommandType.ToggleToolbars}"
                                 IsChecked="{Binding ToolbarConfig.IsVisible, Mode=TwoWay}"
                                 MaxSize="Large"
                                 MinSize="Small" />
                             <ribbon:RibbonToggleButton
                                 Content="File"
-                                Command="{Binding SimpleCommand}"
-                                CommandParameter="{x:Static local:CommandType.ToggleToolbarFile}"
                                 IsChecked="{Binding ToolbarConfig.IsFileVisible, Mode=TwoWay}"
                                 MaxSize="Medium"
                                 MinSize="Small" />
                             <ribbon:RibbonToggleButton
                                 Content="Edit"
-                                Command="{Binding SimpleCommand}"
-                                CommandParameter="{x:Static local:CommandType.ToggleToolbarEdit}"
                                 IsChecked="{Binding ToolbarConfig.IsEditVisible, Mode=TwoWay}"
                                 MaxSize="Medium"
                                 MinSize="Small" />
                             <ribbon:RibbonToggleButton
                                 Content="View"
-                                Command="{Binding SimpleCommand}"
-                                CommandParameter="{x:Static local:CommandType.ToggleToolbarView}"
                                 IsChecked="{Binding ToolbarConfig.IsViewVisible, Mode=TwoWay}"
                                 MaxSize="Medium"
                                 MinSize="Small" />
                             <ribbon:RibbonToggleButton
                                 Content="Help"
-                                Command="{Binding SimpleCommand}"
-                                CommandParameter="{x:Static local:CommandType.ToggleToolbarHelp}"
                                 IsChecked="{Binding ToolbarConfig.IsHelpVisible, Mode=TwoWay}"
                                 MaxSize="Medium"
                                 MinSize="Small" />

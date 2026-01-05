@@ -268,10 +268,12 @@ namespace Jaya.Ui.Services
                 }
             }
 
-            Logger.Debug("PaneConfig states: Ribbon={Ribbon}, MenuHeader={MenuHeader}, ToolbarVisible={Toolbar}",
+            Logger.Debug("PaneConfig states: Ribbon={Ribbon}, MenuHeader={MenuHeader}, ToolbarVisible={Toolbar}, Preview={Preview}, Details={Details}",
                 PaneConfiguration.IsRibbonVisible,
                 PaneConfiguration.IsMenuHeaderVisible,
-                ToolbarConfiguration.IsVisible);
+                ToolbarConfiguration.IsVisible,
+                PaneConfiguration.IsPreviewPaneVisible,
+                PaneConfiguration.IsDetailsPaneVisible);
             LogPaneState(command.ToString());
         }
 

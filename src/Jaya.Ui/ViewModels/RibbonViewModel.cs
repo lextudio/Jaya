@@ -18,6 +18,7 @@ namespace Jaya.Ui.ViewModels
         ICommand? _toggleRibbon;
         ICommand? _openTerminal;
         ICommand? _openVsCode;
+        ICommand? _simpleCommand;
 
         public RibbonViewModel()
         {
@@ -83,6 +84,26 @@ namespace Jaya.Ui.ViewModels
 
                 return _openVsCode!;
             }
+        }
+
+        public new ICommand SimpleCommand
+        {
+            get
+            {
+                if (_simpleCommand == null)
+                    _simpleCommand = new RelayCommand<CommandType>(SimpleCommandAction);
+
+                return _simpleCommand!;
+            }
+        }
+
+        void SimpleCommandAction(CommandType type)
+        {
+            try
+            {
+                EventAggregator?.Publish((byte)type);
+            }
+            catch { }
         }
 
         void ToggleRibbonAction()
