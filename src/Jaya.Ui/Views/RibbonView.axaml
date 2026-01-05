@@ -276,11 +276,6 @@
                             </ribbon:RibbonButton>
                         </ribbon:RibbonGroupBox>
                         <ribbon:RibbonGroupBox Header="Settings">
-                            <ribbon:RibbonToggleButton
-                                Content="Collapse Ribbon"
-                                IsChecked="{Binding PaneConfig.IsRibbonCollapsed, Mode=TwoWay}"
-                                Command="{Binding ToggleRibbonCommand}"
-                                ToolTip.Tip="Toggle ribbon collapse" />
                             <ribbon:RibbonButton
                                 ribbon:KeyTip.KeyTipKeys="OP"
                                 Command="{Binding OpenWindowCommand}"
