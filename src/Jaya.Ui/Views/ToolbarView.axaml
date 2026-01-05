@@ -76,13 +76,22 @@
                 <Image Source="{DynamicResource Icon.DiscClean.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
             <Border Classes="Separator" />
-            <Button ToolTip.Tip="Select All">
+            <Button
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.SelectAll}"
+                ToolTip.Tip="Select All">
                 <Image Source="{DynamicResource Icon.SelectAll.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
-            <Button ToolTip.Tip="Select None">
+            <Button
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.SelectNone}"
+                ToolTip.Tip="Select None">
                 <Image Source="{DynamicResource Icon.SelectNone.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
-            <Button ToolTip.Tip="Invert Selection">
+            <Button
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.InvertSelection}"
+                ToolTip.Tip="Invert Selection">
                 <Image Source="{DynamicResource Icon.InvertSelection.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
         </StackPanel>

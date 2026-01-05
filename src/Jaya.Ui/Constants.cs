@@ -83,5 +83,8 @@ namespace Jaya.Ui
         ToggleFileNameExtensions = 16,
         ToggleHiddenItems = 17,
         Delete = 18
+        , SelectAll = 19
+        , SelectNone = 20
+        , InvertSelection = 21
     }
 }

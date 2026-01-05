@@ -244,6 +244,8 @@
                             <ribbon:RibbonButton
                                 ribbon:KeyTip.KeyTipKeys="SA"
                                 Content="Select all"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.SelectAll}"
                                 MaxSize="Medium"
                                 MinSize="Small">
                                 <ribbon:RibbonButton.Icon>
@@ -253,6 +255,8 @@
                             <ribbon:RibbonButton
                                 ribbon:KeyTip.KeyTipKeys="SN"
                                 Content="Select none"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.SelectNone}"
                                 MaxSize="Medium"
                                 MinSize="Small">
                                 <ribbon:RibbonButton.Icon>
@@ -262,6 +266,8 @@
                             <ribbon:RibbonButton
                                 ribbon:KeyTip.KeyTipKeys="IS"
                                 Content="Invert selection"
+                                Command="{Binding SimpleCommand}"
+                                CommandParameter="{x:Static local:CommandType.InvertSelection}"
                                 MaxSize="Medium"
                                 MinSize="Small">
                                 <ribbon:RibbonButton.Icon>

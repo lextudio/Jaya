@@ -224,6 +224,27 @@ namespace Jaya.Ui.Services
                     }
                     catch { }
                     break;
+                case CommandType.SelectAll:
+                    try
+                    {
+                        _commandService.EventAggregator.Publish(new SelectAllRequestedEventArgs());
+                    }
+                    catch { }
+                    break;
+                case CommandType.SelectNone:
+                    try
+                    {
+                        _commandService.EventAggregator.Publish(new SelectNoneRequestedEventArgs());
+                    }
+                    catch { }
+                    break;
+                case CommandType.InvertSelection:
+                    try
+                    {
+                        _commandService.EventAggregator.Publish(new InvertSelectionRequestedEventArgs());
+                    }
+                    catch { }
+                    break;
             }
             if (persistToolbar)
             {

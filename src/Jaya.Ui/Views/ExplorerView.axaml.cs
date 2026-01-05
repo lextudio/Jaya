@@ -33,6 +33,9 @@ namespace Jaya.Ui.Views
         Subscription<CopyRequestedEventArgs>? _copyRequested;
         Subscription<PasteRequestedEventArgs>? _pasteRequested;
         Subscription<DeleteRequestedEventArgs>? _deleteRequested;
+        Subscription<SelectAllRequestedEventArgs>? _selectAllRequested;
+        Subscription<SelectNoneRequestedEventArgs>? _selectNoneRequested;
+        Subscription<InvertSelectionRequestedEventArgs>? _invertSelectionRequested;
         Subscription<SelectItemsRequestedEventArgs>? _selectItemsRequested;
         Avalonia.Input.PointerPressedEventArgs? _dragStartArgs;
         bool _isDragging;
@@ -275,6 +278,46 @@ namespace Jaya.Ui.Views
                             catch { }
                         }
                         catch { }
+                    });
+                });
+
+                // Register top-level selection commands so they fire regardless of SelectItemsRequested
+                _selectAllRequested = eventAggregator.Subscribe<SelectAllRequestedEventArgs>(args =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        try
+                        {
+                            Logger.Debug("SelectAllRequestedEventArgs received");
+                            PerformSelectAll();
+                        }
+                        catch (Exception ex) { Logger.Warning(ex, "PerformSelectAll failed"); }
+                    });
+                });
+
+                _selectNoneRequested = eventAggregator.Subscribe<SelectNoneRequestedEventArgs>(args =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        try
+                        {
+                            Logger.Debug("SelectNoneRequestedEventArgs received");
+                            PerformSelectNone();
+                        }
+                        catch (Exception ex) { Logger.Warning(ex, "PerformSelectNone failed"); }
+                    });
+                });
+
+                _invertSelectionRequested = eventAggregator.Subscribe<InvertSelectionRequestedEventArgs>(args =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        try
+                        {
+                            Logger.Debug("InvertSelectionRequestedEventArgs received");
+                            PerformInvertSelection();
+                        }
+                        catch (Exception ex) { Logger.Warning(ex, "PerformInvertSelection failed"); }
                     });
                 });
 
@@ -1011,6 +1054,348 @@ namespace Jaya.Ui.Views
                 return selection;
 
             return new List<Models.ExplorerItemModel>();
+        }
+
+        void PerformSelectAll()
+        {
+            try
+            {
+                Logger.Debug("PerformSelectAll invoked");
+                var details = DetailsDataGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
+                var list = ListListBox ?? this.FindControl<ListBox>("ListListBox");
+                var icons = IconsListBox ?? this.FindControl<ListBox>("IconsListBox");
+                var tiles = TilesListBox ?? this.FindControl<ListBox>("TilesListBox");
+                var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
+                Logger.Debug("PerformSelectAll: details={DetailsExists}/{DetailsVisible} list={ListExists}/{ListVisible} icons={IconsExists}/{IconsVisible} tiles={TilesExists}/{TilesVisible} content={ContentExists}/{ContentVisible}",
+                    details != null, details?.IsVisible == true,
+                    list != null, list?.IsVisible == true,
+                    icons != null, icons?.IsVisible == true,
+                    tiles != null, tiles?.IsVisible == true,
+                    content != null, content?.IsVisible == true);
+
+                if (details?.IsVisible == true)
+                {
+                    Logger.Debug("PerformSelectAll: using DetailsDataGrid");
+                    SelectAllInItemsControl(details);
+                    return;
+                }
+
+                if (list?.IsVisible == true) { Logger.Debug("PerformSelectAll: using ListListBox"); SelectAllInItemsControl(list); return; }
+                if (icons?.IsVisible == true) { Logger.Debug("PerformSelectAll: using IconsListBox"); SelectAllInItemsControl(icons); return; }
+                if (tiles?.IsVisible == true) { Logger.Debug("PerformSelectAll: using TilesListBox"); SelectAllInItemsControl(tiles); return; }
+                if (content?.IsVisible == true) { Logger.Debug("PerformSelectAll: using ContentListBox"); SelectAllInItemsControl(content); return; }
+
+                // Fallback: operate on the first control that actually has items
+                var firstWithItems = new (string name, object ctrl)[] {
+                    ("DetailsDataGrid", details as object),
+                    ("ListListBox", list as object),
+                    ("IconsListBox", icons as object),
+                    ("TilesListBox", tiles as object),
+                    ("ContentListBox", content as object)
+                }.FirstOrDefault(pair =>
+                {
+                    IEnumerable? items = null;
+                    if (pair.ctrl is DataGrid dg2)
+                    {
+                        items = dg2.ItemsSource as IEnumerable ?? Array.Empty<object>();
+                        if (!items.Cast<object?>().Any() && dg2.DataContext is ExplorerViewModel evm && evm.Item?.Children != null)
+                            items = evm.Item.Children as IEnumerable ?? Array.Empty<object>();
+                    }
+                    else if (pair.ctrl is ListBox lb2)
+                        items = lb2.Items;
+                    if (items == null) return false;
+                    return items.Cast<object?>().Any();
+                });
+
+                if (firstWithItems.ctrl != null)
+                {
+                    Logger.Debug("PerformSelectAll fallback: using {Name}", firstWithItems.name);
+                    SelectAllInItemsControl(firstWithItems.ctrl);
+                }
+            }
+            catch { }
+        }
+
+        void PerformSelectNone()
+        {
+            try
+            {
+                Logger.Debug("PerformSelectNone invoked");
+                var details = DetailsDataGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
+                var list = ListListBox ?? this.FindControl<ListBox>("ListListBox");
+                var icons = IconsListBox ?? this.FindControl<ListBox>("IconsListBox");
+                var tiles = TilesListBox ?? this.FindControl<ListBox>("TilesListBox");
+                var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
+                Logger.Debug("PerformSelectNone: details={DetailsExists}/{DetailsVisible} list={ListExists}/{ListVisible} icons={IconsExists}/{IconsVisible} tiles={TilesExists}/{TilesVisible} content={ContentExists}/{ContentVisible}",
+                    details != null, details?.IsVisible == true,
+                    list != null, list?.IsVisible == true,
+                    icons != null, icons?.IsVisible == true,
+                    tiles != null, tiles?.IsVisible == true,
+                    content != null, content?.IsVisible == true);
+
+                if (details?.IsVisible == true)
+                {
+                    Logger.Debug("PerformSelectNone: clearing DetailsDataGrid selection (beforeCount={Count})", details.SelectedItems?.Count ?? 0);
+                    details.SelectedItems?.Clear();
+                    details.SelectedItem = null;
+                    Logger.Debug("PerformSelectNone: cleared DetailsDataGrid selection (afterCount={Count})", details.SelectedItems?.Count ?? 0);
+                    return;
+                }
+
+                if (list?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing ListListBox"); list.SelectedItems?.Clear(); list.SelectedItem = null; return; }
+                if (icons?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing IconsListBox"); icons.SelectedItems?.Clear(); icons.SelectedItem = null; return; }
+                if (tiles?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing TilesListBox"); tiles.SelectedItems?.Clear(); tiles.SelectedItem = null; return; }
+                if (content?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing ContentListBox"); content.SelectedItems?.Clear(); content.SelectedItem = null; return; }
+
+                // Fallback: clear the first control that has items
+                var firstWithItems = new (string name, object ctrl)[] {
+                    ("DetailsDataGrid", details as object),
+                    ("ListListBox", list as object),
+                    ("IconsListBox", icons as object),
+                    ("TilesListBox", tiles as object),
+                    ("ContentListBox", content as object)
+                }.FirstOrDefault(pair =>
+                {
+                    var c = pair.ctrl as IEnumerable;
+                    if (c == null) return false;
+                    return c.Cast<object?>().Any();
+                });
+
+                if (firstWithItems.ctrl != null)
+                {
+                    Logger.Debug("PerformSelectNone fallback: clearing {Name}", firstWithItems.name);
+                    if (firstWithItems.ctrl is DataGrid fdg) { fdg.SelectedItems?.Clear(); fdg.SelectedItem = null; }
+                    if (firstWithItems.ctrl is ListBox flb) { flb.SelectedItems?.Clear(); flb.SelectedItem = null; }
+                }
+            }
+            catch { }
+        }
+
+        void PerformInvertSelection()
+        {
+            try
+            {
+                Logger.Debug("PerformInvertSelection invoked");
+                var details = DetailsDataGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
+                var list = ListListBox ?? this.FindControl<ListBox>("ListListBox");
+                var icons = IconsListBox ?? this.FindControl<ListBox>("IconsListBox");
+                var tiles = TilesListBox ?? this.FindControl<ListBox>("TilesListBox");
+                var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
+                Logger.Debug("PerformInvertSelection: details={DetailsExists}/{DetailsVisible} list={ListExists}/{ListVisible} icons={IconsExists}/{IconsVisible} tiles={TilesExists}/{TilesVisible} content={ContentExists}/{ContentVisible}",
+                    details != null, details?.IsVisible == true,
+                    list != null, list?.IsVisible == true,
+                    icons != null, icons?.IsVisible == true,
+                    tiles != null, tiles?.IsVisible == true,
+                    content != null, content?.IsVisible == true);
+
+                if (details?.IsVisible == true)
+                {
+                    Logger.Debug("PerformInvertSelection: using DetailsDataGrid");
+                    InvertSelectionInItemsControl(details);
+                    return;
+                }
+
+                if (list?.IsVisible == true) { Logger.Debug("PerformInvertSelection: using ListListBox"); InvertSelectionInItemsControl(list); return; }
+                if (icons?.IsVisible == true) { Logger.Debug("PerformInvertSelection: using IconsListBox"); InvertSelectionInItemsControl(icons); return; }
+                if (tiles?.IsVisible == true) { Logger.Debug("PerformInvertSelection: using TilesListBox"); InvertSelectionInItemsControl(tiles); return; }
+                if (content?.IsVisible == true) { Logger.Debug("PerformInvertSelection: using ContentListBox"); InvertSelectionInItemsControl(content); return; }
+
+                // Fallback: operate on the first control that actually has items
+                var firstWithItems = new (string name, object ctrl)[] {
+                    ("DetailsDataGrid", details as object),
+                    ("ListListBox", list as object),
+                    ("IconsListBox", icons as object),
+                    ("TilesListBox", tiles as object),
+                    ("ContentListBox", content as object)
+                }.FirstOrDefault(pair =>
+                {
+                    var c = pair.ctrl as IEnumerable;
+                    if (c == null) return false;
+                    return c.Cast<object?>().Any();
+                });
+
+                if (firstWithItems.ctrl != null)
+                {
+                    Logger.Debug("PerformInvertSelection fallback: using {Name}", firstWithItems.name);
+                    InvertSelectionInItemsControl(firstWithItems.ctrl);
+                }
+            }
+            catch { }
+        }
+
+        static void SelectAllInItemsControl(object control)
+        {
+            if (control == null)
+                return;
+
+            if (control is DataGrid dg)
+            {
+                IEnumerable items = dg.ItemsSource as IEnumerable ?? Array.Empty<object>();
+                var itemsSourceUsed = "ItemsSource";
+                if (!items.Cast<object?>().Any())
+                {
+                    // fallback to ViewModel's Item.Children if available
+                    if (dg.DataContext is ExplorerViewModel evm && evm.Item?.Children != null)
+                    {
+                        items = evm.Item.Children as IEnumerable ?? Array.Empty<object>();
+                        itemsSourceUsed = "ViewModel.Item.Children";
+                    }
+                }
+                Logger.Debug("InvertSelectionInItemsControl: DataGrid.{Source} type={Type} isEmpty={IsEmpty}", itemsSourceUsed, items?.GetType().FullName ?? "(null)", !items.Cast<object?>().Any());
+                var idx = 0;
+                foreach (var it in items.Cast<object?>().Take(5))
+                {
+                    if (it is Models.ExplorerItemModel em)
+                    {
+                        var identity = (em.Object as Jaya.Shared.Models.FileSystemObjectModel)?.Path ?? em.DisplayName ?? "(unknown)";
+                        Logger.Debug("InvertSelectionInItemsControl: DataGrid item[{Index}] Id={Id}", idx, identity);
+                    }
+                    else
+                        Logger.Debug("InvertSelectionInItemsControl: DataGrid item[{Index}] Type={Type}", idx, it?.GetType().FullName ?? "(null)");
+                    idx++;
+                }
+                if (dg.SelectedItems != null)
+                {
+                    var sidx = 0;
+                    foreach (var sit in dg.SelectedItems.Cast<object?>().Take(5))
+                    {
+                        if (sit is Models.ExplorerItemModel sem)
+                        {
+                            var sidentity = (sem.Object as Jaya.Shared.Models.FileSystemObjectModel)?.Path ?? sem.DisplayName ?? "(unknown)";
+                            Logger.Debug("InvertSelectionInItemsControl: DataGrid.Selected[{Index}] Id={Id}", sidx, sidentity);
+                        }
+                        else
+                            Logger.Debug("InvertSelectionInItemsControl: DataGrid.Selected[{Index}] Type={Type}", sidx, sit?.GetType().FullName ?? "(null)");
+                        sidx++;
+                    }
+                }
+                var total = items.Cast<object?>().Count();
+                var before = dg.SelectedItems?.Count ?? 0;
+                Logger.Debug("SelectAllInItemsControl: DataGrid totalItems={Total} selectedBefore={Before}", total, before);
+                dg.SelectedItems?.Clear();
+                foreach (var it in items)
+                {
+                    if (it is Models.ExplorerItemModel m)
+                        dg.SelectedItems?.Add(m);
+                }
+                var after = dg.SelectedItems?.Count ?? 0;
+                Logger.Debug("SelectAllInItemsControl: DataGrid selectedAfter={After}", after);
+                var first = items.Cast<object?>().FirstOrDefault();
+                if (first is Models.ExplorerItemModel fm)
+                    dg.SelectedItem = fm;
+            }
+            else if (control is ListBox lb)
+            {
+                var items = lb.Items as IEnumerable ?? Array.Empty<object>();
+                Logger.Debug("InvertSelectionInItemsControl: ListBox.Items type={Type} isEmpty={IsEmpty}", items?.GetType().FullName ?? "(null)", !items.Cast<object?>().Any());
+                var idx = 0;
+                foreach (var it in items.Cast<object?>().Take(5))
+                {
+                    if (it is Models.ExplorerItemModel em)
+                    {
+                        var identity = (em.Object as Jaya.Shared.Models.FileSystemObjectModel)?.Path ?? em.DisplayName ?? "(unknown)";
+                        Logger.Debug("InvertSelectionInItemsControl: ListBox item[{Index}] Id={Id}", idx, identity);
+                    }
+                    else
+                        Logger.Debug("InvertSelectionInItemsControl: ListBox item[{Index}] Type={Type}", idx, it?.GetType().FullName ?? "(null)");
+                    idx++;
+                }
+                if (lb.SelectedItems != null)
+                {
+                    var sidx = 0;
+                    foreach (var sit in lb.SelectedItems.Cast<object?>().Take(5))
+                    {
+                        if (sit is Models.ExplorerItemModel sem)
+                        {
+                            var sidentity = (sem.Object as Jaya.Shared.Models.FileSystemObjectModel)?.Path ?? sem.DisplayName ?? "(unknown)";
+                            Logger.Debug("InvertSelectionInItemsControl: ListBox.Selected[{Index}] Id={Id}", sidx, sidentity);
+                        }
+                        else
+                            Logger.Debug("InvertSelectionInItemsControl: ListBox.Selected[{Index}] Type={Type}", sidx, sit?.GetType().FullName ?? "(null)");
+                        sidx++;
+                    }
+                }
+                var total = items.Cast<object?>().Count();
+                var before = lb.SelectedItems?.Count ?? 0;
+                Logger.Debug("SelectAllInItemsControl: ListBox totalItems={Total} selectedBefore={Before}", total, before);
+                lb.SelectedItems?.Clear();
+                foreach (var it in items)
+                {
+                    if (it is Models.ExplorerItemModel m)
+                        lb.SelectedItems?.Add(m);
+                }
+                var after = lb.SelectedItems?.Count ?? 0;
+                Logger.Debug("SelectAllInItemsControl: ListBox selectedAfter={After}", after);
+                var first = items.Cast<object?>().FirstOrDefault();
+                if (first is Models.ExplorerItemModel fm)
+                    lb.SelectedItem = fm;
+            }
+        }
+
+        static void InvertSelectionInItemsControl(object control)
+        {
+            if (control == null)
+                return;
+
+            if (control is DataGrid dg)
+            {
+                IEnumerable items = dg.ItemsSource as IEnumerable ?? Array.Empty<object>();
+                var itemsSourceUsed = "ItemsSource";
+                if (!items.Cast<object?>().Any())
+                {
+                    if (dg.DataContext is ExplorerViewModel evm && evm.Item?.Children != null)
+                    {
+                        items = evm.Item.Children as IEnumerable ?? Array.Empty<object>();
+                        itemsSourceUsed = "ViewModel.Item.Children";
+                    }
+                }
+                var total = items.Cast<object?>().Count();
+                var before = dg.SelectedItems?.Count ?? 0;
+                var toSelect = new List<Models.ExplorerItemModel>();
+                foreach (var it in items)
+                {
+                    if (it is Models.ExplorerItemModel m)
+                    {
+                        if (dg.SelectedItems != null && dg.SelectedItems.Contains(m))
+                            ; // currently selected -> will be deselected
+                        else
+                            toSelect.Add(m);
+                    }
+                }
+                dg.SelectedItems?.Clear();
+                foreach (var m in toSelect)
+                    dg.SelectedItems?.Add(m);
+                var after = dg.SelectedItems?.Count ?? 0;
+                Logger.Debug("InvertSelectionInItemsControl: DataGrid.{Source} total={Total} selectedBefore={Before} selectedAfter={After}", itemsSourceUsed, total, before, after);
+                var first = toSelect.FirstOrDefault();
+                if (first != null)
+                    dg.SelectedItem = first;
+            }
+            else if (control is ListBox lb)
+            {
+                var items = lb.Items as IEnumerable ?? Array.Empty<object>();
+                var total = items.Cast<object?>().Count();
+                var before = lb.SelectedItems?.Count ?? 0;
+                var toSelect = new List<Models.ExplorerItemModel>();
+                foreach (var it in items)
+                {
+                    if (it is Models.ExplorerItemModel m)
+                    {
+                        if (lb.SelectedItems != null && lb.SelectedItems.Contains(m))
+                            ;
+                        else
+                            toSelect.Add(m);
+                    }
+                }
+                lb.SelectedItems?.Clear();
+                foreach (var m in toSelect)
+                    lb.SelectedItems?.Add(m);
+                var after = lb.SelectedItems?.Count ?? 0;
+                Logger.Debug("InvertSelectionInItemsControl: ListBox total={Total} selectedBefore={Before} selectedAfter={After}", total, before, after);
+                var first = toSelect.FirstOrDefault();
+                if (first != null)
+                    lb.SelectedItem = first;
+            }
         }
 
         static IReadOnlyList<Models.ExplorerItemModel> GetSelectedItems(IList? selectedItems, object? selectedItem)

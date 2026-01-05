@@ -97,17 +97,26 @@
                 </MenuItem.Icon>
             </MenuItem>
             <Separator />
-            <MenuItem Header="Select All">
+            <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.SelectAll}"
+                Header="Select All">
                 <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.SelectAll.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
-            <MenuItem Header="Select None">
+            <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.SelectNone}"
+                Header="Select None">
                 <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.SelectNone.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
             </MenuItem>
-            <MenuItem Header="Invert Selection">
+            <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.InvertSelection}"
+                Header="Invert Selection">
                 <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.InvertSelection.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
