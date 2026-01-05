@@ -87,6 +87,28 @@ namespace Jaya.Ui.Models
 
         public bool IsHavingDummyChild => _dummyChild != null;
 
+        public bool NeedsPopulate
+        {
+            get => Get<bool>();
+            set => Set(value);
+        }
+
+        public bool IsTreeVisible
+        {
+            get
+            {
+                if (IsDummy)
+                {
+                    return !string.Equals(Service?.Name, "File System", System.StringComparison.OrdinalIgnoreCase);
+                }
+
+                if (_shared?.ApplicationConfiguration?.IsHiddenItemVisible == true)
+                    return true;
+
+                return FileSystemObject?.IsHidden != true;
+            }
+        }
+
         public ObservableCollection<TreeNodeModel> Children { get; }
 
         public FileSystemObjectModel? FileSystemObject
@@ -98,6 +120,7 @@ namespace Jaya.Ui.Models
                 {
                     RaisePropertyChanged(nameof(IsDriveIconVisible));
                     RaisePropertyChanged(nameof(IsExternalDriveIconVisible));
+                    RaisePropertyChanged(nameof(IsTreeVisible));
                 }
             }
         }
@@ -121,6 +144,7 @@ namespace Jaya.Ui.Models
                 case nameof(ApplicationConfigModel.IsHiddenItemVisible):
                     if (FileSystemObject != null)
                         FileSystemObject.RaisePropertyChanged(nameof(FileSystemObject.IsHidden));
+                    RaisePropertyChanged(nameof(IsTreeVisible));
                     break;
             }
         }

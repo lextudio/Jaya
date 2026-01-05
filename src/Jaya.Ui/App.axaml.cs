@@ -25,6 +25,7 @@ namespace Jaya.Ui
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
             {
                 _shared = ServiceLocator.Instance.GetService<SharedService>();
+                ServiceLocator.Instance.GetService<VolumeCacheService>()?.WarmUp();
                 _shared?.LoadConfigurations();
 
                 lifetime.Exit += OnExit;

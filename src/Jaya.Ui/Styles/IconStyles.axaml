@@ -1153,6 +1153,8 @@
       <DrawingImage x:Key="Icon.SelectAll.Image" Drawing="{StaticResource Icon.SelectAll}" />
       <DrawingImage x:Key="Icon.SelectNone.Image" Drawing="{StaticResource Icon.SelectNone}" />
       <DrawingImage x:Key="Icon.InvertSelection.Image" Drawing="{StaticResource Icon.InvertSelection}" />
+      <DrawingImage x:Key="Icon.ArrowDown.Image" Drawing="{StaticResource Icon.ArrowDown}" />
+      <DrawingImage x:Key="Icon.ArrowUp.Image" Drawing="{StaticResource Icon.ArrowUp}" />
       <DrawingImage x:Key="Icon.NavigationPane.Image" Drawing="{StaticResource Icon.NavigationPane}" />
       <DrawingImage x:Key="Icon.PreviewPane.Image" Drawing="{StaticResource Icon.PreviewPane}" />
       <DrawingImage x:Key="Icon.DetailsPane.Image" Drawing="{StaticResource Icon.DetailsPane}" />
