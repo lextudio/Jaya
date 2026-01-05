@@ -25,10 +25,7 @@
         <j:BitmapValueConverter x:Key="BitmapValueConverter" />
     </UserControl.Resources>
     <UserControl.KeyBindings>
-        <KeyBinding
-            Gesture="Delete"
-            Command="{Binding SimpleCommand}"
-            CommandParameter="{x:Static local:CommandType.Delete}" />
+      <!-- Delete handled manually to avoid deleting file when editing filename inline -->
         <KeyBinding Gesture="F2" Command="{Binding RenameItemCommand}" CommandParameter="{Binding ElementName=ExplorerRoot, Path=DataContext.Item}" />
         <KeyBinding
             Gesture="Ctrl+X"
@@ -90,9 +87,9 @@
           </Style>
           <Style Selector="DataGridRow">
             <Setter Property="ContextMenu">
-              <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
+              <ContextMenu>
                 <MenuItem
-                  Command="{Binding SimpleCommand}"
+                  Command="{Binding DataContext.SimpleCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{x:Static local:CommandType.Cut}"
                   Header="Cut">
                   <MenuItem.Icon>
@@ -100,7 +97,7 @@
                   </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
-                  Command="{Binding SimpleCommand}"
+                  Command="{Binding DataContext.SimpleCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{x:Static local:CommandType.Copy}"
                   Header="Copy">
                   <MenuItem.Icon>
@@ -108,16 +105,21 @@
                   </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
-                  Command="{Binding SimpleCommand}"
+                  Command="{Binding DataContext.SimpleCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{x:Static local:CommandType.Paste}"
                   Header="Paste">
                   <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
                   </MenuItem.Icon>
                 </MenuItem>
+                <MenuItem
+                  Command="{Binding DataContext.RenameItemCommand, ElementName=ExplorerRoot}"
+                  CommandParameter="{Binding}"
+                  Header="Rename">
+                </MenuItem>
                 <Separator />
                 <MenuItem
-                  Command="{Binding SimpleCommand}"
+                  Command="{Binding DataContext.SimpleCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{x:Static local:CommandType.Delete}"
                   Header="Delete">
                   <MenuItem.Icon>
@@ -132,9 +134,9 @@
           </Style>
           <Style Selector="ListBoxItem">
             <Setter Property="ContextMenu">
-              <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
+              <ContextMenu>
                 <MenuItem
-                  Command="{Binding SimpleCommand}"
+                  Command="{Binding DataContext.SimpleCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{x:Static local:CommandType.Cut}"
                   Header="Cut">
                   <MenuItem.Icon>
@@ -142,7 +144,7 @@
                   </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
-                  Command="{Binding SimpleCommand}"
+                  Command="{Binding DataContext.SimpleCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{x:Static local:CommandType.Copy}"
                   Header="Copy">
                   <MenuItem.Icon>
@@ -150,16 +152,21 @@
                   </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
-                  Command="{Binding SimpleCommand}"
+                  Command="{Binding DataContext.SimpleCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{x:Static local:CommandType.Paste}"
                   Header="Paste">
                   <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
                   </MenuItem.Icon>
                 </MenuItem>
+                <MenuItem
+                  Command="{Binding DataContext.RenameItemCommand, ElementName=ExplorerRoot}"
+                  CommandParameter="{Binding}"
+                  Header="Rename">
+                </MenuItem>
                 <Separator />
                 <MenuItem
-                  Command="{Binding SimpleCommand}"
+                  Command="{Binding DataContext.SimpleCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{x:Static local:CommandType.Delete}"
                   Header="Delete">
                   <MenuItem.Icon>

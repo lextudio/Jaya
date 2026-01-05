@@ -300,7 +300,10 @@ namespace Jaya.Ui.ViewModels
             if (item == null)
                 return;
 
-            if (_service == null || _account == null)
+            // capture service/account to local variables and validate to avoid nullable warnings
+            var serviceLocal = _service;
+            var accountLocal = _account;
+            if (serviceLocal == null || accountLocal == null)
                 return;
 
             if (!item.IsFile && !item.IsDirectory)
@@ -322,9 +325,11 @@ namespace Jaya.Ui.ViewModels
 
             try
             {
+                FileSystemLogger.Debug("CommitRename: starting for item={Label} currentDisplayName={DisplayName} editableName={EditableName}", item?.Label, item?.DisplayName, item?.EditableName);
                 // Check for local conflict (destination exists)
                 var parentDir = System.IO.Path.GetDirectoryName(fso.Path) ?? string.Empty;
                 var destPath = System.IO.Path.Combine(parentDir, newName);
+                FileSystemLogger.Debug("CommitRename: computed parentDir={ParentDir} destPath={Dest}", parentDir, destPath);
                 ConflictPromptViewModel? cvm = null;
                 if (System.IO.File.Exists(destPath) || System.IO.Directory.Exists(destPath))
                 {
@@ -356,9 +361,10 @@ namespace Jaya.Ui.ViewModels
                 }
                 // determine overwrite flag
                 bool overwrite = _applyOverwriteToAll;
+                FileSystemLogger.Debug("CommitRename: overwrite initial={OverwriteFlag} applyOverwriteToAll={ApplyAll}", overwrite, _applyOverwriteToAll);
                 // if we previously showed a dialog, cvm variable will carry user's choice
 
-                if (_service is not Jaya.Shared.Services.IFileRenameService renameService)
+                if (serviceLocal is not Jaya.Shared.Services.IFileRenameService renameService)
                     return;
 
                 // if user selected overwrite in the dialog, set overwrite accordingly
@@ -370,30 +376,42 @@ namespace Jaya.Ui.ViewModels
                 }
 
                 var progress = new Progress<TransferProgressReport>(report => { });
-                var result = await renameService.RenameAsync(_account, fso, newName, overwrite, progress, System.Threading.CancellationToken.None);
+                FileSystemLogger.Debug("CommitRename: calling provider.RenameAsync account={Account} sourcePath={Source} newName={NewName} overwrite={Overwrite}", accountLocal?.Name, fso.Path, newName, overwrite);
+                var result = await renameService.RenameAsync(accountLocal, fso, newName, overwrite, progress, System.Threading.CancellationToken.None);
+                FileSystemLogger.Debug("CommitRename: provider.RenameAsync returned resultName={Result}", result?.Path);
                 if (result != null)
                 {
                     Invoke(() =>
                     {
                         var comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
                         var existing = Item?.Children?.FirstOrDefault(c =>
-                            (c.Object as FileSystemObjectModel)?.Path != null &&
-                            comparer.Equals((c.Object as FileSystemObjectModel)!.Path, fso.Path));
+                        {
+                            var obj = c.Object as FileSystemObjectModel;
+                            if (obj == null || string.IsNullOrWhiteSpace(obj.Path))
+                                return false;
+
+                            return comparer.Equals(obj.Path, fso.Path);
+                        });
 
                         if (existing != null)
                         {
-                            var index = Item.Children.IndexOf(existing);
+                            var index = Item?.Children?.IndexOf(existing) ?? -1;
                             if (index >= 0)
                             {
                                 var newLabel = result switch
                                 {
-                                    Jaya.Shared.Models.FileModel file => file.Name + (string.IsNullOrEmpty(file.Extension) ? string.Empty : "." + file.Extension),
+                                    // Pass the base name (without extension) as the label so ExplorerItemModel
+                                    // will compose DisplayName using the FileModel's Extension. Passing a
+                                    // label that already contains the extension caused duplicate ".ext".
+                                    Jaya.Shared.Models.FileModel file => file.Name,
                                     Jaya.Shared.Models.DirectoryModel dir => dir.Name,
                                     _ => result.Name
                                 };
 
                                 var newItem = new ExplorerItemModel(existing.Type, newLabel, result, existing.ImagePath);
-                                Item.Children[index] = newItem;
+                                var children = Item?.Children;
+                                if (children != null && index >= 0)
+                                    children[index] = newItem;
                             }
                         }
                     });

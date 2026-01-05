@@ -35,8 +35,18 @@ namespace Jaya.Ui.Views
         public ExplorerView()
         {
             this.InitializeComponent();
+            this.AddHandler(KeyDownEvent, ExplorerView_KeyDown, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             if (!Design.IsDesignMode)
             {
+                // Attach MenuItem click handlers to close context menus immediately when an item is clicked.
+                this.AttachedToVisualTree += (s, e) =>
+                {
+                    try
+                    {
+                        AttachMenuItemHandlers(this);
+                    }
+                    catch { }
+                };
                 var eventAggregator = ServiceLocator.Instance.GetService<ICommandService>()?.EventAggregator;
                 if (eventAggregator != null)
                 {
@@ -168,6 +178,73 @@ namespace Jaya.Ui.Views
                     DetachedFromVisualTree += ExplorerView_DetachedFromVisualTree;
                 }
             }
+        }
+
+        void ExplorerView_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
+        {
+            try
+            {
+                if (e == null)
+                    return;
+
+                if (e.Key == Avalonia.Input.Key.Delete)
+                {
+                    // If focus is inside a TextBox that is used for inline editing (EditableName), ignore delete
+                    var focused = Avalonia.Controls.TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() as Avalonia.Controls.Control;
+                    if (focused is Avalonia.Controls.TextBox tb)
+                    {
+                        // assume inline edit TextBoxes have Tag bound to the model or share class names; check DataContext
+                        var dc = tb.DataContext;
+                        if (dc is Jaya.Ui.Models.ExplorerItemModel)
+                        {
+                            // user is editing filename — do not trigger delete
+                            e.Handled = true;
+                            return;
+                        }
+                    }
+
+                    // Otherwise, invoke the delete command via ViewModel
+                    var vm = this.DataContext as Jaya.Ui.ViewModels.ExplorerViewModel;
+                    if (vm != null)
+                    {
+                        if (vm.SimpleCommand != null)
+                        {
+                            // Command parameter for delete
+                            vm.SimpleCommand.Execute((byte)Jaya.Ui.CommandType.Delete);
+                            e.Handled = true;
+                        }
+                    }
+                }
+            }
+            catch { }
+        }
+
+        void AttachMenuItemHandlers(Control root)
+        {
+            // Find all ContextMenu instances defined in the control's resources and visual tree
+            var menus = root.GetVisualDescendants().OfType<ContextMenu>().ToList();
+            foreach (var menu in menus)
+            {
+                foreach (var mi in menu.Items.OfType<MenuItem>())
+                {
+                    mi.Click -= MenuItem_Click_CloseContext;
+                    mi.Click += MenuItem_Click_CloseContext;
+                }
+            }
+        }
+
+        void MenuItem_Click_CloseContext(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        {
+            try
+            {
+                // Close any context menus within this view to ensure they disappear immediately
+                var menus = this.GetVisualDescendants().OfType<ContextMenu>().ToList();
+                foreach (var cm in menus)
+                {
+                    cm.Close();
+                }
+            }
+            catch { }
         }
 
         void ExplorerView_DetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e)

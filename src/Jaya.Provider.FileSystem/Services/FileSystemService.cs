@@ -252,10 +252,12 @@ namespace Jaya.Provider.FileSystem.Services
 
             var parentDir = Path.GetDirectoryName(item.Path) ?? string.Empty;
             var destination = Path.Combine(parentDir, newName);
+            Logger.Debug("FileSystemService.RenameAsync: account={Account} source={Source} newName={NewName} destination={Destination} overwrite={Overwrite}", account?.Name, item.Path, newName, destination, overwrite);
 
             try
             {
                 var result = await _fileSystem.RenameAsync(item.Path, destination, overwrite: overwrite, progress: null, cancellationToken).ConfigureAwait(false);
+                Logger.Debug("FileSystemService.RenameAsync: IFileSystem.RenameAsync returned Success={Success} DestinationPath={Dest} Error={Error}", result.Success, result.DestinationPath, result.Error);
                 if (!result.Success)
                 {
                     // If conflict, try to compute unique destination and return null to let UI decide

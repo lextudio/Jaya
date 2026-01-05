@@ -207,6 +207,8 @@ internal class PlatformFileSystem : IFileSystem
 
         try
         {
+            // Log entry
+            System.Diagnostics.Debug.WriteLine($"PlatformFileSystem.RenameAsync: source={sourcePath} destination={destinationPath} overwrite={overwrite}");
             // Ensure destination directory exists
             var destDir = Path.GetDirectoryName(destinationPath) ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(destDir) && !Directory.Exists(destDir))
@@ -214,18 +216,22 @@ internal class PlatformFileSystem : IFileSystem
 
             // Try native rename first
             var nativeOk = await _platform.TryNativeRenameAsync(sourcePath, destinationPath, overwrite, cancellationToken).ConfigureAwait(false);
+            System.Diagnostics.Debug.WriteLine($"PlatformFileSystem.RenameAsync: TryNativeRenameAsync returned {nativeOk}");
             if (nativeOk)
                 return new RenameResult(true, destinationPath, null);
 
             // If destination exists and caller didn't request overwrite, treat as conflict rather than silently creating a unique name.
             if (!overwrite && (File.Exists(destinationPath) || Directory.Exists(destinationPath)))
+            {
+                System.Diagnostics.Debug.WriteLine($"PlatformFileSystem.RenameAsync: destination exists and overwrite=false -> conflict for {destinationPath}");
                 return new RenameResult(false, null, "Destination exists", true);
+            }
 
             // Fallback: perform explicit file copy-to-destination followed by delete for files,
             // or use TransferEngine for directories and then rename the moved directory if necessary.
             try
             {
-                if (File.Exists(sourcePath))
+                    if (File.Exists(sourcePath))
                 {
                     // Copy file contents to destination
                     using (var src = File.Open(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -245,9 +251,10 @@ internal class PlatformFileSystem : IFileSystem
                         await src.CopyToAsync(dst, cancellationToken).ConfigureAwait(false);
                     }
 
-                    // Delete source
-                    try { File.Delete(sourcePath); } catch { }
-                    return new RenameResult(true, destinationPath, null);
+                        // Delete source
+                        try { File.Delete(sourcePath); } catch { }
+                        System.Diagnostics.Debug.WriteLine($"PlatformFileSystem.RenameAsync: file fallback copy/move succeeded destination={destinationPath}");
+                        return new RenameResult(true, destinationPath, null);
                 }
 
                 // Directory fallback: use TransferEngine to move into destination parent, then rename if necessary
