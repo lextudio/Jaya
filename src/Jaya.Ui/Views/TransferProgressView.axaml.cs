@@ -27,11 +27,17 @@ namespace Jaya.Ui.Views
         void TransferProgressView_DataContextChanged(object? sender, EventArgs e)
         {
             if (_viewModel != null)
+            {
                 _viewModel.PropertyChanged -= ViewModel_PropertyChanged;
+                _viewModel.Finished -= ViewModel_Finished;
+            }
 
             _viewModel = DataContext as TransferProgressViewModel;
             if (_viewModel != null)
+            {
                 _viewModel.PropertyChanged += ViewModel_PropertyChanged;
+                _viewModel.Finished += ViewModel_Finished;
+            }
         }
 
         void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -47,6 +53,14 @@ namespace Jaya.Ui.Views
                     Dispatcher.UIThread.Post(Close, DispatcherPriority.Background);
                 }
             }
+        }
+
+        void ViewModel_Finished(object? sender, EventArgs e)
+        {
+            if (_viewModel == null)
+                return;
+
+            Dispatcher.UIThread.Post(Close, DispatcherPriority.Background);
         }
 
         void TransferProgressView_Closing(object? sender, WindowClosingEventArgs e)

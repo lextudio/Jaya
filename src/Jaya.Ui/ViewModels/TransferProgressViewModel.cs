@@ -13,6 +13,8 @@ namespace Jaya.Ui.ViewModels
 {
     public class TransferProgressViewModel : ViewModelBase
     {
+        public event EventHandler? Finished;
+
         ICommand? _cancelCommand;
         CancellationTokenSource? _cancellation;
 
@@ -131,12 +133,14 @@ namespace Jaya.Ui.ViewModels
                     StatusText = "Completed";
                     IsCompleted = true;
                     CanCancel = false;
+                    Finished?.Invoke(this, EventArgs.Empty);
                     break;
                 case TransferProgressStage.Canceled:
                     HeaderText = BuildHeader(report);
                     StatusText = "Canceled";
                     IsCanceled = true;
                     CanCancel = false;
+                    Finished?.Invoke(this, EventArgs.Empty);
                     break;
                 case TransferProgressStage.Failed:
                     HeaderText = BuildHeader(report);
