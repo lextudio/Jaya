@@ -58,13 +58,22 @@
         <RowDefinition Height="*" />
       </Grid.RowDefinitions>
       <Grid.ContextMenu>
-        <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
+        <ContextMenu x:Name="EmptySpaceMenu" DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
           <MenuItem
             Command="{Binding SimpleCommand}"
             CommandParameter="{x:Static local:CommandType.Paste}"
-            Header="Paste">
+            Header="Paste"
+            IsVisible="{Binding CanPaste}">
             <MenuItem.Icon>
               <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
+            </MenuItem.Icon>
+          </MenuItem>
+          <MenuItem
+            Command="{Binding SimpleCommand}"
+            CommandParameter="{x:Static local:CommandType.NewFolder}"
+            Header="New Folder">
+            <MenuItem.Icon>
+              <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="16" Height="16" />
             </MenuItem.Icon>
           </MenuItem>
         </ContextMenu>
@@ -107,9 +116,18 @@
                 <MenuItem
                   Command="{Binding DataContext.SimpleCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{x:Static local:CommandType.Paste}"
-                  Header="Paste">
+                  Header="Paste"
+                  IsVisible="{Binding DataContext.CanPaste, ElementName=ExplorerRoot}">
                   <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem
+                  Command="{Binding DataContext.SimpleCommand, ElementName=ExplorerRoot}"
+                  CommandParameter="{x:Static local:CommandType.NewFolder}"
+                  Header="New Folder">
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="16" Height="16" />
                   </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
@@ -154,7 +172,8 @@
                 <MenuItem
                   Command="{Binding DataContext.SimpleCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{x:Static local:CommandType.Paste}"
-                  Header="Paste">
+                    Header="Paste"
+                    IsVisible="{Binding DataContext.CanPaste, ElementName=ExplorerRoot}">
                   <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
                   </MenuItem.Icon>
@@ -190,6 +209,27 @@
             x:Name="DetailsDataGrid"
             IsVisible="{Binding PaneConfig.IsDetailsView, Mode=OneWay}"
             SelectionMode="Extended">
+            <DataGrid.ContextMenu>
+              <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
+                <MenuItem
+                  Command="{Binding SimpleCommand}"
+                  CommandParameter="{x:Static local:CommandType.Paste}"
+                  Header="Paste"
+                  IsVisible="{Binding CanPaste}">
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem
+                  Command="{Binding SimpleCommand}"
+                  CommandParameter="{x:Static local:CommandType.NewFolder}"
+                  Header="New Folder">
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+              </ContextMenu>
+            </DataGrid.ContextMenu>
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="Name" Width="*" SortMemberPath="DisplayName">
                     <DataGridTemplateColumn.CellTemplate>
@@ -254,6 +294,27 @@
           IsVisible="{Binding PaneConfig.IsThumbnailView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             SelectionMode="Multiple">
+            <ListBox.ContextMenu>
+              <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
+                <MenuItem
+                  Command="{Binding SimpleCommand}"
+                  CommandParameter="{x:Static local:CommandType.Paste}"
+                  Header="Paste"
+                  IsVisible="{Binding CanPaste}">
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem
+                  Command="{Binding SimpleCommand}"
+                  CommandParameter="{x:Static local:CommandType.NewFolder}"
+                  Header="New Folder">
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+              </ContextMenu>
+            </ListBox.ContextMenu>
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel Width="{Binding $parent[ScrollContentPresenter].Bounds.Width, Mode=OneWay}"/>
@@ -300,6 +361,27 @@
           IsVisible="{Binding PaneConfig.IsListView, Mode=OneWay}"
             ScrollViewer.VerticalScrollBarVisibility="Disabled"
             SelectionMode="Multiple">
+          <ListBox.ContextMenu>
+            <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
+              <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Paste}"
+                Header="Paste"
+                IsVisible="{Binding CanPaste}">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.NewFolder}"
+                Header="New Folder">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+            </ContextMenu>
+          </ListBox.ContextMenu>
           <ListBox.ItemsPanel>
             <ItemsPanelTemplate>
               <WrapPanel Width="{Binding $parent[ScrollContentPresenter].Bounds.Width, Mode=OneWay}" Orientation="Vertical"/>
@@ -346,6 +428,27 @@
           IsVisible="{Binding PaneConfig.IsTilesView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             SelectionMode="Multiple">
+          <ListBox.ContextMenu>
+            <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
+              <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.Paste}"
+                Header="Paste"
+                IsVisible="{Binding CanPaste}">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem
+                Command="{Binding SimpleCommand}"
+                CommandParameter="{x:Static local:CommandType.NewFolder}"
+                Header="New Folder">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+            </ContextMenu>
+          </ListBox.ContextMenu>
           <ListBox.ItemsPanel>
             <ItemsPanelTemplate>
               <WrapPanel Width="{Binding $parent[ScrollContentPresenter].Bounds.Width, Mode=OneWay}"/>
@@ -401,6 +504,27 @@
         IsVisible="{Binding PaneConfig.IsContentView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             SelectionMode="Multiple">
+        <ListBox.ContextMenu>
+          <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
+            <MenuItem
+              Command="{Binding SimpleCommand}"
+              CommandParameter="{x:Static local:CommandType.Paste}"
+              Header="Paste"
+              IsVisible="{Binding CanPaste}">
+              <MenuItem.Icon>
+                <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem
+              Command="{Binding SimpleCommand}"
+              CommandParameter="{x:Static local:CommandType.NewFolder}"
+              Header="New Folder">
+              <MenuItem.Icon>
+                <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="16" Height="16" />
+              </MenuItem.Icon>
+            </MenuItem>
+          </ContextMenu>
+        </ListBox.ContextMenu>
         <ListBox.ItemsPanel>
           <ItemsPanelTemplate>
             <StackPanel Orientation="Vertical"/>

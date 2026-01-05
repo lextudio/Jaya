@@ -68,7 +68,8 @@
             <MenuItem
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.Paste}"
-                Header="Paste">
+                Header="Paste"
+                IsEnabled="{Binding IsPasteEnabled}">
                 <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>

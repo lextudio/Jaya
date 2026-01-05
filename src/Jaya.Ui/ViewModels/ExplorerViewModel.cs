@@ -26,6 +26,7 @@ namespace Jaya.Ui.ViewModels
                                                        .ForContext("Area", "FileSystem");
 
         readonly Subscription<SelectionChangedEventArgs>? _onSelectionChanged;
+        readonly Subscription<NewFolderRequestedEventArgs>? _onNewFolder;
         readonly SharedService? _shared;
         SelectionChangedEventArgs? _lastSelectionArgs;
 
@@ -47,6 +48,7 @@ namespace Jaya.Ui.ViewModels
         {
             _shared = GetService<SharedService>();
             _onSelectionChanged = EventAggregator?.Subscribe<SelectionChangedEventArgs>(SelectionChanged);
+            _onNewFolder = EventAggregator?.Subscribe<NewFolderRequestedEventArgs>(NewFolderRequested);
             if (_shared?.ApplicationConfiguration != null)
             {
                 _shared.ApplicationConfiguration.PropertyChanged += ApplicationConfiguration_PropertyChanged;
@@ -57,6 +59,8 @@ namespace Jaya.Ui.ViewModels
         {
             if (_onSelectionChanged != null)
                 EventAggregator?.UnSubscribe(_onSelectionChanged);
+            if (_onNewFolder != null)
+                EventAggregator?.UnSubscribe(_onNewFolder);
             if (_shared?.ApplicationConfiguration != null)
                 _shared.ApplicationConfiguration.PropertyChanged -= ApplicationConfiguration_PropertyChanged;
         }
@@ -127,6 +131,12 @@ namespace Jaya.Ui.ViewModels
 
                 return _pasteItems!;
             }
+        }
+
+        public bool CanPaste
+        {
+            get => Get<bool>(nameof(CanPaste));
+            private set => Set(value);
         }
 
         public ICommand CommitRenameCommand
@@ -541,6 +551,16 @@ namespace Jaya.Ui.ViewModels
 
                 if (createdItems.Count > 0 && _clipboardMode == TransferMode.Move)
                     _clipboardItems.Clear();
+
+                // Update CanPaste flag based on clipboard contents
+                CanPaste = _clipboardItems != null && _clipboardItems.Count > 0;
+                try
+                {
+                    var shared = GetService<SharedService>();
+                    if (shared != null)
+                        shared.UpdatePasteAvailability(_clipboardItems);
+                }
+                catch { }
             }
             catch (Exception ex)
             {
@@ -569,6 +589,128 @@ namespace Jaya.Ui.ViewModels
             _clipboardItems = targets;
             _clipboardMode = mode;
             FileSystemLogger.Debug("Clipboard stored {Count} items with mode={Mode}.", targets.Count, mode);
+            CanPaste = _clipboardItems != null && _clipboardItems.Count > 0;
+            try
+            {
+                var shared = GetService<SharedService>();
+                if (shared != null)
+                    shared.UpdatePasteAvailability(_clipboardItems);
+            }
+            catch { }
+        }
+
+        void NewFolderRequested(NewFolderRequestedEventArgs? args)
+        {
+            // Fire-and-forget create new folder operation on UI thread
+            try
+            {
+                _ = CreateNewFolderAsync();
+            }
+            catch (Exception ex)
+            {
+                FileSystemLogger.Warning(ex, "NewFolderRequested handler failed");
+            }
+        }
+
+        async Task CreateNewFolderAsync()
+        {
+            try
+            {
+                var currentDir = Item?.Object as DirectoryModel;
+                if (currentDir == null || string.IsNullOrWhiteSpace(currentDir.Path))
+                {
+                    FileSystemLogger.Debug("CreateNewFolder skipped: no current directory context.");
+                    return;
+                }
+
+                var parentPath = currentDir.Path;
+                // Use macOS Finder style default: "untitled folder", "untitled folder 2", ...
+                var baseName = "untitled folder";
+                // GetUniqueNameInFolder expects a filename; it will respect extensions. For mac-style numbering
+                // we reuse the same function but ensure to try variants with numeric suffixes matching Finder behavior.
+                var unique = baseName;
+                if (System.IO.Directory.Exists(System.IO.Path.Combine(parentPath, unique)))
+                {
+                    // Try Finder-like suffixes: "untitled folder 2", "untitled folder 3", ...
+                    for (int i = 2; i < 10000; i++)
+                    {
+                        var candidate = $"{baseName} {i}";
+                        var candidatePath = System.IO.Path.Combine(parentPath, candidate);
+                        if (!System.IO.Directory.Exists(candidatePath))
+                        {
+                            unique = candidate;
+                            break;
+                        }
+                    }
+                }
+                var newPath = System.IO.Path.Combine(parentPath, unique);
+
+                // Require provider support: only create via provider's IFileCreateService.
+                if (!(_service is Jaya.Shared.Services.IFileCreateService createService) || _account == null)
+                {
+                    FileSystemLogger.Debug("CreateNewFolder skipped: service does not support IFileCreateService or account missing.");
+                    return;
+                }
+
+                FileSystemObjectModel? createdObj = null;
+                // Try base name and numbered variants until provider succeeds
+                var attempts = new List<string> { unique };
+                for (int i = 2; i < 10000; i++)
+                {
+                    attempts.Add($"{baseName} {i}");
+                    if (attempts.Count >= 50) break; // safety cap
+                }
+
+                foreach (var candidate in attempts)
+                {
+                    try
+                    {
+                        createdObj = await createService.CreateDirectoryAsync(_account, currentDir, candidate);
+                        if (createdObj != null)
+                        {
+                            unique = candidate;
+                            break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        FileSystemLogger.Warning(ex, "Provider CreateDirectoryAsync failed for candidate {Candidate}", candidate);
+                    }
+                }
+
+                if (createdObj == null)
+                {
+                    FileSystemLogger.Debug("CreateNewFolder: provider failed to create any candidate name.");
+                    return;
+                }
+
+                var created = createdObj as DirectoryModel ?? new DirectoryModel() { Name = createdObj.Name ?? unique, Path = createdObj.Path };
+
+                // Add and then put the created item into edit mode so user can rename immediately
+                Invoke(() =>
+                {
+                    AddItemsToView(new[] { created }, selectAdded: true);
+
+                    // Find the newly added ExplorerItemModel and enable editing
+                    try
+                    {
+                        var comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+                        var newItem = Item?.Children?.FirstOrDefault(c => (c.Object as FileSystemObjectModel)?.Path != null && comparer.Equals((c.Object as FileSystemObjectModel)!.Path, created.Path));
+                        if (newItem != null)
+                        {
+                            newItem.EditableName = newItem.DisplayName;
+                            newItem.IsEditing = true;
+                            // Publish a selection so view attempts to focus the new item
+                            EventAggregator?.Publish(new SelectItemsRequestedEventArgs(new[] { created.Path }));
+                        }
+                    }
+                    catch { }
+                });
+            }
+            catch (Exception ex)
+            {
+                FileSystemLogger.Warning(ex, "CreateNewFolderAsync failed");
+            }
         }
 
         void AddItemsToView(IReadOnlyCollection<FileSystemObjectModel> createdItems, bool selectAdded)

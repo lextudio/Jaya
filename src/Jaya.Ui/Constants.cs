@@ -69,6 +69,7 @@ namespace Jaya.Ui
         Cut,
         Copy,
         Paste,
+        NewFolder,
         ToggleToolbars,
         ToggleToolbarFile,
         ToggleToolbarEdit,

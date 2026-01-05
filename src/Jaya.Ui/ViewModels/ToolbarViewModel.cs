@@ -17,7 +17,20 @@ namespace Jaya.Ui.ViewModels
         public ToolbarViewModel()
         {
             _shared = GetService<SharedService>();
+            if (_shared != null)
+                _shared.PropertyChanged += Shared_PropertyChanged;
         }
+
+        void Shared_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e == null || string.IsNullOrEmpty(e.PropertyName)) return;
+            if (e.PropertyName == nameof(SharedService.IsPasteEnabled))
+            {
+                Invoke(() => RaisePropertyChanged(nameof(IsPasteEnabled)));
+            }
+        }
+
+        public bool IsPasteEnabled => _shared?.IsPasteEnabled ?? false;
 
         public ToolbarConfigModel ToolbarConfig => _shared?.ToolbarConfiguration ?? new ToolbarConfigModel();
 

@@ -17,6 +17,7 @@ namespace Jaya.Provider.Ftp.Services
 {
     public class FtpService : ProviderServiceBase, IProviderService
     {
+        // TODO: Implement IFileCreateService.CreateDirectoryAsync for FTP provider
         public FtpService()
         {
             Name = "FTP/FTPS";

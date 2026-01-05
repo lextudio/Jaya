@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 
 namespace Jaya.Provider.FileSystem.Services
 {
-    public class FileSystemService : ProviderServiceBase, IProviderService, IFileDeleteService, IFileTransferService, Jaya.Shared.Services.IFileRenameService
+    public class FileSystemService : ProviderServiceBase, IProviderService, IFileDeleteService, IFileTransferService, Jaya.Shared.Services.IFileRenameService, Jaya.Shared.Services.IFileCreateService
     {
         static readonly ILogger Logger = Log.ForContext<FileSystemService>();
         readonly IFileSystem _fileSystem;
@@ -272,6 +272,33 @@ namespace Jaya.Provider.FileSystem.Services
             catch (Exception ex)
             {
                 Logger.Warning(ex, "Rename failed from {Source} to {Dest}", item.Path, destination);
+                return null;
+            }
+        }
+
+        // Implement create directory for local filesystem
+        public async Task<FileSystemObjectModel?> CreateDirectoryAsync(AccountModelBase account, DirectoryModel parentDirectory, string name, CancellationToken cancellationToken = default)
+        {
+            if (account == null) throw new ArgumentNullException(nameof(account));
+            if (parentDirectory == null) throw new ArgumentNullException(nameof(parentDirectory));
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
+
+            try
+            {
+                var parentPath = parentDirectory.Path ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(parentPath))
+                    return null;
+
+                var dest = Path.Combine(parentPath, name);
+                if (Directory.Exists(dest))
+                    return CreateFileSystemObject(dest);
+
+                Directory.CreateDirectory(dest);
+                return CreateFileSystemObject(dest);
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning(ex, "CreateDirectoryAsync failed for {Name} under {Parent}", name, parentDirectory.Path);
                 return null;
             }
         }

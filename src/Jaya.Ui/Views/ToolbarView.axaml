@@ -58,7 +58,8 @@
             <Button
                 Command="{Binding SimpleCommand}"
                 CommandParameter="{x:Static local:CommandType.Paste}"
-                ToolTip.Tip="Paste">
+                ToolTip.Tip="Paste"
+                IsEnabled="{Binding IsPasteEnabled}">
                 <Image Source="{DynamicResource Icon.Paste.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
             <Border Classes="Separator" />

@@ -11,8 +11,9 @@ using System.Collections.Generic;
 
 namespace Jaya.Ui.Services
 {
-    public sealed class SharedService : IService
+    public sealed class SharedService : IService, System.ComponentModel.INotifyPropertyChanged
     {
+        bool _isPasteEnabled = false;
         readonly Subscription<byte> _onSimpleCommand;
         readonly Subscription<KeyValuePair<byte, object>> _onParameterizedCommand;
 
@@ -31,6 +32,38 @@ namespace Jaya.Ui.Services
             _onParameterizedCommand = _commandService.EventAggregator.Subscribe<KeyValuePair<byte, object>>(ParameterizedCommandAction);
 
             LoadConfigurations();
+        }
+
+        public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
+        public bool IsPasteEnabled
+        {
+            get => _isPasteEnabled;
+            private set
+            {
+                if (_isPasteEnabled == value) return;
+                _isPasteEnabled = value;
+                PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(IsPasteEnabled)));
+            }
+        }
+
+        public void UpdatePasteAvailability(System.Collections.IEnumerable? clipboardItems)
+        {
+            // Only consider file system objects as valid clipboard items for paste
+            bool anyFiles = false;
+            if (clipboardItems != null)
+            {
+                foreach (var item in clipboardItems)
+                {
+                    if (item is Jaya.Shared.Models.FileSystemObjectModel)
+                    {
+                        anyFiles = true;
+                        break;
+                    }
+                }
+            }
+
+            IsPasteEnabled = anyFiles;
         }
 
         ~SharedService()
@@ -169,6 +202,13 @@ namespace Jaya.Ui.Services
                     try
                     {
                         _commandService.EventAggregator.Publish(new PasteRequestedEventArgs());
+                    }
+                    catch { }
+                    break;
+                case CommandType.NewFolder:
+                    try
+                    {
+                        _commandService.EventAggregator.Publish(new NewFolderRequestedEventArgs());
                     }
                     catch { }
                     break;

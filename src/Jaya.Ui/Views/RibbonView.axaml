@@ -69,6 +69,7 @@
                                     CommandParameter="{x:Static local:CommandType.Paste}"
                                     ribbon:KeyTip.KeyTipKeys="V"
                                     Content="Paste"
+                                    IsEnabled="{Binding IsPasteEnabled}"
                                     MaxSize="Large"
                                     MinSize="Large">
                                 <ribbon:RibbonButton.LargeIcon>

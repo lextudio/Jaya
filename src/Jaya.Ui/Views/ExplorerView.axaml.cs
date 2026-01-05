@@ -37,6 +37,7 @@ namespace Jaya.Ui.Views
             this.InitializeComponent();
             this.AddHandler(KeyDownEvent, ExplorerView_KeyDown, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             this.AddHandler(Avalonia.Input.InputElement.PointerPressedEvent, ExplorerView_PointerPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+            this.AddHandler(ContextRequestedEvent, ExplorerView_ContextRequested, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             if (!Design.IsDesignMode)
             {
                 // Attach MenuItem click handlers to close context menus immediately when an item is clicked.
@@ -171,6 +172,26 @@ namespace Jaya.Ui.Views
                                 return;
 
                             ApplySelection(args.Paths);
+                            // After selecting items, if any selected model is in editing state,
+                            // attempt to focus its inline TextBox so user can start typing immediately.
+                            try
+                            {
+                                var vm = DataContext as ExplorerViewModel;
+                                if (vm != null && vm.Item?.Children != null)
+                                {
+                                    var editing = vm.Item.Children.FirstOrDefault(c => c.IsEditing);
+                                    if (editing != null)
+                                    {
+                                        // search visual tree for a TextBox whose DataContext matches the editing model
+                                        var tb = this.GetVisualDescendants().OfType<TextBox>().FirstOrDefault(textBox => ReferenceEquals(textBox.DataContext, editing));
+                                        if (tb != null)
+                                        {
+                                            try { tb.Focus(); } catch { }
+                                        }
+                                    }
+                                }
+                            }
+                            catch { }
                         }
                         catch { }
                     });
@@ -224,6 +245,13 @@ namespace Jaya.Ui.Views
         {
             try
             {
+                if (e == null)
+                    return;
+
+                var point = e.GetCurrentPoint(this);
+                if (point.Properties.IsLeftButtonPressed)
+                    CloseOpenContextMenus();
+
                 // If focus is inside an inline TextBox and the pointer press occurred outside
                 // of any TextBox within the items area, move focus to a safe focus target
                 // so the inline editor loses focus and commits/cancels via LostFocus.
@@ -257,6 +285,66 @@ namespace Jaya.Ui.Views
                         else focusTarget = this;
 
                         try { focusTarget?.Focus(); } catch { }
+                    }
+                }
+            }
+            catch { }
+        }
+
+        void ExplorerView_ContextRequested(object? sender, ContextRequestedEventArgs e)
+        {
+            try
+            {
+                if (e == null)
+                    return;
+
+                if (IsWithinItem(e.Source as Avalonia.Visual))
+                    return;
+
+                if (EmptySpaceMenu == null)
+                    return;
+
+                if (e.TryGetPosition(this, out var point))
+                {
+                    EmptySpaceMenu.PlacementTarget = this;
+                    EmptySpaceMenu.PlacementRect = new Avalonia.Rect(point, new Avalonia.Size(1, 1));
+                }
+
+                EmptySpaceMenu.Open(this);
+                e.Handled = true;
+            }
+            catch { }
+        }
+
+        static bool IsWithinItem(Avalonia.Visual? visual)
+        {
+            while (visual != null)
+            {
+                if (visual is DataGridRow || visual is ListBoxItem)
+                    return true;
+
+                visual = Avalonia.VisualTree.VisualExtensions.GetVisualParent(visual) as Avalonia.Visual;
+            }
+
+            return false;
+        }
+
+        void CloseOpenContextMenus()
+        {
+            try
+            {
+                if (ContextMenu is ContextMenu rootMenu && rootMenu.IsOpen)
+                {
+                    rootMenu.Close();
+                    return;
+                }
+
+                foreach (var control in this.GetVisualDescendants().OfType<Control>())
+                {
+                    if (control.ContextMenu is ContextMenu menu && menu.IsOpen)
+                    {
+                        menu.Close();
+                        break;
                     }
                 }
             }
