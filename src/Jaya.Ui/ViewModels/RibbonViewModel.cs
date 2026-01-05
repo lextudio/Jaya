@@ -17,6 +17,7 @@ namespace Jaya.Ui.ViewModels
         ICommand? _openWindow;
         ICommand? _toggleRibbon;
         ICommand? _openTerminal;
+        ICommand? _openVsCode;
 
         public RibbonViewModel()
         {
@@ -73,6 +74,17 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
+        public ICommand OpenVsCodeCommand
+        {
+            get
+            {
+                if (_openVsCode == null)
+                    _openVsCode = new RelayCommand(OpenVsCodeAction);
+
+                return _openVsCode!;
+            }
+        }
+
         void ToggleRibbonAction()
         {
             PaneConfig.IsRibbonCollapsed = !PaneConfig.IsRibbonCollapsed;
@@ -83,6 +95,15 @@ namespace Jaya.Ui.ViewModels
             try
             {
                 EventAggregator?.Publish(new OpenTerminalRequestedEventArgs());
+            }
+            catch { }
+        }
+
+        void OpenVsCodeAction()
+        {
+            try
+            {
+                EventAggregator?.Publish(new OpenVsCodeRequestedEventArgs());
             }
             catch { }
         }

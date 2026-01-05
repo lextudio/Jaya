@@ -16,6 +16,7 @@ namespace Jaya.Ui.ViewModels
         readonly SharedService? _shared;
         ICommand? _openWindow;
         ICommand? _openTerminal;
+        ICommand? _openVsCode;
 
         public ToolbarViewModel()
         {
@@ -63,11 +64,31 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
+        public ICommand OpenVsCodeCommand
+        {
+            get
+            {
+                if (_openVsCode == null)
+                    _openVsCode = new RelayCommand(OpenVsCodeAction);
+
+                return _openVsCode!;
+            }
+        }
+
         void OpenTerminalAction()
         {
             try
             {
                 EventAggregator?.Publish(new OpenTerminalRequestedEventArgs());
+            }
+            catch { }
+        }
+
+        void OpenVsCodeAction()
+        {
+            try
+            {
+                EventAggregator?.Publish(new OpenVsCodeRequestedEventArgs());
             }
             catch { }
         }

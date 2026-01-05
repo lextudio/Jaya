@@ -152,6 +152,9 @@
             <Button Command="{Binding OpenTerminalCommand}" ToolTip.Tip="Open Terminal Here">
                 <Image Source="{DynamicResource Icon.Terminal.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
+            <Button Command="{Binding OpenVsCodeCommand}" ToolTip.Tip="Open in VS Code">
+                <Image Source="{DynamicResource Icon.VSCode.Image}" Width="16" Height="16" Stretch="Uniform" />
+            </Button>
         </StackPanel>
 
         <StackPanel>

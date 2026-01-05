@@ -83,6 +83,11 @@
               <Image Source="{DynamicResource Icon.Terminal.Image}" Width="16" Height="16" />
             </MenuItem.Icon>
           </MenuItem>
+          <MenuItem Command="{Binding OpenVsCodeCommand}" Header="Open in VS Code">
+            <MenuItem.Icon>
+              <Image Source="{DynamicResource Icon.VSCode.Image}" Width="16" Height="16" />
+            </MenuItem.Icon>
+          </MenuItem>
         </ContextMenu>
       </Grid.ContextMenu>
 
@@ -141,11 +146,25 @@
                   Command="{Binding DataContext.RenameItemCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{Binding}"
                   Header="Rename">
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.Rename.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem
                   Command="{Binding DataContext.OpenTerminalCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{Binding}">
                   <MenuItem.Header>Open Terminal Here</MenuItem.Header>
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.Terminal.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem
+                  Command="{Binding DataContext.OpenVsCodeCommand, ElementName=ExplorerRoot}"
+                  CommandParameter="{Binding}">
+                  <MenuItem.Header>Open in VS Code</MenuItem.Header>
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.VSCode.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
                 </MenuItem>
                 <Separator />
                 <MenuItem
@@ -195,6 +214,9 @@
                   Command="{Binding DataContext.RenameItemCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{Binding}"
                   Header="Rename">
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.Rename.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
                 </MenuItem>
                 <Separator />
                 <MenuItem
@@ -223,6 +245,7 @@
             x:Name="DetailsDataGrid"
             IsVisible="{Binding PaneConfig.IsDetailsView, Mode=OneWay}"
             SelectionMode="Extended"
+            SelectedItem="{Binding SelectedExplorerItem, Mode=TwoWay}"
             input:DragDrop.AllowDrop="True">
             <DataGrid.ContextMenu>
               <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
@@ -316,6 +339,7 @@
           IsVisible="{Binding PaneConfig.IsThumbnailView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             input:DragDrop.AllowDrop="True"
+            SelectedItem="{Binding SelectedExplorerItem, Mode=TwoWay}"
             SelectionMode="Multiple">
             <ListBox.ContextMenu>
               <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
@@ -384,6 +408,7 @@
           IsVisible="{Binding PaneConfig.IsListView, Mode=OneWay}"
             ScrollViewer.VerticalScrollBarVisibility="Disabled"
             input:DragDrop.AllowDrop="True"
+            SelectedItem="{Binding SelectedExplorerItem, Mode=TwoWay}"
             SelectionMode="Multiple">
           <ListBox.ContextMenu>
             <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
@@ -452,6 +477,7 @@
           IsVisible="{Binding PaneConfig.IsTilesView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             input:DragDrop.AllowDrop="True"
+            SelectedItem="{Binding SelectedExplorerItem, Mode=TwoWay}"
             SelectionMode="Multiple">
           <ListBox.ContextMenu>
             <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
@@ -529,6 +555,7 @@
         IsVisible="{Binding PaneConfig.IsContentView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             input:DragDrop.AllowDrop="True"
+            SelectedItem="{Binding SelectedExplorerItem, Mode=TwoWay}"
             SelectionMode="Multiple">
         <ListBox.ContextMenu>
           <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">

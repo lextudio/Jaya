@@ -29,6 +29,7 @@ namespace Jaya.Ui.ViewModels
         readonly Subscription<SelectionChangedEventArgs>? _onSelectionChanged;
         readonly Subscription<NewFolderRequestedEventArgs>? _onNewFolder;
         readonly Subscription<OpenTerminalRequestedEventArgs>? _onOpenTerminalRequested;
+        readonly Subscription<OpenVsCodeRequestedEventArgs>? _onOpenVsCodeRequested;
         readonly SharedService? _shared;
         SelectionChangedEventArgs? _lastSelectionArgs;
 
@@ -41,6 +42,7 @@ namespace Jaya.Ui.ViewModels
         ICommand? _copyItems;
         ICommand? _pasteItems;
         ICommand? _openTerminalCommand;
+        ICommand? _openVsCodeCommand;
         ProviderServiceBase? _service;
         bool _applyOverwriteToAll = false;
         AccountModelBase? _account;
@@ -53,6 +55,7 @@ namespace Jaya.Ui.ViewModels
             _onSelectionChanged = EventAggregator?.Subscribe<SelectionChangedEventArgs>(SelectionChanged);
             _onNewFolder = EventAggregator?.Subscribe<NewFolderRequestedEventArgs>(NewFolderRequested);
             _onOpenTerminalRequested = EventAggregator?.Subscribe<OpenTerminalRequestedEventArgs>(OnOpenTerminalRequested);
+            _onOpenVsCodeRequested = EventAggregator?.Subscribe<OpenVsCodeRequestedEventArgs>(OnOpenVsCodeRequested);
             // If navigation service already has a selection (published before this VM subscribed), apply it now
             try
             {
@@ -79,6 +82,8 @@ namespace Jaya.Ui.ViewModels
                 EventAggregator?.UnSubscribe(_onNewFolder);
             if (_onOpenTerminalRequested != null)
                 EventAggregator?.UnSubscribe(_onOpenTerminalRequested);
+            if (_onOpenVsCodeRequested != null)
+                EventAggregator?.UnSubscribe(_onOpenVsCodeRequested);
             if (_shared?.ApplicationConfiguration != null)
                 _shared.ApplicationConfiguration.PropertyChanged -= ApplicationConfiguration_PropertyChanged;
         }
@@ -183,6 +188,16 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
+        public ICommand OpenVsCodeCommand
+        {
+            get
+            {
+                if (_openVsCodeCommand == null)
+                    _openVsCodeCommand = new RelayCommand<object?>(OpenVsCode);
+                return _openVsCodeCommand!;
+            }
+        }
+
         public bool CanPaste
         {
             get => Get<bool>(nameof(CanPaste));
@@ -217,6 +232,12 @@ namespace Jaya.Ui.ViewModels
         {
             get => Get<ExplorerItemModel?>();
             private set => Set(value);
+        }
+
+        public ExplorerItemModel? SelectedExplorerItem
+        {
+            get => Get<ExplorerItemModel?>();
+            set => Set(value);
         }
 
         #endregion
@@ -363,11 +384,12 @@ namespace Jaya.Ui.ViewModels
                 // If a specific item was provided via the context menu, use that;
                 // otherwise fall back to the current `Item` selection.
                 string targetPath = string.Empty;
-                if (parameter != null && parameter is ExplorerItemModel paramItem)
+                var paramItem = parameter as ExplorerItemModel ?? SelectedExplorerItem;
+                if (paramItem != null)
                 {
                     var obj = paramItem.Object as FileSystemObjectModel;
                     if (obj is FileModel pf)
-                        targetPath = System.IO.Path.GetDirectoryName(pf.Path) ?? pf.Path ?? string.Empty;
+                        targetPath = pf.Path ?? string.Empty;
                     else if (obj is DirectoryModel pd)
                         targetPath = pd.Path ?? string.Empty;
                 }
@@ -379,7 +401,7 @@ namespace Jaya.Ui.ViewModels
                     {
                         if (fsObj is FileModel fileModel)
                         {
-                            try { targetPath = System.IO.Path.GetDirectoryName(fileModel.Path) ?? fileModel.Path; } catch { targetPath = fileModel.Path ?? string.Empty; }
+                            targetPath = fileModel.Path ?? string.Empty;
                         }
                         else if (fsObj is DirectoryModel dirModel2)
                         {
@@ -485,6 +507,65 @@ namespace Jaya.Ui.ViewModels
             {
                 FileSystemLogger.Error(ex, "Failed to open terminal");
             }
+        }
+
+        void OpenVsCode(object? parameter)
+        {
+            try
+            {
+                string targetPath = string.Empty;
+                var paramItem = parameter as ExplorerItemModel ?? SelectedExplorerItem;
+                if (paramItem != null)
+                {
+                    var obj = paramItem.Object as FileSystemObjectModel;
+                    if (obj is FileModel pf)
+                        targetPath = System.IO.Path.GetDirectoryName(pf.Path) ?? pf.Path ?? string.Empty;
+                    else if (obj is DirectoryModel pd)
+                        targetPath = pd.Path ?? string.Empty;
+                }
+
+                if (string.IsNullOrWhiteSpace(targetPath))
+                {
+                    var fsObj = Item?.Object as FileSystemObjectModel;
+                    if (fsObj != null)
+                    {
+                        if (fsObj is FileModel fileModel)
+                        {
+                            try { targetPath = System.IO.Path.GetDirectoryName(fileModel.Path) ?? fileModel.Path; } catch { targetPath = fileModel.Path ?? string.Empty; }
+                        }
+                        else if (fsObj is DirectoryModel dirModel2)
+                        {
+                            targetPath = dirModel2.Path ?? string.Empty;
+                        }
+                    }
+                    else
+                    {
+                        var dirModel = Item?.Object as DirectoryModel;
+                        targetPath = dirModel?.Path ?? string.Empty;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(targetPath))
+                    return;
+
+                FileSystemLogger.Information("OpenVsCode requested: target={TargetPath}", targetPath);
+
+                var cmd = new Jaya.Ui.Commands.OpenVsCodeCommand();
+                cmd.Execute(targetPath);
+            }
+            catch (Exception ex)
+            {
+                FileSystemLogger.Error(ex, "Failed to open VS Code");
+            }
+        }
+
+        void OnOpenVsCodeRequested(OpenVsCodeRequestedEventArgs args)
+        {
+            try
+            {
+                OpenVsCode(SelectedExplorerItem);
+            }
+            catch { }
         }
 
         async void CommitRename(ExplorerItemModel? item)
