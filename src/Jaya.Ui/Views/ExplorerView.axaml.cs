@@ -22,12 +22,15 @@ using Jaya.Shared.Services;
 using Avalonia.Threading;
 using Serilog;
 using Avalonia.Input;
+using System.Text.Json;
 
 namespace Jaya.Ui.Views
 {
     public partial class ExplorerView : UserControl
     {
         static readonly ILogger Logger = Log.ForContext(typeof(ExplorerView)).ForContext("SourceContext", "Views");
+        static readonly DataFormat<byte[]> JayaPathsFormat = DataFormat.CreateBytesApplicationFormat("Jaya.Paths");
+
         Subscription<OpenRequestedEventArgs>? _openRequested;
         Subscription<CutRequestedEventArgs>? _cutRequested;
         Subscription<CopyRequestedEventArgs>? _copyRequested;
@@ -118,16 +121,16 @@ namespace Jaya.Ui.Views
                                 catch { }
                             };
                             Logger.Debug("Drag-drop handlers attached successfully (Tunnel + Bubble)");
-                           
-                                try
+
+                            try
+                            {
+                                if (OperatingSystem.IsMacOS())
                                 {
-                                    if (OperatingSystem.IsMacOS())
-                                    {
-                                        var col = dataGrid.Columns.FirstOrDefault(c => (c as Avalonia.Controls.DataGridTextColumn)?.Binding?.ToString()?.Contains("Object.Type") == true || string.Equals(c.Header?.ToString(), "Type", StringComparison.OrdinalIgnoreCase));
-                                        if (col != null)
-                                            col.Header = "Kind";
-                                    }
+                                    var col = dataGrid.Columns.FirstOrDefault(c => (c as Avalonia.Controls.DataGridTextColumn)?.Binding?.ToString()?.Contains("Object.Type") == true || string.Equals(c.Header?.ToString(), "Type", StringComparison.OrdinalIgnoreCase));
+                                    if (col != null)
+                                        col.Header = "Kind";
                                 }
+                            }
                             catch { }
                         }
                     }
@@ -137,189 +140,189 @@ namespace Jaya.Ui.Views
                 if (eventAggregator != null)
                 {
                     _openRequested = eventAggregator.Subscribe<OpenRequestedEventArgs>(args =>
-                {
-                    // Attempt to open the selected item(s) by invoking ViewModel command on UI thread
-                    Dispatcher.UIThread.Post(() =>
                     {
-                        try
+                        // Attempt to open the selected item(s) by invoking ViewModel command on UI thread
+                        Dispatcher.UIThread.Post(() =>
                         {
-                            var vm = DataContext as ExplorerViewModel;
-                            if (vm == null)
-                                return;
-
-                            // Prefer selected item from details grid, then listboxes
-                            var selected = DetailsDataGrid?.SelectedItem as Models.ExplorerItemModel
-                                           ?? ListListBox?.SelectedItem as Models.ExplorerItemModel
-                                           ?? IconsListBox?.SelectedItem as Models.ExplorerItemModel
-                                           ?? TilesListBox?.SelectedItem as Models.ExplorerItemModel
-                                           ?? ContentListBox?.SelectedItem as Models.ExplorerItemModel;
-
-                            if (selected != null && vm?.InvokeObjectCommand != null)
-                                vm.InvokeObjectCommand.Execute(selected);
-                        }
-                        catch { }
-                    });
-                });
-                    _cutRequested = eventAggregator.Subscribe<CutRequestedEventArgs>(args =>
-                {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        try
-                        {
-                            var vm = DataContext as ExplorerViewModel;
-                            if (vm == null)
-                                return;
-
-                            var selectedItems = GetSelectedItems();
-                            if (selectedItems.Count > 0 && vm?.CutItemsCommand != null)
-                                vm.CutItemsCommand.Execute(selectedItems);
-                        }
-                        catch { }
-                    });
-                });
-                    _copyRequested = eventAggregator.Subscribe<CopyRequestedEventArgs>(args =>
-                {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        try
-                        {
-                            var vm = DataContext as ExplorerViewModel;
-                            if (vm == null)
-                                return;
-
-                            var selectedItems = GetSelectedItems();
-                            if (selectedItems.Count > 0 && vm?.CopyItemsCommand != null)
-                                vm.CopyItemsCommand.Execute(selectedItems);
-                        }
-                        catch { }
-                    });
-                });
-                    _pasteRequested = eventAggregator.Subscribe<PasteRequestedEventArgs>(args =>
-                {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        try
-                        {
-                            var vm = DataContext as ExplorerViewModel;
-                            if (vm == null)
-                                return;
-
-                            if (vm?.PasteItemsCommand != null)
-                                vm.PasteItemsCommand.Execute(null);
-                        }
-                        catch { }
-                    });
-                });
-                    _deleteRequested = eventAggregator.Subscribe<DeleteRequestedEventArgs>(args =>
-                {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        try
-                        {
-                            var vm = DataContext as ExplorerViewModel;
-                            if (vm == null)
-                            {
-                                Logger.Debug("DeleteRequested ignored: ExplorerView DataContext not ready.");
-                                return;
-                            }
-
-                            var details = DetailsDataGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
-                            var list = ListListBox ?? this.FindControl<ListBox>("ListListBox");
-                            var icons = IconsListBox ?? this.FindControl<ListBox>("IconsListBox");
-                            var tiles = TilesListBox ?? this.FindControl<ListBox>("TilesListBox");
-                            var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
-
-                            Logger.Debug("DeleteRequested received. View visible: Details={Details} List={List} Icons={Icons} Tiles={Tiles} Content={Content}",
-                                details?.IsVisible,
-                                list?.IsVisible,
-                                icons?.IsVisible,
-                                tiles?.IsVisible,
-                                content?.IsVisible);
-
-                            var selectedItems = GetSelectedItems();
-                            Logger.Debug("DeleteRequested selection count={Count} items={Items}",
-                                selectedItems.Count,
-                                DescribeSelection(selectedItems));
-                            if (selectedItems.Count > 0 && vm?.DeleteItemsCommand != null)
-                                vm.DeleteItemsCommand.Execute(selectedItems);
-                        }
-                        catch { }
-                    });
-                });
-                _selectItemsRequested = eventAggregator.Subscribe<SelectItemsRequestedEventArgs>(args =>
-                {
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        try
-                        {
-                            if (args == null || args.Paths == null || args.Paths.Count == 0)
-                                return;
-
-                            ApplySelection(args.Paths);
-                            // After selecting items, if any selected model is in editing state,
-                            // attempt to focus its inline TextBox so user can start typing immediately.
                             try
                             {
                                 var vm = DataContext as ExplorerViewModel;
-                                if (vm != null && vm.Item?.Children != null)
+                                if (vm == null)
+                                    return;
+
+                                // Prefer selected item from details grid, then listboxes
+                                var selected = DetailsDataGrid?.SelectedItem as Models.ExplorerItemModel
+                                               ?? ListListBox?.SelectedItem as Models.ExplorerItemModel
+                                               ?? IconsListBox?.SelectedItem as Models.ExplorerItemModel
+                                               ?? TilesListBox?.SelectedItem as Models.ExplorerItemModel
+                                               ?? ContentListBox?.SelectedItem as Models.ExplorerItemModel;
+
+                                if (selected != null && vm?.InvokeObjectCommand != null)
+                                    vm.InvokeObjectCommand.Execute(selected);
+                            }
+                            catch { }
+                        });
+                    });
+                    _cutRequested = eventAggregator.Subscribe<CutRequestedEventArgs>(args =>
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            try
+                            {
+                                var vm = DataContext as ExplorerViewModel;
+                                if (vm == null)
+                                    return;
+
+                                var selectedItems = GetSelectedItems();
+                                if (selectedItems.Count > 0 && vm?.CutItemsCommand != null)
+                                    vm.CutItemsCommand.Execute(selectedItems);
+                            }
+                            catch { }
+                        });
+                    });
+                    _copyRequested = eventAggregator.Subscribe<CopyRequestedEventArgs>(args =>
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            try
+                            {
+                                var vm = DataContext as ExplorerViewModel;
+                                if (vm == null)
+                                    return;
+
+                                var selectedItems = GetSelectedItems();
+                                if (selectedItems.Count > 0 && vm?.CopyItemsCommand != null)
+                                    vm.CopyItemsCommand.Execute(selectedItems);
+                            }
+                            catch { }
+                        });
+                    });
+                    _pasteRequested = eventAggregator.Subscribe<PasteRequestedEventArgs>(args =>
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            try
+                            {
+                                var vm = DataContext as ExplorerViewModel;
+                                if (vm == null)
+                                    return;
+
+                                if (vm?.PasteItemsCommand != null)
+                                    vm.PasteItemsCommand.Execute(null);
+                            }
+                            catch { }
+                        });
+                    });
+                    _deleteRequested = eventAggregator.Subscribe<DeleteRequestedEventArgs>(args =>
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            try
+                            {
+                                var vm = DataContext as ExplorerViewModel;
+                                if (vm == null)
                                 {
-                                    var editing = vm.Item.Children.FirstOrDefault(c => c.IsEditing);
-                                    if (editing != null)
+                                    Logger.Debug("DeleteRequested ignored: ExplorerView DataContext not ready.");
+                                    return;
+                                }
+
+                                var details = DetailsDataGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
+                                var list = ListListBox ?? this.FindControl<ListBox>("ListListBox");
+                                var icons = IconsListBox ?? this.FindControl<ListBox>("IconsListBox");
+                                var tiles = TilesListBox ?? this.FindControl<ListBox>("TilesListBox");
+                                var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
+
+                                Logger.Debug("DeleteRequested received. View visible: Details={Details} List={List} Icons={Icons} Tiles={Tiles} Content={Content}",
+                                    details?.IsVisible,
+                                    list?.IsVisible,
+                                    icons?.IsVisible,
+                                    tiles?.IsVisible,
+                                    content?.IsVisible);
+
+                                var selectedItems = GetSelectedItems();
+                                Logger.Debug("DeleteRequested selection count={Count} items={Items}",
+                                    selectedItems.Count,
+                                    DescribeSelection(selectedItems));
+                                if (selectedItems.Count > 0 && vm?.DeleteItemsCommand != null)
+                                    vm.DeleteItemsCommand.Execute(selectedItems);
+                            }
+                            catch { }
+                        });
+                    });
+                    _selectItemsRequested = eventAggregator.Subscribe<SelectItemsRequestedEventArgs>(args =>
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            try
+                            {
+                                if (args == null || args.Paths == null || args.Paths.Count == 0)
+                                    return;
+
+                                ApplySelection(args.Paths);
+                                // After selecting items, if any selected model is in editing state,
+                                // attempt to focus its inline TextBox so user can start typing immediately.
+                                try
+                                {
+                                    var vm = DataContext as ExplorerViewModel;
+                                    if (vm != null && vm.Item?.Children != null)
                                     {
-                                        // search visual tree for a TextBox whose DataContext matches the editing model
-                                        var tb = this.GetVisualDescendants().OfType<TextBox>().FirstOrDefault(textBox => ReferenceEquals(textBox.DataContext, editing));
-                                        if (tb != null)
+                                        var editing = vm.Item.Children.FirstOrDefault(c => c.IsEditing);
+                                        if (editing != null)
                                         {
-                                            try { tb.Focus(); } catch { }
+                                            // search visual tree for a TextBox whose DataContext matches the editing model
+                                            var tb = this.GetVisualDescendants().OfType<TextBox>().FirstOrDefault(textBox => ReferenceEquals(textBox.DataContext, editing));
+                                            if (tb != null)
+                                            {
+                                                try { tb.Focus(); } catch { }
+                                            }
                                         }
                                     }
                                 }
+                                catch { }
                             }
                             catch { }
-                        }
-                        catch { }
+                        });
                     });
-                });
 
-                // Register top-level selection commands so they fire regardless of SelectItemsRequested
-                _selectAllRequested = eventAggregator.Subscribe<SelectAllRequestedEventArgs>(args =>
-                {
-                    Dispatcher.UIThread.Post(() =>
+                    // Register top-level selection commands so they fire regardless of SelectItemsRequested
+                    _selectAllRequested = eventAggregator.Subscribe<SelectAllRequestedEventArgs>(args =>
                     {
-                        try
+                        Dispatcher.UIThread.Post(() =>
                         {
-                            Logger.Debug("SelectAllRequestedEventArgs received");
-                            PerformSelectAll();
-                        }
-                        catch (Exception ex) { Logger.Warning(ex, "PerformSelectAll failed"); }
+                            try
+                            {
+                                Logger.Debug("SelectAllRequestedEventArgs received");
+                                PerformSelectAll();
+                            }
+                            catch (Exception ex) { Logger.Warning(ex, "PerformSelectAll failed"); }
+                        });
                     });
-                });
 
-                _selectNoneRequested = eventAggregator.Subscribe<SelectNoneRequestedEventArgs>(args =>
-                {
-                    Dispatcher.UIThread.Post(() =>
+                    _selectNoneRequested = eventAggregator.Subscribe<SelectNoneRequestedEventArgs>(args =>
                     {
-                        try
+                        Dispatcher.UIThread.Post(() =>
                         {
-                            Logger.Debug("SelectNoneRequestedEventArgs received");
-                            PerformSelectNone();
-                        }
-                        catch (Exception ex) { Logger.Warning(ex, "PerformSelectNone failed"); }
+                            try
+                            {
+                                Logger.Debug("SelectNoneRequestedEventArgs received");
+                                PerformSelectNone();
+                            }
+                            catch (Exception ex) { Logger.Warning(ex, "PerformSelectNone failed"); }
+                        });
                     });
-                });
 
-                _invertSelectionRequested = eventAggregator.Subscribe<InvertSelectionRequestedEventArgs>(args =>
-                {
-                    Dispatcher.UIThread.Post(() =>
+                    _invertSelectionRequested = eventAggregator.Subscribe<InvertSelectionRequestedEventArgs>(args =>
                     {
-                        try
+                        Dispatcher.UIThread.Post(() =>
                         {
-                            Logger.Debug("InvertSelectionRequestedEventArgs received");
-                            PerformInvertSelection();
-                        }
-                        catch (Exception ex) { Logger.Warning(ex, "PerformInvertSelection failed"); }
+                            try
+                            {
+                                Logger.Debug("InvertSelectionRequestedEventArgs received");
+                                PerformInvertSelection();
+                            }
+                            catch (Exception ex) { Logger.Warning(ex, "PerformInvertSelection failed"); }
+                        });
                     });
-                });
 
                     DetachedFromVisualTree += ExplorerView_DetachedFromVisualTree;
                 }
@@ -701,7 +704,7 @@ namespace Jaya.Ui.Views
                     StartDragOperation();
                 }
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 Logger.Error(ex, "Error in Root_PointerMoved");
             }
@@ -743,15 +746,21 @@ namespace Jaya.Ui.Views
                 }
 
                 Logger.Debug("StartDragOperation: initiating drag with {Count} paths", paths.Length);
-                #pragma warning disable CS0618
-                var data = new Avalonia.Input.DataObject();
-                data.Set("Jaya.Paths", paths);
 
-                if (_dragStartArgs != null)
-                    await DragDrop.DoDragDrop(_dragStartArgs, data, DragDropEffects.Move | DragDropEffects.Copy);
-                else
-                    await DragDrop.DoDragDrop((Avalonia.Input.PointerEventArgs)null!, data, DragDropEffects.Move | DragDropEffects.Copy);
-                #pragma warning restore CS0618
+                if (_dragStartArgs == null)
+                {
+                    Logger.Debug("StartDragOperation: missing drag start args");
+                    return;
+                }
+
+                // New drag & drop API: IDataTransfer/DataTransfer + DataTransferItem
+                // Serialize paths to bytes for a stable payload.
+                var payload = JsonSerializer.SerializeToUtf8Bytes(paths);
+                var dataTransfer = new DataTransfer();
+                dataTransfer.Add(DataTransferItem.Create(JayaPathsFormat, payload));
+
+                await DragDrop.DoDragDropAsync(_dragStartArgs, dataTransfer, DragDropEffects.Move | DragDropEffects.Copy);
+
                 Logger.Debug("StartDragOperation: drag operation completed");
             }
             catch (Exception ex)
@@ -840,9 +849,9 @@ namespace Jaya.Ui.Views
         {
             try
             {
-                // Accept if our data object contains Jaya.Paths
-                #pragma warning disable CS0618
-                if (e.Data != null && e.Data.Contains("Jaya.Paths"))
+                // New drag & drop API: use DataTransfer
+                var dt = e.DataTransfer;
+                if (dt != null && dt.Contains(JayaPathsFormat))
                 {
                     if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
                         e.DragEffects = DragDropEffects.Copy;
@@ -856,7 +865,7 @@ namespace Jaya.Ui.Views
                     Logger.Debug("DragOver rejected: no Jaya.Paths in data");
                 }
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 Logger.Error(ex, "Error in Root_DragOver");
             }
@@ -885,15 +894,17 @@ namespace Jaya.Ui.Views
             Logger.Debug("ProcessDropAsync: entry point reached");
             try
             {
-                #pragma warning disable CS0618
-                if (e.Data == null || !e.Data.Contains("Jaya.Paths"))
+                var dt = e.DataTransfer;
+                if (dt == null || !dt.Contains(JayaPathsFormat))
                 {
                     Logger.Debug("Drop rejected: no Jaya.Paths in data");
                     return;
                 }
-                var obj = e.Data.Get("Jaya.Paths") as string[];
-                #pragma warning restore CS0618
-                if (obj == null || obj.Length == 0)
+
+                var payload = dt.TryGetValue(JayaPathsFormat);
+                var obj = payload != null ? (JsonSerializer.Deserialize<string[]>(payload) ?? Array.Empty<string>()) : Array.Empty<string>();
+
+                if (obj.Length == 0)
                 {
                     Logger.Debug("Drop rejected: empty paths");
                     return;
@@ -970,7 +981,7 @@ namespace Jaya.Ui.Views
             }
             catch { }
         }
-        
+
         static Models.ExplorerItemModel? FindExplorerItemModel(Avalonia.Visual? visual)
         {
             var depth = 0;
@@ -1307,7 +1318,7 @@ namespace Jaya.Ui.Views
                 if (lb.SelectedItems != null)
                 {
                     var sidx = 0;
-                        foreach (var sit in (lb.SelectedItems ?? Array.Empty<object>()).Cast<object?>().Take(5))
+                    foreach (var sit in (lb.SelectedItems ?? Array.Empty<object>()).Cast<object?>().Take(5))
                     {
                         if (sit is Models.ExplorerItemModel sem)
                         {
