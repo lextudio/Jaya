@@ -27,6 +27,29 @@
       </ControlTemplate>
     </Setter>
   </Style>
+  <Style Selector="ListBox.locations">
+    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Padding" Value="0" />
+  </Style>
+  <Style Selector="ListBox.locations ListBoxItem">
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Margin" Value="0" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Border Name="PART_Border" Background="Transparent" Padding="4">
+          <ContentPresenter />
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="ListBox.locations ListBoxItem:pointerover /template/ Border#PART_Border">
+    <Setter Property="Background" Value="{DynamicResource NavigationPane.ItemHoverBrush}" />
+  </Style>
+  <Style Selector="ListBox.locations ListBoxItem:selected /template/ Border#PART_Border">
+    <Setter Property="Background" Value="{DynamicResource NavigationPane.ItemSelectedBrush}" />
+  </Style>
   <Style Selector="TreeViewItem">
     <Style.Resources>
       <converters:MarginMultiplierConverter Indent="8" Left="True" x:Key="LeftMarginConverter" />

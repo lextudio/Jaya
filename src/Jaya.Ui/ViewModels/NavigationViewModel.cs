@@ -22,9 +22,12 @@ namespace Jaya.Ui.ViewModels
         readonly Subscription<SelectionChangedEventArgs>? _onSelectionChanged;
         static readonly ILogger Logger = Log.ForContext<NavigationViewModel>();
         ICommand? _populateCommand;
+        ICommand? _selectLocationCommand;
         TreeNodeModel? _selectedNode;
         bool _suppressPublish;
         ObservableCollection<TreeNodeModel>? _favorites = new();
+            ObservableCollection<LocationItemViewModel>? _locations = new();
+            LocationItemViewModel? _selectedLocation;
 
         public NavigationViewModel()
         {
@@ -32,6 +35,7 @@ namespace Jaya.Ui.ViewModels
 
             Node = new TreeNodeModel(null, null, null);
             Favorites = _favorites;
+            Locations = _locations;
             if (!IsDesignMode)
                 PopulateCommand?.Execute(Node);
 
@@ -53,6 +57,22 @@ namespace Jaya.Ui.ViewModels
             {
                 _populateCommand ??= new RelayCommand<TreeNodeModel>(PopulateAction);
                 return _populateCommand!;
+            }
+        }
+
+        public ICommand SelectLocationCommand
+        {
+            get
+            {
+                _selectLocationCommand ??= new RelayCommand<LocationItemViewModel>(loc =>
+                {
+                    try
+                    {
+                        SelectedLocation = loc;
+                    }
+                    catch { }
+                });
+                return _selectLocationCommand!;
             }
         }
 
@@ -97,6 +117,38 @@ namespace Jaya.Ui.ViewModels
         {
             get => _favorites ?? (_favorites = new ObservableCollection<TreeNodeModel>());
             private set => Set(ref _favorites, value ?? new ObservableCollection<TreeNodeModel>());
+        }
+
+        public ObservableCollection<LocationItemViewModel> Locations
+        {
+            get => _locations ?? (_locations = new ObservableCollection<LocationItemViewModel>());
+            private set => Set(ref _locations, value ?? new ObservableCollection<LocationItemViewModel>());
+        }
+
+        public LocationItemViewModel? SelectedLocation
+        {
+            get => _selectedLocation;
+            set
+            {
+                if (ReferenceEquals(_selectedLocation, value))
+                    return;
+
+                _selectedLocation = value;
+                RaisePropertyChanged(nameof(SelectedLocation));
+
+                if (_selectedLocation == null)
+                    return;
+
+                if (_suppressPublish)
+                {
+                    Logger.Debug("Suppressed publish for programmatic SelectedLocation change.");
+                    return;
+                }
+
+                // Publish selection to navigate to the chosen location
+                var args = new SelectionChangedEventArgs(_selectedLocation.Service, _selectedLocation.Account, _selectedLocation.Directory);
+                EventAggregator?.Publish(args);
+            }
         }
 
         #endregion
@@ -191,6 +243,9 @@ namespace Jaya.Ui.ViewModels
 
                     var favoritesLocal = new List<TreeNodeModel>();
 
+                    // Populate Locations (Home, Downloads, Trash)
+                    var locationsLocal = new List<LocationItemViewModel>();
+
                     // Home directory entry
                     var homePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
                     var homeDir = new DirectoryModel { Path = homePath, Name = homePath };
@@ -216,6 +271,17 @@ namespace Jaya.Ui.ViewModels
 
                     favoritesLocal.Add(homeNode);
 
+                    // Add locations Home
+                    var homeLocation = new LocationItemViewModel
+                    {
+                        Label = Environment.UserName,
+                        Directory = homeDir,
+                        Service = fileService,
+                        Account = fileAccount,
+                        ImageResourceKey = "Icon.Folder.Image"
+                    };
+                    locationsLocal.Add(homeLocation);
+
                     // Downloads entry
                     try
                     {
@@ -240,6 +306,36 @@ namespace Jaya.Ui.ViewModels
                             };
                         }
                         favoritesLocal.Add(downloadsNode);
+
+                        var downloadsLocation = new LocationItemViewModel
+                        {
+                            Label = "Downloads",
+                            Directory = downloadsDir,
+                            Service = fileService,
+                            Account = fileAccount,
+                            ImageResourceKey = "Icon.NewFolder.Image"
+                        };
+                        locationsLocal.Add(downloadsLocation);
+                    }
+                    catch { }
+
+                    // Trash entry (platform specific)
+                    try
+                    {
+                        var trashPath = GetTrashPath();
+                        if (!string.IsNullOrEmpty(trashPath))
+                        {
+                            var trashDir = new DirectoryModel { Path = trashPath, Name = trashPath };
+                            var trashLocation = new LocationItemViewModel
+                            {
+                                Label = "Trash",
+                                Directory = trashDir,
+                                Service = fileService,
+                                Account = fileAccount,
+                                ImageResourceKey = "Icon.Delete.Image"
+                            };
+                            locationsLocal.Add(trashLocation);
+                        }
                     }
                     catch { }
 
@@ -253,8 +349,26 @@ namespace Jaya.Ui.ViewModels
                                 Favorites.Add(f);
                         }
 
-                        // Set initial selection to Home so app opens there — publish selection so Explorer loads it
+                        // Populate Locations collection and set initial selection to Home
+                        Locations.Clear();
+                        foreach (var l in locationsLocal)
+                            Locations.Add(l);
+
+                        // Diagnostic logging: list the locations we populated (Label, Path, ImageResourceKey)
+                        try
+                        {
+                            foreach (var loc in locationsLocal)
+                            {
+                                Logger.Information("Location populated: Label={Label}, Path={Path}, ImageResourceKey={Key}",
+                                    loc.Label ?? string.Empty,
+                                    loc.Directory?.Path ?? string.Empty,
+                                    loc.ImageResourceKey ?? string.Empty);
+                            }
+                        }
+                        catch { }
+
                         try { SelectedNode = homeNode; } catch { }
+                        try { SelectedLocation = Locations.FirstOrDefault(); } catch { }
                     });
                 }
                 catch (Exception ex)
@@ -397,12 +511,57 @@ namespace Jaya.Ui.ViewModels
                 {
                     _suppressPublish = false;
                 }
+                // Also update location selection if the selected directory matches a known location
+                try { UpdateLocationSelection(args); } catch { }
             }
             else
             {
                 Logger.Debug("OnExternalSelectionChanged: matching navigation node not found for Service={Service}, Account={Account}, Directory={Directory}",
                     args.Service?.Name, args.Account?.Name, args.Directory?.Path ?? args.Directory?.Name);
             }
+        }
+
+        void UpdateLocationSelection(SelectionChangedEventArgs args)
+        {
+            if (args == null)
+                return;
+
+            try
+            {
+                _suppressPublish = true;
+                // Find location with matching path
+                foreach (var loc in Locations)
+                {
+                    if (loc.Directory != null && args.Directory != null && string.Equals(loc.Directory.Path, args.Directory.Path, StringComparison.OrdinalIgnoreCase))
+                        SelectedLocation = loc;
+                }
+            }
+            finally
+            {
+                _suppressPublish = false;
+            }
+        }
+
+        string? GetTrashPath()
+        {
+            // macOS: ~/.Trash
+            try
+            {
+                if (Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix)
+                {
+                    var home = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+                    var trash = System.IO.Path.Combine(home, ".Trash");
+                    return trash;
+                }
+                else if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    // Windows Recycle Bin is not a simple path; return empty and disable Trash entry on Windows for now
+                    return string.Empty;
+                }
+            }
+            catch { }
+
+            return string.Empty;
         }
 
         TreeNodeModel? FindNodeForSelection(TreeNodeModel root, ProviderServiceBase? service, AccountModelBase? account, DirectoryModel? directory)
