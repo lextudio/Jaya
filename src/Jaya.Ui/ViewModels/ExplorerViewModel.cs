@@ -557,10 +557,7 @@ namespace Jaya.Ui.ViewModels
                 if (paramItem != null)
                 {
                     var obj = paramItem.Object as FileSystemObjectModel;
-                    if (obj is FileModel pf)
-                        targetPath = System.IO.Path.GetDirectoryName(pf.Path) ?? pf.Path ?? string.Empty;
-                    else if (obj is DirectoryModel pd)
-                        targetPath = pd.Path ?? string.Empty;
+                    targetPath = obj?.Path ?? string.Empty;
                 }
 
                 if (string.IsNullOrWhiteSpace(targetPath))
@@ -568,14 +565,7 @@ namespace Jaya.Ui.ViewModels
                     var fsObj = Item?.Object as FileSystemObjectModel;
                     if (fsObj != null)
                     {
-                        if (fsObj is FileModel fileModel)
-                        {
-                            try { targetPath = System.IO.Path.GetDirectoryName(fileModel.Path) ?? fileModel.Path; } catch { targetPath = fileModel.Path ?? string.Empty; }
-                        }
-                        else if (fsObj is DirectoryModel dirModel2)
-                        {
-                            targetPath = dirModel2.Path ?? string.Empty;
-                        }
+                        targetPath = fsObj.Path ?? string.Empty;
                     }
                     else
                     {
