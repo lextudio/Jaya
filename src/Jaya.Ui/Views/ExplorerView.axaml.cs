@@ -12,8 +12,10 @@ using Jaya.Shared.Base;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Diagnostics;
+using System.Reflection;
 using Jaya.Ui.ViewModels;
 using Jaya.Shared;
 using Jaya.Shared.Services;
@@ -25,7 +27,7 @@ namespace Jaya.Ui.Views
 {
     public partial class ExplorerView : UserControl
     {
-        static readonly ILogger Logger = Log.ForContext<ExplorerView>();
+        static readonly ILogger Logger = Log.ForContext(typeof(ExplorerView)).ForContext("SourceContext", "Views");
         Subscription<OpenRequestedEventArgs>? _openRequested;
         Subscription<CutRequestedEventArgs>? _cutRequested;
         Subscription<CopyRequestedEventArgs>? _copyRequested;
@@ -34,6 +36,10 @@ namespace Jaya.Ui.Views
         Subscription<SelectItemsRequestedEventArgs>? _selectItemsRequested;
         Avalonia.Input.PointerPressedEventArgs? _dragStartArgs;
         bool _isDragging;
+        ExplorerViewModel? _viewModel;
+        PropertyChangedEventHandler? _viewModelPropertyChanged;
+        DataGrid? _detailsGrid;
+        EventHandler<AvaloniaPropertyChangedEventArgs>? _detailsGridPropertyChanged;
 
         public ExplorerView()
         {
@@ -46,6 +52,7 @@ namespace Jaya.Ui.Views
             this.AddHandler(Avalonia.Input.InputElement.PointerReleasedEvent, Root_PointerReleased, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             this.AddHandler(DragDrop.DragOverEvent, Root_DragOver, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             this.AddHandler(DragDrop.DropEvent, Root_Drop, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+            AttachViewModel(this.DataContext as ExplorerViewModel);
             if (!Design.IsDesignMode)
             {
                 // Attach MenuItem click handlers to close context menus immediately when an item is clicked.
@@ -59,6 +66,7 @@ namespace Jaya.Ui.Views
                         if (dataGrid != null)
                         {
                             Logger.Debug("Attaching drag-drop handlers to DetailsDataGrid");
+                            AttachDetailsGrid(dataGrid);
                             // Try both strategies: Tunnel (from top down) and Bubble (from bottom up)
                             dataGrid.AddHandler(DragDrop.DragOverEvent, DetailsDataGrid_DragOver, Avalonia.Interactivity.RoutingStrategies.Tunnel);
                             dataGrid.AddHandler(DragDrop.DropEvent, DetailsDataGrid_Drop, Avalonia.Interactivity.RoutingStrategies.Tunnel);
@@ -75,29 +83,34 @@ namespace Jaya.Ui.Views
                                     if (vm == null)
                                         return;
 
-                                    // Try to detect the sorted column via reflection: look for a property named 'SortDirection' on columns
-                                    foreach (var col in dataGrid.Columns)
+                                    var columnArgs = ee as Avalonia.Controls.DataGridColumnEventArgs;
+                                    var sortedColumn = columnArgs?.Column;
+                                    if (sortedColumn == null)
+                                        return;
+
+                                    var sortMember = sortedColumn.SortMemberPath ?? sortedColumn.Header?.ToString() ?? string.Empty;
+                                    if (string.IsNullOrWhiteSpace(sortMember))
+                                        return;
+
+                                    Dispatcher.UIThread.Post(() =>
                                     {
                                         try
                                         {
-                                            var prop = col.GetType().GetProperty("SortDirection");
-                                            if (prop != null)
+                                            if (!TryGetSortAscending(sortedColumn, out var asc))
+                                                return;
+
+                                            var currentDir = vm.Item?.Object as Jaya.Shared.Models.DirectoryModel;
+                                            if (currentDir != null)
                                             {
-                                                var val = prop.GetValue(col);
-                                                if (val != null)
-                                                {
-                                                    // Found sorted column
-                                                    var sortMember = (col as Avalonia.Controls.DataGridColumn)?.SortMemberPath ?? col.Header?.ToString() ?? string.Empty;
-                                                    var asc = val.ToString()?.IndexOf("Asc", StringComparison.OrdinalIgnoreCase) >= 0;
-                                                    var currentDir = vm.Item?.Object as Jaya.Shared.Models.DirectoryModel;
-                                                    if (currentDir != null && !string.IsNullOrWhiteSpace(sortMember))
-                                                        vm.SaveDirectorySort(currentDir.Path, sortMember, asc);
-                                                    break;
-                                                }
+                                                vm.SaveDirectorySort(currentDir.Path, sortMember, asc);
+                                                Logger.Information("Details sort changed: Path={Path} Member={Member} Ascending={Ascending}",
+                                                    currentDir.Path,
+                                                    sortMember,
+                                                    asc);
                                             }
                                         }
                                         catch { }
-                                    }
+                                    });
                                 }
                                 catch { }
                             };
@@ -112,7 +125,7 @@ namespace Jaya.Ui.Views
                                             col.Header = "Kind";
                                     }
                                 }
-                                catch { }
+                            catch { }
                         }
                     }
                     catch { }
@@ -272,55 +285,7 @@ namespace Jaya.Ui.Views
                 {
                     try
                     {
-                        var vm = this.DataContext as Jaya.Ui.ViewModels.ExplorerViewModel;
-                        if (vm != null)
-                        {
-                            vm.PropertyChanged += (vs, ve) =>
-                            {
-                                try
-                                {
-                                    if (ve.PropertyName == nameof(Jaya.Ui.ViewModels.ExplorerViewModel.Item))
-                                    {
-                                        var grid = this.FindControl<DataGrid>("DetailsDataGrid");
-                                        var dir = vm.Item?.Object as Jaya.Shared.Models.DirectoryModel;
-                                        if (grid != null && dir != null)
-                                        {
-                                            var sort = vm.GetDirectorySort(dir.Path);
-                                            if (sort.HasValue)
-                                            {
-                                                // Try to find matching column and set its SortDirection via reflection
-                                                foreach (var col in grid.Columns)
-                                                {
-                                                    try
-                                                    {
-                                                        var dgCol = col as Avalonia.Controls.DataGridColumn;
-                                                        var sortMember = dgCol?.SortMemberPath ?? col.Header?.ToString();
-                                                        if (!string.IsNullOrWhiteSpace(sortMember) && string.Equals(sortMember, sort.Value.sortMember, StringComparison.OrdinalIgnoreCase))
-                                                        {
-                                                            var prop = col.GetType().GetProperty("SortDirection");
-                                                            if (prop != null && prop.PropertyType.IsEnum)
-                                                            {
-                                                                // Find enum value matching Ascending/Descending
-                                                                var enumType = prop.PropertyType;
-                                                                var desired = sort.Value.ascending ? "Ascending" : "Descending";
-                                                                var enumVal = Enum.GetValues(enumType).Cast<object>().FirstOrDefault(x => x.ToString()?.IndexOf(desired, StringComparison.OrdinalIgnoreCase) >= 0);
-                                                                if (enumVal != null)
-                                                                {
-                                                                    prop.SetValue(col, enumVal);
-                                                                }
-                                                            }
-                                                            break;
-                                                        }
-                                                    }
-                                                    catch { }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                catch { }
-                            };
-                        }
+                        AttachViewModel(this.DataContext as ExplorerViewModel);
                     }
                     catch { }
                 };
@@ -365,6 +330,187 @@ namespace Jaya.Ui.Views
                 }
             }
             catch { }
+        }
+
+        void AttachViewModel(ExplorerViewModel? vm)
+        {
+            if (_viewModel != null && _viewModelPropertyChanged != null)
+                _viewModel.PropertyChanged -= _viewModelPropertyChanged;
+
+            _viewModel = vm;
+            if (_viewModel == null)
+            {
+                Logger.Information("ExplorerView DataContext cleared.");
+                return;
+            }
+
+            _viewModelPropertyChanged = (vs, ve) =>
+            {
+                try
+                {
+                    if (ve.PropertyName == nameof(ExplorerViewModel.Item))
+                    {
+                        Logger.Information("ExplorerViewModel.Item changed; applying saved details sort.");
+                        ApplySavedDetailsSort(_viewModel);
+                    }
+                }
+                catch { }
+            };
+            _viewModel.PropertyChanged += _viewModelPropertyChanged;
+            Logger.Information("ExplorerView DataContext attached: {Type}", _viewModel.GetType().Name);
+            ApplySavedDetailsSort(_viewModel);
+        }
+
+        void ApplySavedDetailsSort(ExplorerViewModel vm)
+        {
+            if (vm == null)
+                return;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                var grid = _detailsGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
+                var dir = vm.Item?.Object as Jaya.Shared.Models.DirectoryModel;
+                if (grid == null)
+                {
+                    Logger.Information("ApplySavedDetailsSort skipped: DetailsDataGrid not found.");
+                    return;
+                }
+                if (dir == null)
+                {
+                    Logger.Information("ApplySavedDetailsSort skipped: current directory is null.");
+                    return;
+                }
+
+                var sort = vm.GetDirectorySort(dir.Path);
+                if (!sort.HasValue)
+                {
+                    Logger.Information("No saved details sort to apply: Path={Path}", dir.Path);
+                    return;
+                }
+
+                foreach (var col in grid.Columns)
+                {
+                    try
+                    {
+                        var dgCol = col as Avalonia.Controls.DataGridColumn;
+                        var sortMember = dgCol?.SortMemberPath ?? col.Header?.ToString();
+                        if (!string.IsNullOrWhiteSpace(sortMember) && string.Equals(sortMember, sort.Value.sortMember, StringComparison.OrdinalIgnoreCase))
+                        {
+                            Logger.Information("Applying details sort: Path={Path} Member={Member} Ascending={Ascending}",
+                                dir.Path,
+                                sort.Value.sortMember,
+                                sort.Value.ascending);
+                            foreach (var other in grid.Columns)
+                            {
+                                if (!ReferenceEquals(other, col))
+                                    (other as Avalonia.Controls.DataGridColumn)?.ClearSort();
+                            }
+
+                            dgCol?.Sort(sort.Value.ascending ? ListSortDirection.Ascending : ListSortDirection.Descending);
+                            break;
+                        }
+                    }
+                    catch { }
+                }
+                Logger.Information("Details sort apply finished: Path={Path}", dir.Path);
+            });
+        }
+
+        void AttachDetailsGrid(DataGrid dataGrid)
+        {
+            if (ReferenceEquals(_detailsGrid, dataGrid) && _detailsGridPropertyChanged != null)
+                return;
+
+            if (_detailsGrid != null && _detailsGridPropertyChanged != null)
+                _detailsGrid.PropertyChanged -= _detailsGridPropertyChanged;
+
+            _detailsGrid = dataGrid;
+            _detailsGridPropertyChanged = (s, e) =>
+            {
+                try
+                {
+                    if (e.Property == DataGrid.ItemsSourceProperty)
+                    {
+                        Logger.Debug("DetailsDataGrid.ItemsSource changed.");
+                        if (_viewModel == null)
+                        {
+                            var vm = this.DataContext as ExplorerViewModel;
+                            if (vm != null)
+                                AttachViewModel(vm);
+                        }
+                        if (_viewModel != null)
+                            ApplySavedDetailsSort(_viewModel);
+                        else
+                            Logger.Information("DetailsDataGrid.ItemsSource changed but ExplorerViewModel is not attached yet.");
+                    }
+                }
+                catch { }
+            };
+            _detailsGrid.PropertyChanged += _detailsGridPropertyChanged;
+        }
+
+        static bool TryGetSortAscending(Avalonia.Controls.DataGridColumn column, out bool ascending)
+        {
+            ascending = true;
+            if (column == null)
+                return false;
+
+            try
+            {
+                var colType = column.GetType();
+                var dirProp = colType.GetProperty("SortDirection", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (dirProp != null)
+                {
+                    var dirValue = dirProp.GetValue(column);
+                    if (TryParseSortDirection(dirValue, out ascending))
+                        return true;
+                }
+
+                var getSortDescription = colType.GetMethod("GetSortDescription", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (getSortDescription == null)
+                    return false;
+
+                var sortDescription = getSortDescription.Invoke(column, null);
+                return TryParseSortDirection(sortDescription, out ascending);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        static bool TryParseSortDirection(object? value, out bool ascending)
+        {
+            ascending = true;
+            if (value == null)
+                return false;
+
+            try
+            {
+                var type = value.GetType();
+                var dirProp = type.GetProperty("Direction") ?? type.GetProperty("SortDirection");
+                if (dirProp != null)
+                {
+                    var dirValue = dirProp.GetValue(value);
+                    if (dirValue != null)
+                    {
+                        var dirText = dirValue.ToString() ?? string.Empty;
+                        ascending = dirText.IndexOf("Desc", StringComparison.OrdinalIgnoreCase) < 0;
+                        return true;
+                    }
+                }
+
+                var text = value.ToString() ?? string.Empty;
+                if (text.Length == 0)
+                    return false;
+
+                ascending = text.IndexOf("Desc", StringComparison.OrdinalIgnoreCase) < 0;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         void ExplorerView_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
@@ -639,6 +785,10 @@ namespace Jaya.Ui.Views
             _deleteRequested = null;
             _selectItemsRequested = null;
             DetachedFromVisualTree -= ExplorerView_DetachedFromVisualTree;
+            if (_detailsGrid != null && _detailsGridPropertyChanged != null)
+                _detailsGrid.PropertyChanged -= _detailsGridPropertyChanged;
+            _detailsGridPropertyChanged = null;
+            _detailsGrid = null;
         }
 
         void Root_DragOver(object? sender, DragEventArgs e)

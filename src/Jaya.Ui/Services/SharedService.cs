@@ -19,7 +19,7 @@ namespace Jaya.Ui.Services
 
         readonly ICommandService _commandService;
         readonly IConfigurationService _configService;
-        static readonly ILogger Logger = Log.ForContext<SharedService>();
+        static readonly ILogger Logger = Log.ForContext(typeof(SharedService)).ForContext("SourceContext", "Settings");
 
         public SharedService(
             ICommandService commandService,
@@ -105,6 +105,8 @@ namespace Jaya.Ui.Services
                 ApplicationConfiguration.PropertyChanged += ApplicationConfiguration_PropertyChanged;
                 Logger.Debug("Initial ApplicationConfiguration.IsFileNameExtensionVisible={IsFileNameExtensionVisible}", ApplicationConfiguration.IsFileNameExtensionVisible);
                 Logger.Debug("Initial ApplicationConfiguration.IsHiddenItemVisible={IsHiddenItemVisible}", ApplicationConfiguration.IsHiddenItemVisible);
+                Logger.Information("Initial ApplicationConfiguration.DetailsViewSortSettings count={Count}",
+                    ApplicationConfiguration.DetailsViewSortSettings?.Count ?? 0);
             }
         }
 
@@ -114,6 +116,8 @@ namespace Jaya.Ui.Services
             _configService.Set(ToolbarConfiguration);
             _configService.Set(PaneConfiguration);
             _configService.Set(UpdateConfiguration);
+            Logger.Information("Saved configuration snapshot: DetailsViewSortSettings count={Count}",
+                ApplicationConfiguration?.DetailsViewSortSettings?.Count ?? 0);
         }
 
         public void SimpleCommandAction(byte type)

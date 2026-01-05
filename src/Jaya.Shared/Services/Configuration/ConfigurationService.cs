@@ -7,11 +7,13 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Serilog;
 
 namespace Jaya.Shared.Services
 {
     public sealed class ConfigurationService: IConfigurationService
     {
+        static readonly ILogger Logger = Log.ForContext(typeof(ConfigurationService)).ForContext("SourceContext", "Settings");
         readonly string _configurationFilePathFormat;
 
         public ConfigurationService()
@@ -37,6 +39,7 @@ namespace Jaya.Shared.Services
             var fileInfo = new FileInfo(string.Format(_configurationFilePathFormat, key));
             if (fileInfo.Exists)
             {
+                Logger.Information("Loading configuration: Type={Type} Path={Path}", type.Name, fileInfo.FullName);
                 var json = File.ReadAllText(fileInfo.FullName);
                 var options = new JsonSerializerOptions
                 {
@@ -45,9 +48,15 @@ namespace Jaya.Shared.Services
                     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
                 };
 
-                return JsonSerializer.Deserialize(json, type, options) as T;
+                var result = JsonSerializer.Deserialize(json, type, options) as T;
+                Logger.Information("Loaded configuration: Type={Type} Path={Path} Bytes={Bytes}",
+                    type.Name,
+                    fileInfo.FullName,
+                    json.Length);
+                return result;
             }
 
+            Logger.Information("Configuration not found: Type={Type} Path={Path}", type.Name, fileInfo.FullName);
             return default;
         }
 
@@ -81,6 +90,10 @@ namespace Jaya.Shared.Services
 
             var json = JsonSerializer.Serialize(value, type, options);
             File.WriteAllText(fileInfo.FullName, json);
+            Logger.Information("Saved configuration: Type={Type} Path={Path} Bytes={Bytes}",
+                type.Name,
+                fileInfo.FullName,
+                json.Length);
         }
 
         string GetUsableKey(Type type)

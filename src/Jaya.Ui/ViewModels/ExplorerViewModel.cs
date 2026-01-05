@@ -15,6 +15,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -23,7 +24,7 @@ namespace Jaya.Ui.ViewModels
 {
     public class ExplorerViewModel : ViewModelBase
     {
-        static readonly ILogger FileSystemLogger = Log.ForContext("Category", "FileSystem")
+        static readonly ILogger FileSystemLogger = Log.ForContext("SourceContext", "FileSystem")
                                                        .ForContext("Area", "FileSystem");
 
         readonly Subscription<SelectionChangedEventArgs>? _onSelectionChanged;
@@ -88,15 +89,35 @@ namespace Jaya.Ui.ViewModels
                 _shared.ApplicationConfiguration.PropertyChanged -= ApplicationConfiguration_PropertyChanged;
         }
 
-        // Remember per-directory sort settings: map directory path -> (sortMemberPath, ascending)
-        readonly Dictionary<string, (string sortMember, bool ascending)> _directorySortSettings = new();
-
         public void SaveDirectorySort(string? directoryPath, string sortMember, bool ascending)
         {
             if (string.IsNullOrWhiteSpace(directoryPath) || string.IsNullOrWhiteSpace(sortMember))
                 return;
 
-            _directorySortSettings[directoryPath] = (sortMember, ascending);
+            var key = NormalizeSortKey(directoryPath);
+            if (string.IsNullOrWhiteSpace(key))
+                return;
+
+            var settings = ApplicationConfig.DetailsViewSortSettings;
+            settings[key] = new DirectorySortSetting
+            {
+                SortMember = sortMember,
+                Ascending = ascending
+            };
+            FileSystemLogger.Information("Saved details sort: Path={Path} Key={Key} Member={Member} Ascending={Ascending}",
+                directoryPath,
+                key,
+                sortMember,
+                ascending);
+            try
+            {
+                _shared?.SaveConfigurations();
+                FileSystemLogger.Information("Persisted details sort settings.");
+            }
+            catch (Exception ex)
+            {
+                FileSystemLogger.Warning(ex, "Failed to persist details sort settings");
+            }
         }
 
         public (string sortMember, bool ascending)? GetDirectorySort(string? directoryPath)
@@ -104,10 +125,42 @@ namespace Jaya.Ui.ViewModels
             if (string.IsNullOrWhiteSpace(directoryPath))
                 return null;
 
-            if (_directorySortSettings.TryGetValue(directoryPath, out var v))
-                return v;
+            var key = NormalizeSortKey(directoryPath);
+            if (string.IsNullOrWhiteSpace(key))
+                return null;
+
+            var settings = ApplicationConfig.DetailsViewSortSettings;
+            if (settings.TryGetValue(key, out var v))
+            {
+                FileSystemLogger.Information("Loaded details sort: Path={Path} Key={Key} Member={Member} Ascending={Ascending}",
+                    directoryPath,
+                    key,
+                    v.SortMember,
+                    v.Ascending);
+                return (v.SortMember, v.Ascending);
+            }
+
+            FileSystemLogger.Information("No saved details sort for path: Path={Path} Key={Key} KnownCount={Count}",
+                directoryPath,
+                key,
+                settings.Count);
 
             return null;
+        }
+
+        static string NormalizeSortKey(string path)
+        {
+            var trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (string.IsNullOrWhiteSpace(trimmed))
+            {
+                var root = Path.GetPathRoot(path);
+                trimmed = string.IsNullOrWhiteSpace(root) ? path : root;
+            }
+
+            if (string.IsNullOrWhiteSpace(trimmed))
+                return string.Empty;
+
+            return OperatingSystem.IsWindows() ? trimmed.ToLowerInvariant() : trimmed;
         }
 
         #region properties
@@ -1304,6 +1357,7 @@ namespace Jaya.Ui.ViewModels
             if (e.PropertyName == nameof(ApplicationConfigModel.IsFileNameExtensionVisible) ||
                 e.PropertyName == nameof(ApplicationConfigModel.IsHiddenItemVisible))
             {
+                FileSystemLogger.Debug("Explorer view refresh requested due to config change: {Property}", e.PropertyName);
                 // Re-run the last selection to refresh displayed items
                 if (_lastSelectionArgs != null)
                 {

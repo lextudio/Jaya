@@ -7,6 +7,7 @@ using Jaya.Shared.Base;
 using Jaya.Shared.Models;
 using System.Text.Json.Serialization;
 using System;
+using System.Collections.Generic;
 
 namespace Jaya.Ui.Models
 {
@@ -31,6 +32,23 @@ namespace Jaya.Ui.Models
         public bool IsHiddenItemVisible
         {
             get => Get<bool>();
+            set => Set(value);
+        }
+
+        [JsonPropertyName("detailsViewSortSettings")]
+        public Dictionary<string, DirectorySortSetting> DetailsViewSortSettings
+        {
+            get
+            {
+                var value = Get<Dictionary<string, DirectorySortSetting>>();
+                if (value == null)
+                {
+                    value = new Dictionary<string, DirectorySortSetting>();
+                    Set(value, nameof(DetailsViewSortSettings), false);
+                }
+
+                return value;
+            }
             set => Set(value);
         }
 
@@ -100,7 +118,8 @@ namespace Jaya.Ui.Models
                 WidthPx = 800,
                 HeightPx = 600,
                 ThemeName = "Dark",
-                PreferIterm = false
+                PreferIterm = false,
+                DetailsViewSortSettings = new Dictionary<string, DirectorySortSetting>()
             };
         }
     }

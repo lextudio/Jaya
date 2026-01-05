@@ -69,7 +69,7 @@ namespace Jaya.Ui.Logging
                 return;
 
             var logger = Serilog.Log.ForContext("Area", area ?? string.Empty)
-                                    .ForContext("Category", "Avalonia");
+                                    .ForContext("SourceContext", "Avalonia");
 
             if (source != null)
                 logger = logger.ForContext("Source", source);
