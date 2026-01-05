@@ -420,6 +420,8 @@ namespace Jaya.Provider.FileSystem.Services
                 dir.Modified = info.LastWriteTime;
                 dir.Accessed = info.LastAccessTime;
                 dir.IsHidden = info.Attributes.HasFlag(FileAttributes.Hidden);
+                if (IsDotHiddenName(info.Name))
+                    dir.IsHidden = true;
                 dir.IsSystem = info.Attributes.HasFlag(FileAttributes.System);
                 return dir;
             }
@@ -453,11 +455,24 @@ namespace Jaya.Provider.FileSystem.Services
                 file.Modified = info.LastWriteTime;
                 file.Accessed = info.LastAccessTime;
                 file.IsHidden = info.Attributes.HasFlag(FileAttributes.Hidden);
+                if (IsDotHiddenName(info.Name))
+                    file.IsHidden = true;
                 file.IsSystem = info.Attributes.HasFlag(FileAttributes.System);
                 return file;
             }
 
             return null;
+        }
+
+        static bool IsDotHiddenName(string? name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return false;
+
+            if (OperatingSystem.IsWindows())
+                return false;
+
+            return name.Length > 1 && name[0] == '.' && name != "." && name != "..";
         }
     }
 }

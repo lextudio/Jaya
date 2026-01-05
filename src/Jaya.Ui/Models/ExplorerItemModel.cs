@@ -66,6 +66,17 @@ namespace Jaya.Ui.Models
 
         public bool IsHavingMetaData => IsAccount || IsDrive || IsDirectory;
 
+        public bool IsHidden
+        {
+            get
+            {
+                if (Object is FileSystemObjectModel fso)
+                    return fso.IsHidden;
+
+                return false;
+            }
+        }
+
         public string? Label
         {
             get => Get<string?>();

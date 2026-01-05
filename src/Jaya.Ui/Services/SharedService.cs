@@ -104,6 +104,7 @@ namespace Jaya.Ui.Services
             {
                 ApplicationConfiguration.PropertyChanged += ApplicationConfiguration_PropertyChanged;
                 Logger.Debug("Initial ApplicationConfiguration.IsFileNameExtensionVisible={IsFileNameExtensionVisible}", ApplicationConfiguration.IsFileNameExtensionVisible);
+                Logger.Debug("Initial ApplicationConfiguration.IsHiddenItemVisible={IsHiddenItemVisible}", ApplicationConfiguration.IsHiddenItemVisible);
             }
         }
 

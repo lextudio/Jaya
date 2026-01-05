@@ -107,6 +107,7 @@
             <Setter Property="ItemsSource" Value="{Binding Item.Children, Mode=OneWay}"/>
           </Style>
           <Style Selector="DataGridRow">
+            <Setter Property="IsVisible" Value="{Binding IsHidden, Mode=OneWay, Converter={StaticResource TreeNodeVisibilityConverter}, FallbackValue=True}" />
             <Setter Property="ContextMenu">
               <ContextMenu>
                 <MenuItem
@@ -183,6 +184,7 @@
             <Setter Property="ItemsSource" Value="{Binding Item.Children, Mode=OneWay}"/>
           </Style>
           <Style Selector="ListBoxItem">
+            <Setter Property="IsVisible" Value="{Binding IsHidden, Mode=OneWay, Converter={StaticResource TreeNodeVisibilityConverter}, FallbackValue=True}" />
             <Setter Property="ContextMenu">
               <ContextMenu>
                 <MenuItem

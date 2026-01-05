@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -8,6 +9,9 @@ internal static class FileSystemModelFactory
     public static FileInfoModel FromFileInfo(FileInfo info)
     {
         FileSystemItemId.TryFromPath(info.FullName, out var id);
+        var attributes = MapAttributes(info.Attributes);
+        if (IsDotHiddenName(info.Name))
+            attributes |= FileSystemAttributes.Hidden;
         return new FileInfoModel
         {
             Name = info.Name,
@@ -17,13 +21,16 @@ internal static class FileSystemModelFactory
             Created = info.CreationTime,
             Modified = info.LastWriteTime,
             Accessed = info.LastAccessTime,
-            Attributes = MapAttributes(info.Attributes)
+            Attributes = attributes
         };
     }
 
     public static DirectoryInfoModel FromDirectoryInfo(DirectoryInfo info, IReadOnlyList<FileInfoModel>? files = null, IReadOnlyList<DirectoryInfoModel>? directories = null)
     {
         FileSystemItemId.TryFromPath(info.FullName, out var id);
+        var attributes = MapAttributes(info.Attributes);
+        if (IsDotHiddenName(info.Name))
+            attributes |= FileSystemAttributes.Hidden;
         return new DirectoryInfoModel
         {
             Name = info.Name,
@@ -32,7 +39,7 @@ internal static class FileSystemModelFactory
             Created = info.CreationTime,
             Modified = info.LastWriteTime,
             Accessed = info.LastAccessTime,
-            Attributes = MapAttributes(info.Attributes) | FileSystemAttributes.Directory,
+            Attributes = attributes | FileSystemAttributes.Directory,
             Files = files,
             Directories = directories
         };
@@ -48,5 +55,16 @@ internal static class FileSystemModelFactory
         if (attributes.HasFlag(FileAttributes.Archive)) result |= FileSystemAttributes.Archive;
         if (attributes.HasFlag(FileAttributes.ReparsePoint)) result |= FileSystemAttributes.ReparsePoint;
         return result;
+    }
+
+    static bool IsDotHiddenName(string? name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return false;
+
+        if (OperatingSystem.IsWindows())
+            return false;
+
+        return name.Length > 1 && name[0] == '.' && name != "." && name != "..";
     }
 }
