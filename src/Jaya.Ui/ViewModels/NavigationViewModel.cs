@@ -45,7 +45,11 @@ namespace Jaya.Ui.ViewModels
             Favorites = _favorites;
             Locations = _locations;
             if (!IsDesignMode)
+            {
                 _onSelectionChanged = EventAggregator?.Subscribe<SelectionChangedEventArgs>(OnExternalSelectionChanged);
+                if (_volumeCacheService != null)
+                    _volumeCacheService.VolumesChanged += OnVolumesChanged;
+            }
 
             if (!IsDesignMode)
                 PopulateCommand?.Execute(Node);
@@ -55,6 +59,8 @@ namespace Jaya.Ui.ViewModels
         {
             if (_onSelectionChanged != null)
                 EventAggregator?.UnSubscribe(_onSelectionChanged);
+            if (_volumeCacheService != null)
+                _volumeCacheService.VolumesChanged -= OnVolumesChanged;
         }
 
         #region properties
@@ -334,6 +340,112 @@ namespace Jaya.Ui.ViewModels
             {
                 Logger.Debug("OnExternalSelectionChanged: matching navigation node not found for Service={Service}, Account={Account}, Directory={Directory}",
                     args.Service?.Name, args.Account?.Name, args.Directory?.Path ?? args.Directory?.Name);
+            }
+        }
+
+        void OnVolumesChanged(object? sender, VolumeCacheChangedEventArgs e)
+        {
+            if (IsDesignMode)
+                return;
+
+            _ = Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                try
+                {
+                    await RefreshFileSystemVolumeNodesAsync(e.Volumes);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Debug(ex, "Volume cache change handling failed");
+                }
+            });
+        }
+
+        async Task RefreshFileSystemVolumeNodesAsync(IReadOnlyList<VolumeModel> volumes)
+        {
+            if (volumes == null || volumes.Count == 0)
+                return;
+
+            var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            var comparer = comparison == StringComparison.OrdinalIgnoreCase ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+            var volumeByMount = new Dictionary<string, VolumeModel>(comparer);
+            foreach (var volume in volumes)
+            {
+                var mount = NormalizePath(volume.MountPoint, comparison);
+                if (string.IsNullOrEmpty(mount) || volumeByMount.ContainsKey(mount))
+                    continue;
+
+                volumeByMount.Add(mount, volume);
+            }
+
+            if (volumeByMount.Count == 0)
+                return;
+
+            var fileSystemServices = Node.Children.Where(n => IsFileSystemService(n.Service)).ToList();
+            foreach (var serviceNode in fileSystemServices)
+            {
+                foreach (var accountNode in serviceNode.Children.ToList())
+                    await UpdateAccountVolumeNodesAsync(accountNode, volumeByMount, comparison);
+            }
+        }
+
+        async Task UpdateAccountVolumeNodesAsync(
+            TreeNodeModel accountNode,
+            Dictionary<string, VolumeModel> volumeByMount,
+            StringComparison comparison)
+        {
+            if (accountNode == null)
+                return;
+
+            var comparer = volumeByMount.Comparer;
+            var existingDriveNodes = new Dictionary<string, TreeNodeModel>(comparer);
+            foreach (var child in accountNode.Children)
+            {
+                if (child.FileSystemObject is not DirectoryModel dir || dir.Type != FileSystemObjectType.Drive)
+                    continue;
+
+                var mount = NormalizePath(dir.Path, comparison);
+                if (!string.IsNullOrEmpty(mount))
+                    existingDriveNodes[mount] = child;
+            }
+
+            foreach (var pair in volumeByMount)
+            {
+                var mount = pair.Key;
+                var volume = pair.Value;
+                if (existingDriveNodes.TryGetValue(mount, out var node))
+                {
+                    var label = GetVolumeDisplayName(volume);
+                    if (!string.Equals(node.Label, label, StringComparison.Ordinal))
+                        node.Label = label;
+
+                    if (node.FileSystemObject is DirectoryModel dir)
+                    {
+                        if (!string.Equals(dir.Name, label, StringComparison.Ordinal))
+                            dir.Name = label;
+                        dir.IsExternalDrive = volume.IsRemovable || !volume.IsInternal;
+                    }
+
+                    continue;
+                }
+
+                if (accountNode.IsHavingDummyChild && accountNode.Children.Count == 1 && accountNode.NeedsPopulate)
+                    continue;
+
+                var driveModel = new DirectoryModel(true)
+                {
+                    Name = GetVolumeDisplayName(volume),
+                    Path = volume.MountPoint,
+                    IsExternalDrive = volume.IsRemovable || !volume.IsInternal
+                };
+                var driveNode = new TreeNodeModel(accountNode.Service, accountNode.Account, ItemType.Drive)
+                {
+                    Label = driveModel.Name,
+                    FileSystemObject = driveModel
+                };
+                driveNode.NodeExpanded += OnNodeExpanded;
+                driveNode.AddDummyChild();
+                await AddChildNodeAsync(accountNode, driveNode);
             }
         }
 
@@ -704,6 +816,18 @@ namespace Jaya.Ui.ViewModels
                 return name;
 
             return string.IsNullOrEmpty(trimmed) ? path : trimmed;
+        }
+
+        static string GetVolumeDisplayName(VolumeModel volume)
+        {
+            if (!string.IsNullOrWhiteSpace(volume.Name))
+                return volume.Name ?? string.Empty;
+
+            var trimmed = volume.MountPoint?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (!string.IsNullOrWhiteSpace(trimmed))
+                return Path.GetFileName(trimmed);
+
+            return volume.MountPoint ?? string.Empty;
         }
 
         async Task<VolumeModel?> GetVolumeForPathAsync(string targetPath, StringComparison comparison)

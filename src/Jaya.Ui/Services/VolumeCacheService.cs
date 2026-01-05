@@ -4,6 +4,7 @@ using Jaya.Shared.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,6 +20,8 @@ namespace Jaya.Ui.Services
 
         IReadOnlyList<VolumeModel> _volumes = Array.Empty<VolumeModel>();
         DateTime _lastRefreshUtc = DateTime.MinValue;
+
+        public event EventHandler<VolumeCacheChangedEventArgs>? VolumesChanged;
 
         public IReadOnlyList<VolumeModel> CurrentVolumes => _volumes;
 
@@ -68,10 +71,17 @@ namespace Jaya.Ui.Services
             try
             {
                 Logger.Debug("Volume cache refresh started.");
+                var previous = _volumes;
                 var volumes = await _fileSystem.GetVolumesAsync(CancellationToken.None).ConfigureAwait(false);
                 _volumes = volumes ?? Array.Empty<VolumeModel>();
                 _lastRefreshUtc = DateTime.UtcNow;
                 Logger.Debug("Volume cache refreshed. Count={Count}", _volumes.Count);
+
+                if (!AreVolumesEquivalent(previous, _volumes))
+                {
+                    Logger.Debug("Volume cache changed. Count={Count}", _volumes.Count);
+                    VolumesChanged?.Invoke(this, new VolumeCacheChangedEventArgs(_volumes));
+                }
             }
             catch (Exception ex)
             {
@@ -88,5 +98,64 @@ namespace Jaya.Ui.Services
             _refreshTimer?.Dispose();
             _refreshLock.Dispose();
         }
+
+        static bool AreVolumesEquivalent(IReadOnlyList<VolumeModel> left, IReadOnlyList<VolumeModel> right)
+        {
+            if (ReferenceEquals(left, right))
+                return true;
+
+            if (left.Count != right.Count)
+                return false;
+
+            var comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+            var set = new HashSet<string>(comparer);
+            for (int i = 0; i < left.Count; i++)
+                set.Add(BuildVolumeKey(left[i]));
+
+            for (int i = 0; i < right.Count; i++)
+            {
+                if (!set.Remove(BuildVolumeKey(right[i])))
+                    return false;
+            }
+
+            return set.Count == 0;
+        }
+
+        static string BuildVolumeKey(VolumeModel volume)
+        {
+            var mount = NormalizeMountPoint(volume.MountPoint);
+            return string.Concat(
+                mount,
+                "|",
+                volume.Name ?? string.Empty,
+                "|",
+                volume.DeviceId ?? string.Empty,
+                "|",
+                volume.IsRemovable ? "1" : "0",
+                "|",
+                volume.IsInternal ? "1" : "0");
+        }
+
+        static string NormalizeMountPoint(string mountPoint)
+        {
+            if (string.IsNullOrWhiteSpace(mountPoint))
+                return string.Empty;
+
+            var trimmed = mountPoint.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (string.IsNullOrEmpty(trimmed))
+                return Path.GetPathRoot(mountPoint) ?? mountPoint;
+
+            return trimmed;
+        }
+    }
+
+    public sealed class VolumeCacheChangedEventArgs : EventArgs
+    {
+        public VolumeCacheChangedEventArgs(IReadOnlyList<VolumeModel> volumes)
+        {
+            Volumes = volumes;
+        }
+
+        public IReadOnlyList<VolumeModel> Volumes { get; }
     }
 }
