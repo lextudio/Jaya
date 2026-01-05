@@ -23,6 +23,7 @@ namespace Jaya.Ui.Services
         RelayCommand? _navigateBack, _navigateForward;
         RelayCommand<WindowOptionsModel>? _openWindow;
         SelectionChangedEventArgs? _directoryChangedArgs;
+        public SelectionChangedEventArgs? CurrentSelection { get; private set; }
 
         public NavigationService(ICommandService commandService)
         {
@@ -158,6 +159,7 @@ namespace Jaya.Ui.Services
             }
 
             _directoryChangedArgs = args;
+            CurrentSelection = args;
         }
     }
 }

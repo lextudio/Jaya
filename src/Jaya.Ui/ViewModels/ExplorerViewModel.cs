@@ -49,6 +49,18 @@ namespace Jaya.Ui.ViewModels
             _shared = GetService<SharedService>();
             _onSelectionChanged = EventAggregator?.Subscribe<SelectionChangedEventArgs>(SelectionChanged);
             _onNewFolder = EventAggregator?.Subscribe<NewFolderRequestedEventArgs>(NewFolderRequested);
+            // If navigation service already has a selection (published before this VM subscribed), apply it now
+            try
+            {
+                var nav = GetService<NavigationService>();
+                var current = nav?.CurrentSelection;
+                if (current != null)
+                {
+                    // Defer to the SelectionChanged handler to populate view
+                    Invoke(() => SelectionChanged(current));
+                }
+            }
+            catch { }
             if (_shared?.ApplicationConfiguration != null)
             {
                 _shared.ApplicationConfiguration.PropertyChanged += ApplicationConfiguration_PropertyChanged;
