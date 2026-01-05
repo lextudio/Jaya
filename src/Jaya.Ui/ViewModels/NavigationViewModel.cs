@@ -447,6 +447,27 @@ namespace Jaya.Ui.ViewModels
                 driveNode.AddDummyChild();
                 await AddChildNodeAsync(accountNode, driveNode);
             }
+
+            if (existingDriveNodes.Count == 0)
+                return;
+
+            var selectedNode = SelectedNode;
+            var selectedPath = (selectedNode?.FileSystemObject as DirectoryModel)?.Path;
+            foreach (var pair in existingDriveNodes)
+            {
+                if (volumeByMount.ContainsKey(pair.Key))
+                    continue;
+
+                var node = pair.Value;
+                if (ReferenceEquals(node, selectedNode))
+                    continue;
+
+                if (!string.IsNullOrEmpty(selectedPath) && IsPathPrefix(pair.Key, NormalizePath(selectedPath, comparison), comparison))
+                    continue;
+
+                Logger.Debug("Removing missing drive node: Label={Label}, Path={Path}", node.Label, (node.FileSystemObject as DirectoryModel)?.Path);
+                RemoveChildNode(accountNode, node);
+            }
         }
 
         void UpdateLocationSelection(SelectionChangedEventArgs args)
