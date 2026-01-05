@@ -23,6 +23,7 @@
     </Design.DataContext>
     <UserControl.Resources>
         <c:BooleanToTreeNodeVisibilityConverter x:Key="TreeNodeVisibilityConverter" />
+        <c:BooleanToOpacityConverter x:Key="HiddenItemOpacityConverter" HiddenOpacity="0.55" />
         <c:FileSystemObjectToFileNameConverter x:Key="FileNameConverter" />
         <j:BitmapValueConverter x:Key="BitmapValueConverter" />
     </UserControl.Resources>
@@ -109,6 +110,7 @@
           </Style>
           <Style Selector="DataGridRow">
             <Setter Property="IsVisible" Value="{Binding IsHidden, Mode=OneWay, Converter={StaticResource TreeNodeVisibilityConverter}, FallbackValue=True}" />
+            <Setter Property="Opacity" Value="{Binding IsHidden, Mode=OneWay, Converter={StaticResource HiddenItemOpacityConverter}, FallbackValue=1}" />
             <Setter Property="ContextMenu">
               <ContextMenu>
                 <MenuItem
@@ -186,6 +188,7 @@
           </Style>
           <Style Selector="ListBoxItem">
             <Setter Property="IsVisible" Value="{Binding IsHidden, Mode=OneWay, Converter={StaticResource TreeNodeVisibilityConverter}, FallbackValue=True}" />
+            <Setter Property="Opacity" Value="{Binding IsHidden, Mode=OneWay, Converter={StaticResource HiddenItemOpacityConverter}, FallbackValue=1}" />
             <Setter Property="ContextMenu">
               <ContextMenu>
                 <MenuItem
