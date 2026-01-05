@@ -64,23 +64,24 @@ namespace Jaya.Ui
 
     public enum CommandType : byte
     {
-        Exit,
-        Open,
-        Cut,
-        Copy,
-        Paste,
-        NewFolder,
-        ToggleToolbars,
-        ToggleToolbarFile,
-        ToggleToolbarEdit,
-        ToggleToolbarView,
-        ToggleToolbarHelp,
-        TogglePaneNavigation,
-        TogglePanePreview,
-        TogglePaneDetails,
-        ToggleItemCheckBoxes,
-        ToggleFileNameExtensions,
-        ToggleHiddenItems,
-        Delete
+        None = 0,
+        Exit = 1,
+        Open = 2,
+        Cut = 3,
+        Copy = 4,
+        Paste = 5,
+        NewFolder = 6,
+        ToggleToolbars = 7,
+        ToggleToolbarFile = 8,
+        ToggleToolbarEdit = 9,
+        ToggleToolbarView = 10,
+        ToggleToolbarHelp = 11,
+        TogglePaneNavigation = 12,
+        TogglePanePreview = 13,
+        TogglePaneDetails = 14,
+        ToggleItemCheckBoxes = 15,
+        ToggleFileNameExtensions = 16,
+        ToggleHiddenItems = 17,
+        Delete = 18
     }
 }

@@ -3,6 +3,7 @@
 // Licensed under the 3-Clause BSD license. See LICENSE file in the project root for full license information.
 //
 using Jaya.Shared;
+using Avalonia.Threading;
 using Jaya.Shared.Base;
 using Jaya.Shared.Models;
 using Jaya.Shared.Services;
@@ -20,7 +21,7 @@ using System.Windows.Input;
 
 namespace Jaya.Ui.ViewModels
 {
-    public class ExplorerViewModel: ViewModelBase
+    public class ExplorerViewModel : ViewModelBase
     {
         static readonly ILogger FileSystemLogger = Log.ForContext("Category", "FileSystem")
                                                        .ForContext("Area", "FileSystem");
@@ -201,28 +202,28 @@ namespace Jaya.Ui.ViewModels
                     break;
 
                 case ItemType.File:
-                {
-                    var file = obj.Object as FileModel;
-                    var path = file?.Path;
-
-                    FileSystemLogger.Information("File activated: {Label} path={Path}", obj.Label, path ?? "<unknown>");
-
-                    if (!string.IsNullOrEmpty(path))
                     {
-                        try
-                        {
-                            OpenFile(path);
-                            FileSystemLogger.Information("Launched file: {Path}", path);
-                        }
-                        catch (Exception ex)
-                        {
-                            FileSystemLogger.Error(ex, "Failed to open file: {Path}", path);
-                        }
-                    }
+                        var file = obj.Object as FileModel;
+                        var path = file?.Path;
 
-                    IsBusy = false;
-                    return;
-                }
+                        FileSystemLogger.Information("File activated: {Label} path={Path}", obj.Label, path ?? "<unknown>");
+
+                        if (!string.IsNullOrEmpty(path))
+                        {
+                            try
+                            {
+                                OpenFile(path);
+                                FileSystemLogger.Information("Launched file: {Path}", path);
+                            }
+                            catch (Exception ex)
+                            {
+                                FileSystemLogger.Error(ex, "Failed to open file: {Path}", path);
+                            }
+                        }
+
+                        IsBusy = false;
+                        return;
+                    }
 
                 case ItemType.Computer:
                     _account = obj.Object as AccountModelBase;
@@ -573,6 +574,18 @@ namespace Jaya.Ui.ViewModels
                         shared.UpdatePasteAvailability(_clipboardItems);
                 }
                 catch { }
+                // Ensure progress window is closed even if the transfer service didn't report completion
+                try
+                {
+                    if (progressWindow != null)
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            try { progressWindow.Close(); } catch { }
+                        }, DispatcherPriority.Background);
+                    }
+                }
+                catch { }
             }
             catch (Exception ex)
             {
@@ -768,6 +781,123 @@ namespace Jaya.Ui.ViewModels
             if (selectAdded && addedPaths != null && addedPaths.Count > 0)
             {
                 EventAggregator?.Publish(new SelectItemsRequestedEventArgs(addedPaths));
+            }
+        }
+
+        public async System.Threading.Tasks.Task HandleDropAsync(string[] sourcePaths, DirectoryModel? targetDirectory, Avalonia.Input.DragDropEffects effect)
+        {
+            if (sourcePaths == null || sourcePaths.Length == 0)
+                return;
+
+            if (_service == null || _account == null)
+            {
+                FileSystemLogger.Debug("Drop ignored: missing service/account context.");
+                return;
+            }
+
+            try
+            {
+                var transferService = ServiceLocator.Instance.GetProviders().OfType<IFileTransferService>().FirstOrDefault();
+                if (transferService == null)
+                {
+                    FileSystemLogger.Warning("Drop requested but transfer service not available.");
+                    return;
+                }
+
+                var mode = effect == Avalonia.Input.DragDropEffects.Copy ? TransferMode.Copy : TransferMode.Move;
+
+                var cancellation = new System.Threading.CancellationTokenSource();
+                var progressWindow = new Views.TransferProgressView();
+                var progressViewModel = progressWindow.DataContext as TransferProgressViewModel;
+                if (progressViewModel != null)
+                {
+                    progressViewModel.AttachCancellation(cancellation);
+                    var verb = mode == TransferMode.Move ? "Moving items" : "Copying items";
+                    progressViewModel.Title = verb;
+                    progressViewModel.HeaderText = $"{verb}...";
+                    progressViewModel.StatusText = "Preparing items...";
+                    progressViewModel.TargetPath = targetDirectory?.Path ?? string.Empty;
+                }
+
+                var owner = App.Lifetime?.MainWindow;
+                if (owner != null)
+                    progressWindow.Show(owner);
+                else
+                    progressWindow.Show();
+
+                var progress = new System.Progress<TransferProgressReport>(report => { if (progressViewModel != null) progressViewModel.Update(report); });
+
+                // Map string paths to FileSystemObjectModel instances where possible; fall back to raw paths via provider later if needed
+                var items = new List<FileSystemObjectModel>();
+                if (Item?.Children != null)
+                {
+                    var lookup = Item.Children
+                        .Select(c => c.Object as FileSystemObjectModel)
+                        .Where(f => f != null && !string.IsNullOrWhiteSpace(f.Path))
+                        .ToDictionary(f => f.Path!, f => f, StringComparer.OrdinalIgnoreCase);
+
+                    foreach (var p in sourcePaths)
+                    {
+                        if (p != null && lookup.TryGetValue(p, out var found))
+                            items.Add(found);
+                    }
+                }
+
+                var results = await transferService.TransferAsync(_account, items, targetDirectory, mode, progress, cancellation.Token);
+                FileSystemLogger.Information("Drop transfer requested for {Count} items (created={Created})", items.Count, results?.Count ?? 0);
+
+                if (results != null && results.Count > 0)
+                {
+                    // Only add created items to this view if the transfer target matches the current directory
+                    try
+                    {
+                        var currentDir = Item?.Object as DirectoryModel;
+                        if (currentDir != null && targetDirectory != null && !string.IsNullOrWhiteSpace(currentDir.Path) && !string.IsNullOrWhiteSpace(targetDirectory.Path))
+                        {
+                            var comparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+                            if (comparer.Equals(currentDir.Path, targetDirectory.Path))
+                            {
+                                Invoke(() => AddItemsToView(results, selectAdded: true));
+                            }
+                        }
+                        else if (currentDir != null && targetDirectory == null)
+                        {
+                            // If targetDirectory is null but currentDir exists, conservatively add to view
+                            Invoke(() => AddItemsToView(results, selectAdded: true));
+                        }
+                    }
+                    catch { }
+                }
+
+                // If this was a Move, remove the original items from the current view
+                try
+                {
+                    if (mode == TransferMode.Move && items != null && items.Count > 0)
+                    {
+                        Invoke(() => RemoveItemsFromView(items));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    FileSystemLogger.Warning(ex, "Failed to remove moved items from view");
+                }
+
+                // Close the progress window on UI thread to ensure it doesn't stay open
+                try
+                {
+                    if (progressWindow != null)
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            try { progressWindow.Close(); } catch { }
+                        }, DispatcherPriority.Background);
+                    }
+                }
+                catch { }
+            }
+            catch (Exception ex)
+            {
+                FileSystemLogger.Error(ex, "Failed to handle drop for {Count} items", sourcePaths.Length);
             }
         }
 

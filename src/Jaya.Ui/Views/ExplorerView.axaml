@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
     xmlns:ia="clr-namespace:Avalonia.Xaml.Interactions.Core;assembly=Avalonia.Xaml.Interactions"
+    xmlns:input="clr-namespace:Avalonia.Input;assembly=Avalonia.Base"
     xmlns:j="https://github.com/lextudio/jaya"
     xmlns:local="clr-namespace:Jaya.Ui;assembly=Jaya.Ui"
     xmlns:m="clr-namespace:Jaya.Ui.Models;assembly=Jaya.Ui"
@@ -52,7 +53,7 @@
             Command="{Binding SimpleCommand}"
             CommandParameter="{x:Static local:CommandType.Paste}" />
     </UserControl.KeyBindings>
-    <Grid>
+    <Grid input:DragDrop.AllowDrop="True">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
@@ -146,6 +147,7 @@
                 </MenuItem>
               </ContextMenu>
             </Setter>
+            <Setter Property="input:DragDrop.AllowDrop" Value="True" />
           </Style>
           <Style Selector="ListBox[IsVisible=True]">
             <Setter Property="ItemsSource" Value="{Binding Item.Children, Mode=OneWay}"/>
@@ -194,6 +196,7 @@
                 </MenuItem>
               </ContextMenu>
             </Setter>
+            <Setter Property="input:DragDrop.AllowDrop" Value="True" />
           </Style>
           <Style Selector="ListBoxItem CheckBox">
             <Setter Property="Background" Value="{DynamicResource Window.BackgroundBrush}"/>
@@ -208,7 +211,8 @@
             IsReadOnly="True"
             x:Name="DetailsDataGrid"
             IsVisible="{Binding PaneConfig.IsDetailsView, Mode=OneWay}"
-            SelectionMode="Extended">
+            SelectionMode="Extended"
+            input:DragDrop.AllowDrop="True">
             <DataGrid.ContextMenu>
               <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
                 <MenuItem
@@ -239,6 +243,7 @@
                                     <ia:EventTriggerBehavior EventName="DoubleTapped" SourceObject="{Binding #ObjectEntry}">
                                         <ia:InvokeCommandAction Command="{Binding $parent[DataGrid].DataContext.InvokeObjectCommand}" CommandParameter="{Binding}" />
                                     </ia:EventTriggerBehavior>
+                                    <!-- Allow dropping onto rows to move files into directories -->
                                 </i:Interaction.Behaviors>
                                   <Panel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" IsVisible="{Binding Path=$parent[DataGrid].DataContext.ApplicationConfig.IsItemCheckBoxVisible}">
                                   <Rectangle Width="{Binding #SelectionCheckBox.Bounds.Width}" Height="{Binding #SelectionCheckBox.Bounds.Height}"/>
@@ -293,6 +298,7 @@
         <ListBox x:Name="IconsListBox" Classes="IconsView"
           IsVisible="{Binding PaneConfig.IsThumbnailView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            input:DragDrop.AllowDrop="True"
             SelectionMode="Multiple">
             <ListBox.ContextMenu>
               <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
@@ -360,6 +366,7 @@
         <ListBox x:Name="ListListBox" Classes="ListView"
           IsVisible="{Binding PaneConfig.IsListView, Mode=OneWay}"
             ScrollViewer.VerticalScrollBarVisibility="Disabled"
+            input:DragDrop.AllowDrop="True"
             SelectionMode="Multiple">
           <ListBox.ContextMenu>
             <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
@@ -427,6 +434,7 @@
         <ListBox x:Name="TilesListBox" Classes="TilesView"
           IsVisible="{Binding PaneConfig.IsTilesView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            input:DragDrop.AllowDrop="True"
             SelectionMode="Multiple">
           <ListBox.ContextMenu>
             <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
@@ -503,6 +511,7 @@
       <ListBox x:Name="ContentListBox" Classes="ContentView"
         IsVisible="{Binding PaneConfig.IsContentView, Mode=OneWay}"
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            input:DragDrop.AllowDrop="True"
             SelectionMode="Multiple">
         <ListBox.ContextMenu>
           <ContextMenu DataContext="{Binding DataContext, ElementName=ExplorerRoot}">
