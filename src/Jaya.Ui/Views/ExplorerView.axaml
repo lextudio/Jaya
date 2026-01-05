@@ -77,6 +77,12 @@
               <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="16" Height="16" />
             </MenuItem.Icon>
           </MenuItem>
+          <Separator />
+          <MenuItem Command="{Binding OpenTerminalCommand}" Header="Open Terminal Here">
+            <MenuItem.Icon>
+              <Image Source="{DynamicResource Icon.Terminal.Image}" Width="16" Height="16" />
+            </MenuItem.Icon>
+          </MenuItem>
         </ContextMenu>
       </Grid.ContextMenu>
 
@@ -135,6 +141,11 @@
                   Command="{Binding DataContext.RenameItemCommand, ElementName=ExplorerRoot}"
                   CommandParameter="{Binding}"
                   Header="Rename">
+                </MenuItem>
+                <MenuItem
+                  Command="{Binding DataContext.OpenTerminalCommand, ElementName=ExplorerRoot}"
+                  CommandParameter="{Binding}">
+                  <MenuItem.Header>Open Terminal Here</MenuItem.Header>
                 </MenuItem>
                 <Separator />
                 <MenuItem
@@ -232,6 +243,12 @@
                     <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="16" Height="16" />
                   </MenuItem.Icon>
                 </MenuItem>
+                <Separator />
+                <MenuItem Command="{Binding OpenTerminalCommand}" Header="Open Terminal Here">
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.Terminal.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
               </ContextMenu>
             </DataGrid.ContextMenu>
             <DataGrid.Columns>
@@ -282,16 +299,8 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Binding="{Binding Object.Modified, StringFormat='{}{0:G}'}" Header="Date Modified" SortMemberPath="Object.Modified" />
-                <DataGridTextColumn Binding="{Binding Object.Type}">
-                  <DataGridTextColumn.Header>
-                    <OnPlatform x:TypeArguments="x:String">
-                      <On Platform="MacOS" Value="Kind" />
-                      <On Platform="Windows" Value="Type" />
-                      <On Platform="Linux" Value="Type" />
-                    </OnPlatform>
-                  </DataGridTextColumn.Header>
-                </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Modified, StringFormat='{}{0:G}'}" Header="Date Modified" SortMemberPath="Modified" />
+                <DataGridTextColumn Binding="{Binding Object.Type}" Header="Type" />
                 <DataGridTemplateColumn Header="Size" SortMemberPath="SizeSort">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

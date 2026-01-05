@@ -66,7 +66,53 @@ namespace Jaya.Ui.Views
                             dataGrid.AddHandler(DragDrop.DropEvent, DetailsDataGrid_Drop, Avalonia.Interactivity.RoutingStrategies.Bubble);
                             // Clear selection when clicking empty space in Details view
                             dataGrid.AddHandler(Avalonia.Input.InputElement.PointerPressedEvent, DetailsDataGrid_PointerPressed, Avalonia.Interactivity.RoutingStrategies.Bubble);
+                            // Save sort settings when user sorts columns
+                            dataGrid.Sorting += (ss, ee) =>
+                            {
+                                try
+                                {
+                                    var vm = DataContext as Jaya.Ui.ViewModels.ExplorerViewModel;
+                                    if (vm == null)
+                                        return;
+
+                                    // Try to detect the sorted column via reflection: look for a property named 'SortDirection' on columns
+                                    foreach (var col in dataGrid.Columns)
+                                    {
+                                        try
+                                        {
+                                            var prop = col.GetType().GetProperty("SortDirection");
+                                            if (prop != null)
+                                            {
+                                                var val = prop.GetValue(col);
+                                                if (val != null)
+                                                {
+                                                    // Found sorted column
+                                                    var sortMember = (col as Avalonia.Controls.DataGridColumn)?.SortMemberPath ?? col.Header?.ToString() ?? string.Empty;
+                                                    var asc = val.ToString()?.IndexOf("Asc", StringComparison.OrdinalIgnoreCase) >= 0;
+                                                    var currentDir = vm.Item?.Object as Jaya.Shared.Models.DirectoryModel;
+                                                    if (currentDir != null && !string.IsNullOrWhiteSpace(sortMember))
+                                                        vm.SaveDirectorySort(currentDir.Path, sortMember, asc);
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        catch { }
+                                    }
+                                }
+                                catch { }
+                            };
                             Logger.Debug("Drag-drop handlers attached successfully (Tunnel + Bubble)");
+                           
+                                try
+                                {
+                                    if (OperatingSystem.IsMacOS())
+                                    {
+                                        var col = dataGrid.Columns.FirstOrDefault(c => (c as Avalonia.Controls.DataGridTextColumn)?.Binding?.ToString()?.Contains("Object.Type") == true || string.Equals(c.Header?.ToString(), "Type", StringComparison.OrdinalIgnoreCase));
+                                        if (col != null)
+                                            col.Header = "Kind";
+                                    }
+                                }
+                                catch { }
                         }
                     }
                     catch { }
@@ -221,6 +267,63 @@ namespace Jaya.Ui.Views
 
                     DetachedFromVisualTree += ExplorerView_DetachedFromVisualTree;
                 }
+                // Restore directory sort when ViewModel.Item changes
+                this.DataContextChanged += (s, e) =>
+                {
+                    try
+                    {
+                        var vm = this.DataContext as Jaya.Ui.ViewModels.ExplorerViewModel;
+                        if (vm != null)
+                        {
+                            vm.PropertyChanged += (vs, ve) =>
+                            {
+                                try
+                                {
+                                    if (ve.PropertyName == nameof(Jaya.Ui.ViewModels.ExplorerViewModel.Item))
+                                    {
+                                        var grid = this.FindControl<DataGrid>("DetailsDataGrid");
+                                        var dir = vm.Item?.Object as Jaya.Shared.Models.DirectoryModel;
+                                        if (grid != null && dir != null)
+                                        {
+                                            var sort = vm.GetDirectorySort(dir.Path);
+                                            if (sort.HasValue)
+                                            {
+                                                // Try to find matching column and set its SortDirection via reflection
+                                                foreach (var col in grid.Columns)
+                                                {
+                                                    try
+                                                    {
+                                                        var dgCol = col as Avalonia.Controls.DataGridColumn;
+                                                        var sortMember = dgCol?.SortMemberPath ?? col.Header?.ToString();
+                                                        if (!string.IsNullOrWhiteSpace(sortMember) && string.Equals(sortMember, sort.Value.sortMember, StringComparison.OrdinalIgnoreCase))
+                                                        {
+                                                            var prop = col.GetType().GetProperty("SortDirection");
+                                                            if (prop != null && prop.PropertyType.IsEnum)
+                                                            {
+                                                                // Find enum value matching Ascending/Descending
+                                                                var enumType = prop.PropertyType;
+                                                                var desired = sort.Value.ascending ? "Ascending" : "Descending";
+                                                                var enumVal = Enum.GetValues(enumType).Cast<object>().FirstOrDefault(x => x.ToString()?.IndexOf(desired, StringComparison.OrdinalIgnoreCase) >= 0);
+                                                                if (enumVal != null)
+                                                                {
+                                                                    prop.SetValue(col, enumVal);
+                                                                }
+                                                            }
+                                                            break;
+                                                        }
+                                                    }
+                                                    catch { }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                catch { }
+                            };
+                        }
+                    }
+                    catch { }
+                };
             }
 
         }

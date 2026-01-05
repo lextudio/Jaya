@@ -113,6 +113,19 @@ namespace Jaya.Ui.Models
             }
         }
 
+        // Expose modified date from underlying model for DataGrid binding/sorting
+        public DateTime? Modified
+        {
+            get
+            {
+                if (Object is FileModel file && file.Modified.HasValue)
+                    return file.Modified.Value;
+                if (Object is DirectoryModel dir && dir.Modified.HasValue)
+                    return dir.Modified.Value;
+                return null;
+            }
+        }
+
         #endregion
     }
 }

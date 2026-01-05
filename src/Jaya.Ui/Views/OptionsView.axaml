@@ -23,24 +23,31 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Color Theme:" />
-            <ComboBox
-                x:Name="ThemeSelector"
-                Grid.Column="1"
-                ItemsSource="{Binding Themes, Mode=OneWay}"
-                SelectedItem="{Binding SelectedThemePreview, Mode=TwoWay}"
-                >
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Name}" />
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
+        <TextBlock Text="Color Theme:" Grid.Row="0" />
+        <ComboBox
+            x:Name="ThemeSelector"
+            Grid.Row="0"
+            Grid.Column="1"
+            ItemsSource="{Binding Themes, Mode=OneWay}"
+            SelectedItem="{Binding SelectedThemePreview, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Name}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
 
         <CheckBox
             Grid.Row="1"
+            Grid.ColumnSpan="3"
+            Content="Prefer iTerm when available (macOS)"
+            IsChecked="{Binding ApplicationConfig.PreferIterm, Mode=TwoWay}" />
+
+        <CheckBox
+            Grid.Row="2"
             Grid.ColumnSpan="3"
             Content="Use ribbon interface instead of menu and toolbar."
             IsChecked="{Binding PaneConfig.IsRibbonVisible, Mode=TwoWay}"
@@ -48,12 +55,12 @@
             Unchecked="OnPaneOptionChanged" />
 
         <CheckBox
-            Grid.Row="2"
+            Grid.Row="3"
             Grid.ColumnSpan="3"
             Content="Use native menus. (Linux)" />
 
         <CheckBox
-            Grid.Row="3"
+            Grid.Row="4"
             Grid.ColumnSpan="3"
             Content="Show status bar."
             IsChecked="{Binding PaneConfig.IsStatusBarVisible, Mode=TwoWay}"
@@ -61,14 +68,14 @@
             Unchecked="OnPaneOptionChanged" />
 
         <CheckBox
-            Grid.Row="4"
+            Grid.Row="5"
             Grid.ColumnSpan="3"
             Content="Show custom title header (menu + window controls)."
             IsChecked="{Binding PaneConfig.IsMenuHeaderVisible, Mode=TwoWay}"
             Checked="OnPaneOptionChanged"
             Unchecked="OnPaneOptionChanged" />
 
-        <StackPanel Grid.Row="5" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Grid.Row="6" Grid.ColumnSpan="3" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="_OK" Margin="4" Click="OnOkClicked" />
             <Button Content="_Cancel" Margin="4" Click="OnCancelClicked" />
         </StackPanel>

@@ -221,6 +221,15 @@
                                     <Image Source="{DynamicResource Icon.EditFile.Image}" Width="16" Height="16" />
                                 </ribbon:RibbonButton.Icon>
                             </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                Command="{Binding OpenTerminalCommand}"
+                                Content="Terminal"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Terminal.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
                         </ribbon:RibbonGroupBox>
                         <ribbon:RibbonGroupBox Header="Select">
                             <ribbon:RibbonButton

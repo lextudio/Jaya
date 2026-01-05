@@ -39,6 +39,7 @@ namespace Jaya.Ui.ViewModels
         ICommand? _cutItems;
         ICommand? _copyItems;
         ICommand? _pasteItems;
+        ICommand? _openTerminalCommand;
         ProviderServiceBase? _service;
         bool _applyOverwriteToAll = false;
         AccountModelBase? _account;
@@ -76,6 +77,28 @@ namespace Jaya.Ui.ViewModels
                 EventAggregator?.UnSubscribe(_onNewFolder);
             if (_shared?.ApplicationConfiguration != null)
                 _shared.ApplicationConfiguration.PropertyChanged -= ApplicationConfiguration_PropertyChanged;
+        }
+
+        // Remember per-directory sort settings: map directory path -> (sortMemberPath, ascending)
+        readonly Dictionary<string, (string sortMember, bool ascending)> _directorySortSettings = new();
+
+        public void SaveDirectorySort(string? directoryPath, string sortMember, bool ascending)
+        {
+            if (string.IsNullOrWhiteSpace(directoryPath) || string.IsNullOrWhiteSpace(sortMember))
+                return;
+
+            _directorySortSettings[directoryPath] = (sortMember, ascending);
+        }
+
+        public (string sortMember, bool ascending)? GetDirectorySort(string? directoryPath)
+        {
+            if (string.IsNullOrWhiteSpace(directoryPath))
+                return null;
+
+            if (_directorySortSettings.TryGetValue(directoryPath, out var v))
+                return v;
+
+            return null;
         }
 
         #region properties
@@ -143,6 +166,16 @@ namespace Jaya.Ui.ViewModels
                     _pasteItems = new RelayCommand(PasteItems);
 
                 return _pasteItems!;
+            }
+        }
+
+        public ICommand OpenTerminalCommand
+        {
+            get
+            {
+                if (_openTerminalCommand == null)
+                    _openTerminalCommand = new RelayCommand<object?>(OpenTerminal);
+                return _openTerminalCommand!;
             }
         }
 
@@ -316,6 +349,138 @@ namespace Jaya.Ui.ViewModels
             // initialize edit name and toggle edit mode
             item.EditableName = item.DisplayName;
             item.IsEditing = true;
+        }
+
+        void OpenTerminal(object? parameter)
+        {
+            try
+            {
+                // Determine the target folder to open in terminal.
+                // If a specific item was provided via the context menu, use that;
+                // otherwise fall back to the current `Item` selection.
+                string targetPath = string.Empty;
+                if (parameter != null && parameter is ExplorerItemModel paramItem)
+                {
+                    var obj = paramItem.Object as FileSystemObjectModel;
+                    if (obj is FileModel pf)
+                        targetPath = System.IO.Path.GetDirectoryName(pf.Path) ?? pf.Path ?? string.Empty;
+                    else if (obj is DirectoryModel pd)
+                        targetPath = pd.Path ?? string.Empty;
+                }
+
+                if (string.IsNullOrWhiteSpace(targetPath))
+                {
+                    var fsObj = Item?.Object as FileSystemObjectModel;
+                    if (fsObj != null)
+                    {
+                        if (fsObj is FileModel fileModel)
+                        {
+                            try { targetPath = System.IO.Path.GetDirectoryName(fileModel.Path) ?? fileModel.Path; } catch { targetPath = fileModel.Path ?? string.Empty; }
+                        }
+                        else if (fsObj is DirectoryModel dirModel2)
+                        {
+                            targetPath = dirModel2.Path ?? string.Empty;
+                        }
+                    }
+                    else
+                    {
+                        var dirModel = Item?.Object as DirectoryModel;
+                        targetPath = dirModel?.Path ?? string.Empty;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(targetPath))
+                    return;
+
+                // Determine whether to prefer iTerm: user preference if set, otherwise detect installation
+                bool preferIterm;
+                try
+                {
+                    preferIterm = _shared?.ApplicationConfiguration?.PreferIterm ?? (System.IO.Directory.Exists("/Applications/iTerm.app") || System.IO.File.Exists("/Applications/iTerm.app"));
+                }
+                catch
+                {
+                    preferIterm = System.IO.Directory.Exists("/Applications/iTerm.app") || System.IO.File.Exists("/Applications/iTerm.app");
+                }
+
+                FileSystemLogger.Information("OpenTerminal requested: target={TargetPath} preferIterm={PreferIterm}", targetPath, preferIterm);
+
+                if (OperatingSystem.IsMacOS())
+                {
+                    // Helper: escape single quotes for shell arguments by replacing ' with '"'"'
+                    string EscapeSingleQuotes(string s) => s?.Replace("'", "'\"'\"'") ?? string.Empty;
+                        var shellSafePath = EscapeSingleQuotes(targetPath);
+
+                    // Helper: write AppleScript to temp file and execute with osascript
+                    void RunAppleScriptFromFile(string script)
+                    {
+                        try
+                        {
+                            var tmpPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"jaya-terminal-{Guid.NewGuid()}.applescript");
+                            System.IO.File.WriteAllText(tmpPath, script);
+                            FileSystemLogger.Debug("OpenTerminal: wrote appleScript to {TmpPath} scriptStart=\n{Script}\nscriptEnd", tmpPath, script);
+                            var psi = new ProcessStartInfo("osascript", tmpPath) { UseShellExecute = false };
+                            FileSystemLogger.Information("OpenTerminal: executing osascript {TmpPath}", tmpPath);
+                            var p = Process.Start(psi);
+                            try { p?.WaitForExit(2000); } catch { }
+                            try { System.IO.File.Delete(tmpPath); } catch { }
+                        }
+                        catch (Exception ex)
+                        {
+                            FileSystemLogger.Warning(ex, "Failed to run AppleScript via temporary file");
+                        }
+                    }
+
+                    if (preferIterm)
+                    {
+                        // iTerm2 AppleScript: create a window and run cd to the path
+                        var script = "tell application \"iTerm\"\n" +
+                                     "  create window with default profile\n" +
+                                     "  tell current session of current window\n" +
+                                     $"    write text \"cd '{shellSafePath}'; clear\"\n" +
+                                     "  end tell\n" +
+                                     "  activate\n" +
+                                     "end tell";
+                        FileSystemLogger.Information("OpenTerminal: running iTerm appleScript (preferIterm=true)");
+                        RunAppleScriptFromFile(script);
+                    }
+                    else
+                    {
+                        // Terminal AppleScript: open Terminal and run cd to the path
+                        var script = "tell application \"Terminal\"\n" +
+                                     $"  do script \"cd '{shellSafePath}'; clear\"\n" +
+                                     "  activate\n" +
+                                     "end tell";
+                        FileSystemLogger.Information("OpenTerminal: running Terminal appleScript (preferIterm=false)");
+                        RunAppleScriptFromFile(script);
+                    }
+                }
+                else if (OperatingSystem.IsWindows())
+                {
+                    // Use wt (Windows Terminal) if available, otherwise cmd
+                    try
+                        {
+                            FileSystemLogger.Information("OpenTerminal: launching wt -d {TargetPath}", targetPath);
+                            Process.Start(new ProcessStartInfo("wt", $"-d \"{targetPath}\"") { UseShellExecute = true });
+                    }
+                    catch
+                    {
+                            FileSystemLogger.Information("OpenTerminal: wt failed, falling back to cmd /K cd /d {TargetPath}", targetPath);
+                            Process.Start(new ProcessStartInfo("cmd", $"/K cd /d \"{targetPath}\"") { UseShellExecute = true });
+                    }
+                }
+                else
+                {
+                    // Linux: try gnome-terminal, x-terminal-emulator, or xterm
+                        try { FileSystemLogger.Information("OpenTerminal: launching gnome-terminal --working-directory={TargetPath}", targetPath); Process.Start(new ProcessStartInfo("gnome-terminal", $"--working-directory=\"{targetPath}\"") { UseShellExecute = true }); return; } catch (Exception ex) { FileSystemLogger.Debug(ex, "gnome-terminal failed"); }
+                        try { FileSystemLogger.Information("OpenTerminal: launching x-terminal-emulator --working-directory={TargetPath}", targetPath); Process.Start(new ProcessStartInfo("x-terminal-emulator", $"--working-directory=\"{targetPath}\"") { UseShellExecute = true }); return; } catch (Exception ex) { FileSystemLogger.Debug(ex, "x-terminal-emulator failed"); }
+                        try { FileSystemLogger.Information("OpenTerminal: launching xterm and cd to {TargetPath}", targetPath); Process.Start(new ProcessStartInfo("xterm", $"-e \"cd \"{targetPath}\"; bash\"") { UseShellExecute = true }); return; } catch (Exception ex) { FileSystemLogger.Debug(ex, "xterm failed"); }
+                }
+            }
+            catch (Exception ex)
+            {
+                FileSystemLogger.Error(ex, "Failed to open terminal");
+            }
         }
 
         async void CommitRename(ExplorerItemModel? item)

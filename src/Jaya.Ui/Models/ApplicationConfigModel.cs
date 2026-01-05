@@ -63,6 +63,13 @@ namespace Jaya.Ui.Models
             }
         }
 
+        [JsonPropertyName("preferIterm")]
+        public bool PreferIterm
+        {
+            get => Get<bool>();
+            set => Set(value);
+        }
+
         [JsonPropertyName("themeName")]
         public string ThemeName
         {
@@ -92,7 +99,8 @@ namespace Jaya.Ui.Models
             {
                 WidthPx = 800,
                 HeightPx = 600,
-                ThemeName = "Dark"
+                ThemeName = "Dark",
+                PreferIterm = false
             };
         }
     }

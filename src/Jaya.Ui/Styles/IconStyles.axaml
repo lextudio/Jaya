@@ -1158,6 +1158,29 @@
       <DrawingImage x:Key="Icon.Property.Image" Drawing="{StaticResource Icon.Property}" />
       <DrawingImage x:Key="Icon.Folder.Image" Drawing="{StaticResource Icon.Folder}" />
       <DrawingImage x:Key="Icon.SubFolders.Image" Drawing="{StaticResource Icon.SubFolders}" />
+      <!-- Terminal icon -->
+      <DrawingGroup x:Key="Icon.Terminal">
+        <GeometryDrawing Geometry="M0,0 L16,0 16,16 0,16 Z">
+          <GeometryDrawing.Brush>
+            <StaticResource ResourceKey="IconRes.DarkGreyBrush" />
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M1,2 L15,2 L15,5 L1,5 Z">
+          <GeometryDrawing.Brush>
+            <StaticResource ResourceKey="IconRes.WhiteBrush" />
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M3,8 L6,11 M7,8 L13,14">
+          <GeometryDrawing.Pen>
+            <Pen Thickness="1">
+              <Pen.Brush>
+                <StaticResource ResourceKey="IconRes.WhiteBrush" />
+              </Pen.Brush>
+            </Pen>
+          </GeometryDrawing.Pen>
+        </GeometryDrawing>
+      </DrawingGroup>
+      <DrawingImage x:Key="Icon.Terminal.Image" Drawing="{StaticResource Icon.Terminal}" />
       <DrawingImage x:Key="Icon.FindInFiles.Image" Drawing="{StaticResource Icon.FindInFiles}" />
       <DrawingImage x:Key="Icon.Calendar.Image" Drawing="{StaticResource Icon.Calendar}" />
       <DrawingImage x:Key="Icon.ContentType.Image" Drawing="{StaticResource Icon.ContentType}" />

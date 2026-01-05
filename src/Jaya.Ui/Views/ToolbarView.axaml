@@ -149,6 +149,9 @@
                 </Button.CommandParameter>
                 <Image Source="{DynamicResource Icon.Property.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
+            <Button Command="{Binding OpenTerminalCommand}" ToolTip.Tip="Open Terminal Here">
+                <Image Source="{DynamicResource Icon.Terminal.Image}" Width="16" Height="16" Stretch="Uniform" />
+            </Button>
         </StackPanel>
 
         <StackPanel>
