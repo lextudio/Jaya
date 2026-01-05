@@ -291,7 +291,7 @@
                                     </ia:EventTriggerBehavior>
                                     <!-- Allow dropping onto rows to move files into directories -->
                                 </i:Interaction.Behaviors>
-                                  <Panel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" IsVisible="{Binding Path=$parent[DataGrid].DataContext.ApplicationConfig.IsItemCheckBoxVisible}">
+                                  <Panel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" IsVisible="{Binding DataContext.ApplicationConfig.IsItemCheckBoxVisible, ElementName=ExplorerRoot}">
                                   <Rectangle Width="{Binding #SelectionCheckBox.Bounds.Width}" Height="{Binding #SelectionCheckBox.Bounds.Height}"/>
                                   <CheckBox x:Name="SelectionCheckBox" IsChecked="{Binding $parent[DataGridRow].IsSelected}"/>
                                 </Panel>
@@ -401,7 +401,7 @@
                         </TextBox>
                       </Grid>
                     </StackPanel>
-                    <Panel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" IsVisible="{Binding Path=$parent[ListBox].DataContext.ApplicationConfig.IsItemCheckBoxVisible}">
+                    <Panel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" IsVisible="{Binding DataContext.ApplicationConfig.IsItemCheckBoxVisible, ElementName=ExplorerRoot}">
                       <CheckBox IsChecked="{Binding $parent[ListBoxItem].IsSelected}"/>
                     </Panel>
                   </Panel>
@@ -470,7 +470,7 @@
                         </TextBox>
                       </Grid>
                 </StackPanel>
-                <Panel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" IsVisible="{Binding Path=$parent[ListBox].DataContext.ApplicationConfig.IsItemCheckBoxVisible}">
+                <Panel HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0" IsVisible="{Binding DataContext.ApplicationConfig.IsItemCheckBoxVisible, ElementName=ExplorerRoot}">
                   <CheckBox IsChecked="{Binding $parent[ListBoxItem].IsSelected}"/>
                 </Panel>
               </Panel>
@@ -549,7 +549,7 @@
                         TextWrapping="Wrap" />
                   </UniformGrid>
                 </StackPanel>
-                <Panel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" IsVisible="{Binding Path=$parent[ListBox].DataContext.ApplicationConfig.IsItemCheckBoxVisible}">
+                <Panel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="5" IsVisible="{Binding DataContext.ApplicationConfig.IsItemCheckBoxVisible, ElementName=ExplorerRoot}">
                   <CheckBox IsChecked="{Binding $parent[ListBoxItem].IsSelected}"/>
                 </Panel>
               </Panel>
