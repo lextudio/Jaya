@@ -86,5 +86,6 @@ namespace Jaya.Ui
         , SelectAll = 19
         , SelectNone = 20
         , InvertSelection = 21
+        , CopyPath = 22
     }
 }

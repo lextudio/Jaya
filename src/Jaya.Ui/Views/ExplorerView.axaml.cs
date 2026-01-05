@@ -15,6 +15,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
+using Jaya.Ui.Services;
 using System.Reflection;
 using Jaya.Ui.ViewModels;
 using Jaya.Shared;
@@ -40,6 +42,7 @@ namespace Jaya.Ui.Views
         Subscription<SelectNoneRequestedEventArgs>? _selectNoneRequested;
         Subscription<InvertSelectionRequestedEventArgs>? _invertSelectionRequested;
         Subscription<SelectItemsRequestedEventArgs>? _selectItemsRequested;
+        Subscription<CopyPathRequestedEventArgs>? _copyPathRequested;
         Avalonia.Input.PointerPressedEventArgs? _dragStartArgs;
         bool _isDragging;
         ExplorerViewModel? _viewModel;
@@ -279,6 +282,35 @@ namespace Jaya.Ui.Views
                                     }
                                 }
                                 catch { }
+                            }
+                            catch { }
+                        });
+                    });
+                    _copyPathRequested = eventAggregator.Subscribe<CopyPathRequestedEventArgs>(args =>
+                    {
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            try
+                            {
+                                var vm = DataContext as ExplorerViewModel;
+                                if (vm == null)
+                                    return;
+
+                                var selected = DetailsDataGrid?.SelectedItem as Models.ExplorerItemModel
+                                               ?? ListListBox?.SelectedItem as Models.ExplorerItemModel
+                                               ?? IconsListBox?.SelectedItem as Models.ExplorerItemModel
+                                               ?? TilesListBox?.SelectedItem as Models.ExplorerItemModel
+                                               ?? ContentListBox?.SelectedItem as Models.ExplorerItemModel;
+
+                                if (selected?.Object is Jaya.Shared.Models.FileSystemObjectModel fso && !string.IsNullOrWhiteSpace(fso.Path))
+                                {
+                                    try
+                                    {
+                                        ClipboardService.CopyText(fso.Path);
+                                        Logger.Debug("Copied path to clipboard: {Path}", fso.Path);
+                                    }
+                                    catch (Exception ex) { Logger.Warning(ex, "CopyPath failed"); }
+                                }
                             }
                             catch { }
                         });
@@ -558,6 +590,8 @@ namespace Jaya.Ui.Views
                 return false;
             }
         }
+
+        
 
         void ExplorerView_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
         {

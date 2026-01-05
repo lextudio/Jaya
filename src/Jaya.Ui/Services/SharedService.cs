@@ -213,6 +213,13 @@ namespace Jaya.Ui.Services
                     }
                     catch { }
                     break;
+                case CommandType.CopyPath:
+                    try
+                    {
+                        _commandService.EventAggregator.Publish(new CopyPathRequestedEventArgs());
+                    }
+                    catch { }
+                    break;
                 case CommandType.Paste:
                     try
                     {

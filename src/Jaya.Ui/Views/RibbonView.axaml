@@ -90,6 +90,8 @@
                             <ribbon:RibbonButton
                                     ribbon:KeyTip.KeyTipKeys="CP"
                                     Content="Copy Path"
+                                    Command="{Binding SimpleCommand}"
+                                    CommandParameter="{x:Static local:CommandType.CopyPath}"
                                     MaxSize="Medium"
                                     MinSize="Small">
                                 <ribbon:RibbonButton.Icon>
