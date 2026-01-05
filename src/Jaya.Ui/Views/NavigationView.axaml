@@ -28,24 +28,43 @@
     </UserControl.Styles>
 
     <StackPanel>
-        <TextBlock Margin="6,4,0,2" FontWeight="Bold">Locations</TextBlock>
+        <TextBlock Margin="10,12,10,8" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource SystemAccentColor}" Opacity="0.7">LOCATIONS</TextBlock>
         <ItemsControl
             Classes="locations"
-            Margin="4"
+            Margin="4,0,4,8"
             ItemsSource="{Binding Locations}">
+            <ItemsControl.Styles>
+                <Style Selector="ItemsControl.locations Button">
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="BorderThickness" Value="0" />
+                    <Setter Property="Padding" Value="8,0,8,0" />
+                    <Setter Property="MinHeight" Value="28" />
+                    <Setter Property="CornerRadius" Value="6" />
+                    <Setter Property="Cursor" Value="Hand" />
+                </Style>
+                <Style Selector="ItemsControl.locations Button:pointerover">
+                    <Setter Property="Background" Value="#0a000000" />
+                    <Setter Property="Foreground" Value="{DynamicResource Window.ForegroundBrush}" />
+                </Style>
+                <Style Selector="ItemsControl.locations Button:pressed">
+                    <Setter Property="Background" Value="#14000000" />
+                </Style>
+            </ItemsControl.Styles>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Grid Height="28" Margin="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="28" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Image Grid.Column="0" Width="18" Height="18" VerticalAlignment="Center" HorizontalAlignment="Center"
-                               Source="{Binding ImageResourceKey, Converter={StaticResource ResourceValueConverter}}" />
-                        <Image Grid.Column="0" Width="18" Height="18" VerticalAlignment="Center" HorizontalAlignment="Center"
-                               Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}}" />
-                        <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" Foreground="{DynamicResource Window.ForegroundBrush}" FontSize="13" />
-                    </Grid>
+                    <Button Command="{Binding DataContext.SelectLocationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Focusable="False" HorizontalAlignment="Stretch">
+                        <Grid Height="28" Margin="0" VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,4,0"
+                                Source="{Binding ImageResourceKey, Converter={StaticResource ResourceValueConverter}}" />
+                            <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,4,0"
+                                Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}}" />
+                            <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" Foreground="{DynamicResource Window.ForegroundBrush}" FontSize="13" />
+                        </Grid>
+                    </Button>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
