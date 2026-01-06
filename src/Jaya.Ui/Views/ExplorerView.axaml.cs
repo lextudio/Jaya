@@ -14,7 +14,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.InteropServices;
 using Jaya.Ui.Services;
 using System.Reflection;
 using Jaya.Ui.ViewModels;
@@ -49,7 +48,7 @@ namespace Jaya.Ui.Views
         System.Collections.Specialized.NotifyCollectionChangedEventHandler? _contentSelectionChangedHandler;
 
         EventHandler<Avalonia.Controls.SelectionChangedEventArgs>? _detailsSelectionChangedEventHandler;
-        EventHandler<Avalonia.Controls.SelectionChangedEventArgs>? _listBoxSelectionChangedEventHandler;
+        readonly Dictionary<ListBox, EventHandler<Avalonia.Controls.SelectionChangedEventArgs>> _listBoxSelectionChangedHandlers = new();
         Avalonia.Input.PointerPressedEventArgs? _dragStartArgs;
         bool _isDragging;
         ExplorerViewModel? _viewModel;
@@ -736,17 +735,21 @@ namespace Jaya.Ui.Views
                 // Attach SelectionChanged event as well
                 try
                 {
-                    var eventHandler = new EventHandler<Avalonia.Controls.SelectionChangedEventArgs>((s, e) =>
+                    if (!_listBoxSelectionChangedHandlers.TryGetValue(lb, out var eventHandler))
                     {
-                        try
+                        eventHandler = (s, e) =>
                         {
-                            var list = s as ListBox;
-                            var count = list?.SelectedItems?.Count ?? (list?.SelectedItem != null ? 1 : 0);
-                            Logger.Debug("ListBox.SelectionChanged handler `{Name}`: Count={Count}", lb.Name, count);
-                            ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
-                        }
-                        catch { }
-                    });
+                            try
+                            {
+                                var list = s as ListBox;
+                                var count = list?.SelectedItems?.Count ?? (list?.SelectedItem != null ? 1 : 0);
+                                Logger.Debug("ListBox.SelectionChanged handler `{Name}`: Count={Count}", lb.Name, count);
+                                ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
+                            }
+                            catch { }
+                        };
+                        _listBoxSelectionChangedHandlers[lb] = eventHandler;
+                    }
                     lb.SelectionChanged -= eventHandler;
                     lb.SelectionChanged += eventHandler;
                 }
@@ -1114,11 +1117,28 @@ namespace Jaya.Ui.Views
             if (_detailsGrid != null && _detailsGridPropertyChanged != null)
                 _detailsGrid.PropertyChanged -= _detailsGridPropertyChanged;
             _detailsGridPropertyChanged = null;
+            try
+            {
+                if (_detailsSelectionChangedEventHandler != null)
+                    _detailsGrid?.SelectionChanged -= _detailsSelectionChangedEventHandler;
+            }
+            catch { }
+            _detailsSelectionChangedEventHandler = null;
             // Detach selection handlers
             try
             {
                 if (_detailsSelectionChangedHandler != null && _detailsGrid?.SelectedItems is System.Collections.Specialized.INotifyCollectionChanged dincc)
                     dincc.CollectionChanged -= _detailsSelectionChangedHandler;
+            }
+            catch { }
+            _detailsSelectionChangedHandler = null;
+            try
+            {
+                foreach (var entry in _listBoxSelectionChangedHandlers)
+                {
+                    entry.Key.SelectionChanged -= entry.Value;
+                }
+                _listBoxSelectionChangedHandlers.Clear();
             }
             catch { }
             try
@@ -1333,18 +1353,97 @@ namespace Jaya.Ui.Views
             catch { }
         }
 
+        IEnumerable<(string name, Control? control)> EnumerateItemControls()
+        {
+            yield return ("DetailsDataGrid", _detailsGrid ?? this.FindControl<DataGrid>("DetailsDataGrid"));
+            yield return ("ListListBox", ListListBox ?? this.FindControl<ListBox>("ListListBox"));
+            yield return ("IconsListBox", IconsListBox ?? this.FindControl<ListBox>("IconsListBox"));
+            yield return ("TilesListBox", TilesListBox ?? this.FindControl<ListBox>("TilesListBox"));
+            yield return ("ContentListBox", ContentListBox ?? this.FindControl<ListBox>("ContentListBox"));
+        }
+
+        static IReadOnlyList<Models.ExplorerItemModel> GetSelectedItemsFromControl(Control? control)
+        {
+            if (control is DataGrid dg)
+                return GetSelectedItems(dg.SelectedItems, dg.SelectedItem);
+            if (control is ListBox lb)
+                return GetSelectedItems(lb.SelectedItems, lb.SelectedItem);
+
+            return new List<Models.ExplorerItemModel>();
+        }
+
+        static bool TryGetItemsEnumerable(object control, out IEnumerable items, out string itemsSourceUsed)
+        {
+            items = Array.Empty<object>();
+            itemsSourceUsed = "Items";
+
+            if (control is DataGrid dg)
+            {
+                items = dg.ItemsSource as IEnumerable ?? Array.Empty<object>();
+                itemsSourceUsed = "ItemsSource";
+
+                if (!(items ?? Array.Empty<object>()).Cast<object?>().Any() && dg.DataContext is ExplorerViewModel evm)
+                {
+                    items = evm.DisplayedItems as IEnumerable ?? Array.Empty<object>();
+                    itemsSourceUsed = "ViewModel.DisplayedItems";
+                }
+
+                return true;
+            }
+
+            if (control is ListBox lb)
+            {
+                items = lb.Items as IEnumerable ?? Array.Empty<object>();
+                itemsSourceUsed = "Items";
+                return true;
+            }
+
+            return false;
+        }
+
+        static bool ControlHasItems(object control)
+        {
+            if (!TryGetItemsEnumerable(control, out var items, out _))
+                return false;
+
+            return (items ?? Array.Empty<object>()).Cast<object?>().Any();
+        }
+
+        static bool SelectInControl(Control? control, HashSet<string> pathSet)
+        {
+            if (control is DataGrid dg)
+                return SelectInDataGrid(dg, pathSet);
+            if (control is ListBox lb)
+                return SelectInListBox(lb, pathSet);
+
+            return false;
+        }
+
+        static void ClearSelection(Control? control)
+        {
+            if (control is DataGrid dg)
+            {
+                dg.SelectedItems?.Clear();
+                dg.SelectedItem = null;
+                return;
+            }
+
+            if (control is ListBox lb)
+            {
+                lb.SelectedItems?.Clear();
+                lb.SelectedItem = null;
+            }
+        }
+
         IReadOnlyList<Models.ExplorerItemModel> GetSelectedItems()
         {
-            var details = DetailsDataGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
-            var list = ListListBox ?? this.FindControl<ListBox>("ListListBox");
-            var icons = IconsListBox ?? this.FindControl<ListBox>("IconsListBox");
-            var tiles = TilesListBox ?? this.FindControl<ListBox>("TilesListBox");
-            var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
-
-            if (details?.IsVisible == true)
+            foreach (var entry in EnumerateItemControls())
             {
-                var sel = GetSelectedItems(details.SelectedItems, details.SelectedItem);
-                Logger.Debug("GetSelectedItems: using DetailsDataGrid selectionCount={Count}", sel.Count);
+                if (entry.control?.IsVisible != true)
+                    continue;
+
+                var sel = GetSelectedItemsFromControl(entry.control);
+                Logger.Debug("GetSelectedItems: using {Name} selectionCount={Count}", entry.name, sel.Count);
                 try
                 {
                     ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(sel.Count);
@@ -1352,113 +1451,23 @@ namespace Jaya.Ui.Views
                 }
                 catch (Exception ex)
                 {
-                    Logger.Warning(ex, "Failed calling UpdateSelectionAvailability from DetailsDataGrid path");
+                    Logger.Warning(ex, "Failed calling UpdateSelectionAvailability from {Name} path", entry.name);
                 }
                 return sel;
             }
 
-            if (list?.IsVisible == true)
+            foreach (var entry in EnumerateItemControls())
             {
-                var sel = GetSelectedItems(list.SelectedItems, list.SelectedItem);
-                Logger.Debug("GetSelectedItems: using ListListBox selectionCount={Count}", sel.Count);
-                try
-                {
-                    ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(sel.Count);
-                    Logger.Debug("SharedService.UpdateSelectionAvailability called with count={Count}", sel.Count);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Warning(ex, "Failed calling UpdateSelectionAvailability from ListListBox path");
-                }
-                return sel;
-            }
+                if (entry.control == null)
+                    continue;
 
-            if (icons?.IsVisible == true)
-            {
-                var sel = GetSelectedItems(icons.SelectedItems, icons.SelectedItem);
-                Logger.Debug("GetSelectedItems: using IconsListBox selectionCount={Count}", sel.Count);
-                try
+                var sel = GetSelectedItemsFromControl(entry.control);
+                Logger.Debug("GetSelectedItems fallback: {Name} selectionCount={Count}", entry.name, sel.Count);
+                if (sel.Count > 0)
                 {
-                    ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(sel.Count);
-                    Logger.Debug("SharedService.UpdateSelectionAvailability called with count={Count}", sel.Count);
+                    try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(sel.Count); } catch { }
+                    return sel;
                 }
-                catch (Exception ex)
-                {
-                    Logger.Warning(ex, "Failed calling UpdateSelectionAvailability from IconsListBox path");
-                }
-                return sel;
-            }
-
-            if (tiles?.IsVisible == true)
-            {
-                var sel = GetSelectedItems(tiles.SelectedItems, tiles.SelectedItem);
-                Logger.Debug("GetSelectedItems: using TilesListBox selectionCount={Count}", sel.Count);
-                try
-                {
-                    ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(sel.Count);
-                    Logger.Debug("SharedService.UpdateSelectionAvailability called with count={Count}", sel.Count);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Warning(ex, "Failed calling UpdateSelectionAvailability from TilesListBox path");
-                }
-                return sel;
-            }
-
-            if (content?.IsVisible == true)
-            {
-                var sel = GetSelectedItems(content.SelectedItems, content.SelectedItem);
-                Logger.Debug("GetSelectedItems: using ContentListBox selectionCount={Count}", sel.Count);
-                try
-                {
-                    ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(sel.Count);
-                    Logger.Debug("SharedService.UpdateSelectionAvailability called with count={Count}", sel.Count);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Warning(ex, "Failed calling UpdateSelectionAvailability from ContentListBox path");
-                }
-                return sel;
-            }
-
-            var selection = GetSelectedItems(details?.SelectedItems, details?.SelectedItem);
-            Logger.Debug("GetSelectedItems fallback: details selectionCount={Count}", selection.Count);
-            if (selection.Count > 0)
-            {
-                try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(selection.Count); } catch { }
-                return selection;
-            }
-
-            selection = GetSelectedItems(list?.SelectedItems, list?.SelectedItem);
-            Logger.Debug("GetSelectedItems fallback: list selectionCount={Count}", selection.Count);
-            if (selection.Count > 0)
-            {
-                try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(selection.Count); } catch { }
-                return selection;
-            }
-
-            selection = GetSelectedItems(icons?.SelectedItems, icons?.SelectedItem);
-            Logger.Debug("GetSelectedItems fallback: icons selectionCount={Count}", selection.Count);
-            if (selection.Count > 0)
-            {
-                try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(selection.Count); } catch { }
-                return selection;
-            }
-
-            selection = GetSelectedItems(tiles?.SelectedItems, tiles?.SelectedItem);
-            Logger.Debug("GetSelectedItems fallback: tiles selectionCount={Count}", selection.Count);
-            if (selection.Count > 0)
-            {
-                try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(selection.Count); } catch { }
-                return selection;
-            }
-
-            selection = GetSelectedItems(content?.SelectedItems, content?.SelectedItem);
-            Logger.Debug("GetSelectedItems fallback: content selectionCount={Count}", selection.Count);
-            if (selection.Count > 0)
-            {
-                try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(selection.Count); } catch { }
-                return selection;
             }
 
             var empty = new List<Models.ExplorerItemModel>();
@@ -1476,56 +1485,19 @@ namespace Jaya.Ui.Views
             try
             {
                 Logger.Debug("PerformSelectAll invoked");
-                var details = DetailsDataGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
-                var list = ListListBox ?? this.FindControl<ListBox>("ListListBox");
-                var icons = IconsListBox ?? this.FindControl<ListBox>("IconsListBox");
-                var tiles = TilesListBox ?? this.FindControl<ListBox>("TilesListBox");
-                var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
-                Logger.Debug("PerformSelectAll: details={DetailsExists}/{DetailsVisible} list={ListExists}/{ListVisible} icons={IconsExists}/{IconsVisible} tiles={TilesExists}/{TilesVisible} content={ContentExists}/{ContentVisible}",
-                    details != null, details?.IsVisible == true,
-                    list != null, list?.IsVisible == true,
-                    icons != null, icons?.IsVisible == true,
-                    tiles != null, tiles?.IsVisible == true,
-                    content != null, content?.IsVisible == true);
-
-                if (details?.IsVisible == true)
+                var visible = EnumerateItemControls().FirstOrDefault(entry => entry.control?.IsVisible == true);
+                if (visible.control != null)
                 {
-                    Logger.Debug("PerformSelectAll: using DetailsDataGrid");
-                    SelectAllInItemsControl(details);
+                    Logger.Debug("PerformSelectAll: using {Name}", visible.name);
+                    SelectAllInItemsControl(visible.control);
                     return;
                 }
 
-                if (list?.IsVisible == true) { Logger.Debug("PerformSelectAll: using ListListBox"); SelectAllInItemsControl(list); return; }
-                if (icons?.IsVisible == true) { Logger.Debug("PerformSelectAll: using IconsListBox"); SelectAllInItemsControl(icons); return; }
-                if (tiles?.IsVisible == true) { Logger.Debug("PerformSelectAll: using TilesListBox"); SelectAllInItemsControl(tiles); return; }
-                if (content?.IsVisible == true) { Logger.Debug("PerformSelectAll: using ContentListBox"); SelectAllInItemsControl(content); return; }
-
-                // Fallback: operate on the first control that actually has items
-                var firstWithItems = new (string name, object? ctrl)[] {
-                    ("DetailsDataGrid", details as object),
-                    ("ListListBox", list as object),
-                    ("IconsListBox", icons as object),
-                    ("TilesListBox", tiles as object),
-                    ("ContentListBox", content as object)
-                }.FirstOrDefault(pair =>
+                var fallback = EnumerateItemControls().FirstOrDefault(entry => entry.control != null && ControlHasItems(entry.control));
+                if (fallback.control != null)
                 {
-                    IEnumerable? items = null;
-                    if (pair.ctrl is DataGrid dg2)
-                    {
-                        items = dg2.ItemsSource as IEnumerable ?? Array.Empty<object>();
-                        if (!items.Cast<object?>().Any() && dg2.DataContext is ExplorerViewModel evm)
-                            items = evm.DisplayedItems as IEnumerable ?? Array.Empty<object>();
-                    }
-                    else if (pair.ctrl is ListBox lb2)
-                        items = lb2.Items;
-                    if (items == null) return false;
-                    return (items ?? Array.Empty<object>()).Cast<object?>().Any();
-                });
-
-                if (firstWithItems.ctrl != null)
-                {
-                    Logger.Debug("PerformSelectAll fallback: using {Name}", firstWithItems.name);
-                    SelectAllInItemsControl(firstWithItems.ctrl);
+                    Logger.Debug("PerformSelectAll fallback: using {Name}", fallback.name);
+                    SelectAllInItemsControl(fallback.control);
                     try
                     {
                         var sel = GetSelectedItems();
@@ -1542,52 +1514,21 @@ namespace Jaya.Ui.Views
             try
             {
                 Logger.Debug("PerformSelectNone invoked");
-                var details = DetailsDataGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
-                var list = ListListBox ?? this.FindControl<ListBox>("ListListBox");
-                var icons = IconsListBox ?? this.FindControl<ListBox>("IconsListBox");
-                var tiles = TilesListBox ?? this.FindControl<ListBox>("TilesListBox");
-                var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
-                Logger.Debug("PerformSelectNone: details={DetailsExists}/{DetailsVisible} list={ListExists}/{ListVisible} icons={IconsExists}/{IconsVisible} tiles={TilesExists}/{TilesVisible} content={ContentExists}/{ContentVisible}",
-                    details != null, details?.IsVisible == true,
-                    list != null, list?.IsVisible == true,
-                    icons != null, icons?.IsVisible == true,
-                    tiles != null, tiles?.IsVisible == true,
-                    content != null, content?.IsVisible == true);
-
-                if (details?.IsVisible == true)
+                var visible = EnumerateItemControls().FirstOrDefault(entry => entry.control?.IsVisible == true);
+                if (visible.control != null)
                 {
-                    Logger.Debug("PerformSelectNone: clearing DetailsDataGrid selection (beforeCount={Count})", details.SelectedItems?.Count ?? 0);
-                    details.SelectedItems?.Clear();
-                    details.SelectedItem = null;
-                    Logger.Debug("PerformSelectNone: cleared DetailsDataGrid selection (afterCount={Count})", details.SelectedItems?.Count ?? 0);
+                    Logger.Debug("PerformSelectNone: clearing {Name}", visible.name);
+                    ClearSelection(visible.control);
                     try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(0); } catch { }
                     return;
                 }
 
-                if (list?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing ListListBox"); list.SelectedItems?.Clear(); list.SelectedItem = null; try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(0); } catch { } return; }
-                if (icons?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing IconsListBox"); icons.SelectedItems?.Clear(); icons.SelectedItem = null; try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(0); } catch { } return; }
-                if (tiles?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing TilesListBox"); tiles.SelectedItems?.Clear(); tiles.SelectedItem = null; try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(0); } catch { } return; }
-                if (content?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing ContentListBox"); content.SelectedItems?.Clear(); content.SelectedItem = null; try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(0); } catch { } return; }
-
-                // Fallback: clear the first control that has items
-                var firstWithItems = new (string name, object? ctrl)[] {
-                    ("DetailsDataGrid", details as object),
-                    ("ListListBox", list as object),
-                    ("IconsListBox", icons as object),
-                    ("TilesListBox", tiles as object),
-                    ("ContentListBox", content as object)
-                }.FirstOrDefault(pair =>
+                var fallback = EnumerateItemControls().FirstOrDefault(entry => entry.control != null && ControlHasItems(entry.control));
+                if (fallback.control != null)
                 {
-                    var c = pair.ctrl as IEnumerable;
-                    if (c == null) return false;
-                    return (c ?? Array.Empty<object>()).Cast<object?>().Any();
-                });
-
-                if (firstWithItems.ctrl != null)
-                {
-                    Logger.Debug("PerformSelectNone fallback: clearing {Name}", firstWithItems.name);
-                    if (firstWithItems.ctrl is DataGrid fdg) { fdg.SelectedItems?.Clear(); fdg.SelectedItem = null; }
-                    if (firstWithItems.ctrl is ListBox flb) { flb.SelectedItems?.Clear(); flb.SelectedItem = null; }
+                    Logger.Debug("PerformSelectNone fallback: clearing {Name}", fallback.name);
+                    ClearSelection(fallback.control);
+                    try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(0); } catch { }
                 }
             }
             catch { }
@@ -1598,48 +1539,19 @@ namespace Jaya.Ui.Views
             try
             {
                 Logger.Debug("PerformInvertSelection invoked");
-                var details = DetailsDataGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
-                var list = ListListBox ?? this.FindControl<ListBox>("ListListBox");
-                var icons = IconsListBox ?? this.FindControl<ListBox>("IconsListBox");
-                var tiles = TilesListBox ?? this.FindControl<ListBox>("TilesListBox");
-                var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
-                Logger.Debug("PerformInvertSelection: details={DetailsExists}/{DetailsVisible} list={ListExists}/{ListVisible} icons={IconsExists}/{IconsVisible} tiles={TilesExists}/{TilesVisible} content={ContentExists}/{ContentVisible}",
-                    details != null, details?.IsVisible == true,
-                    list != null, list?.IsVisible == true,
-                    icons != null, icons?.IsVisible == true,
-                    tiles != null, tiles?.IsVisible == true,
-                    content != null, content?.IsVisible == true);
-
-                if (details?.IsVisible == true)
+                var visible = EnumerateItemControls().FirstOrDefault(entry => entry.control?.IsVisible == true);
+                if (visible.control != null)
                 {
-                    Logger.Debug("PerformInvertSelection: using DetailsDataGrid");
-                    InvertSelectionInItemsControl(details);
+                    Logger.Debug("PerformInvertSelection: using {Name}", visible.name);
+                    InvertSelectionInItemsControl(visible.control);
                     return;
                 }
 
-                if (list?.IsVisible == true) { Logger.Debug("PerformInvertSelection: using ListListBox"); InvertSelectionInItemsControl(list); return; }
-                if (icons?.IsVisible == true) { Logger.Debug("PerformInvertSelection: using IconsListBox"); InvertSelectionInItemsControl(icons); return; }
-                if (tiles?.IsVisible == true) { Logger.Debug("PerformInvertSelection: using TilesListBox"); InvertSelectionInItemsControl(tiles); return; }
-                if (content?.IsVisible == true) { Logger.Debug("PerformInvertSelection: using ContentListBox"); InvertSelectionInItemsControl(content); return; }
-
-                // Fallback: operate on the first control that actually has items
-                var firstWithItems = new (string name, object? ctrl)[] {
-                    ("DetailsDataGrid", details as object),
-                    ("ListListBox", list as object),
-                    ("IconsListBox", icons as object),
-                    ("TilesListBox", tiles as object),
-                    ("ContentListBox", content as object)
-                }.FirstOrDefault(pair =>
+                var fallback = EnumerateItemControls().FirstOrDefault(entry => entry.control != null && ControlHasItems(entry.control));
+                if (fallback.control != null)
                 {
-                    var c = pair.ctrl as IEnumerable;
-                    if (c == null) return false;
-                    return (c ?? Array.Empty<object>()).Cast<object?>().Any();
-                });
-
-                if (firstWithItems.ctrl != null)
-                {
-                    Logger.Debug("PerformInvertSelection fallback: using {Name}", firstWithItems.name);
-                    InvertSelectionInItemsControl(firstWithItems.ctrl);
+                    Logger.Debug("PerformInvertSelection fallback: using {Name}", fallback.name);
+                    InvertSelectionInItemsControl(fallback.control);
                 }
             }
             catch { }
@@ -1652,28 +1564,20 @@ namespace Jaya.Ui.Views
 
             if (control is DataGrid dg)
             {
-                IEnumerable items = dg.ItemsSource as IEnumerable ?? Array.Empty<object>();
-                var itemsSourceUsed = "ItemsSource";
-                if (!(items ?? Array.Empty<object>()).Cast<object?>().Any())
-                {
-                    // fallback to ViewModel's DisplayedItems if available
-                    if (dg.DataContext is ExplorerViewModel evm)
-                    {
-                        items = evm.DisplayedItems as IEnumerable ?? Array.Empty<object>();
-                        itemsSourceUsed = "ViewModel.DisplayedItems";
-                    }
-                }
-                Logger.Debug("InvertSelectionInItemsControl: DataGrid.{Source} type={Type} isEmpty={IsEmpty}", itemsSourceUsed, items?.GetType().FullName ?? "(null)", !(items ?? Array.Empty<object>()).Cast<object?>().Any());
+                if (!TryGetItemsEnumerable(dg, out var items, out var itemsSourceUsed))
+                    return;
+
+                Logger.Debug("SelectAllInItemsControl: DataGrid.{Source} type={Type} isEmpty={IsEmpty}", itemsSourceUsed, items?.GetType().FullName ?? "(null)", !(items ?? Array.Empty<object>()).Cast<object?>().Any());
                 var idx = 0;
                 foreach (var it in (items ?? Array.Empty<object>()).Cast<object?>().Take(5))
                 {
                     if (it is Models.ExplorerItemModel em)
                     {
                         var identity = (em.Object as Jaya.Shared.Models.FileSystemObjectModel)?.Path ?? em.DisplayName ?? "(unknown)";
-                        Logger.Debug("InvertSelectionInItemsControl: DataGrid item[{Index}] Id={Id}", idx, identity);
+                        Logger.Debug("SelectAllInItemsControl: DataGrid item[{Index}] Id={Id}", idx, identity);
                     }
                     else
-                        Logger.Debug("InvertSelectionInItemsControl: DataGrid item[{Index}] Type={Type}", idx, it?.GetType().FullName ?? "(null)");
+                        Logger.Debug("SelectAllInItemsControl: DataGrid item[{Index}] Type={Type}", idx, it?.GetType().FullName ?? "(null)");
                     idx++;
                 }
                 if (dg.SelectedItems != null)
@@ -1684,10 +1588,10 @@ namespace Jaya.Ui.Views
                         if (sit is Models.ExplorerItemModel sem)
                         {
                             var sidentity = (sem.Object as Jaya.Shared.Models.FileSystemObjectModel)?.Path ?? sem.DisplayName ?? "(unknown)";
-                            Logger.Debug("InvertSelectionInItemsControl: DataGrid.Selected[{Index}] Id={Id}", sidx, sidentity);
+                            Logger.Debug("SelectAllInItemsControl: DataGrid.Selected[{Index}] Id={Id}", sidx, sidentity);
                         }
                         else
-                            Logger.Debug("InvertSelectionInItemsControl: DataGrid.Selected[{Index}] Type={Type}", sidx, sit?.GetType().FullName ?? "(null)");
+                            Logger.Debug("SelectAllInItemsControl: DataGrid.Selected[{Index}] Type={Type}", sidx, sit?.GetType().FullName ?? "(null)");
                         sidx++;
                     }
                 }
@@ -1708,18 +1612,20 @@ namespace Jaya.Ui.Views
             }
             else if (control is ListBox lb)
             {
-                var items = lb.Items as IEnumerable ?? Array.Empty<object>();
-                Logger.Debug("InvertSelectionInItemsControl: ListBox.Items type={Type} isEmpty={IsEmpty}", items?.GetType().FullName ?? "(null)", !(items ?? Array.Empty<object>()).Cast<object?>().Any());
+                if (!TryGetItemsEnumerable(lb, out var items, out _))
+                    return;
+
+                Logger.Debug("SelectAllInItemsControl: ListBox.Items type={Type} isEmpty={IsEmpty}", items?.GetType().FullName ?? "(null)", !(items ?? Array.Empty<object>()).Cast<object?>().Any());
                 var idx = 0;
                 foreach (var it in (items ?? Array.Empty<object>()).Cast<object?>().Take(5))
                 {
                     if (it is Models.ExplorerItemModel em)
                     {
                         var identity = (em.Object as Jaya.Shared.Models.FileSystemObjectModel)?.Path ?? em.DisplayName ?? "(unknown)";
-                        Logger.Debug("InvertSelectionInItemsControl: ListBox item[{Index}] Id={Id}", idx, identity);
+                        Logger.Debug("SelectAllInItemsControl: ListBox item[{Index}] Id={Id}", idx, identity);
                     }
                     else
-                        Logger.Debug("InvertSelectionInItemsControl: ListBox item[{Index}] Type={Type}", idx, it?.GetType().FullName ?? "(null)");
+                        Logger.Debug("SelectAllInItemsControl: ListBox item[{Index}] Type={Type}", idx, it?.GetType().FullName ?? "(null)");
                     idx++;
                 }
                 if (lb.SelectedItems != null)
@@ -1730,10 +1636,10 @@ namespace Jaya.Ui.Views
                         if (sit is Models.ExplorerItemModel sem)
                         {
                             var sidentity = (sem.Object as Jaya.Shared.Models.FileSystemObjectModel)?.Path ?? sem.DisplayName ?? "(unknown)";
-                            Logger.Debug("InvertSelectionInItemsControl: ListBox.Selected[{Index}] Id={Id}", sidx, sidentity);
+                            Logger.Debug("SelectAllInItemsControl: ListBox.Selected[{Index}] Id={Id}", sidx, sidentity);
                         }
                         else
-                            Logger.Debug("InvertSelectionInItemsControl: ListBox.Selected[{Index}] Type={Type}", sidx, sit?.GetType().FullName ?? "(null)");
+                            Logger.Debug("SelectAllInItemsControl: ListBox.Selected[{Index}] Type={Type}", sidx, sit?.GetType().FullName ?? "(null)");
                         sidx++;
                     }
                 }
@@ -1761,16 +1667,9 @@ namespace Jaya.Ui.Views
 
             if (control is DataGrid dg)
             {
-                IEnumerable items = dg.ItemsSource as IEnumerable ?? Array.Empty<object>();
-                var itemsSourceUsed = "ItemsSource";
-                if (!(items ?? Array.Empty<object>()).Cast<object?>().Any())
-                {
-                    if (dg.DataContext is ExplorerViewModel evm)
-                    {
-                        items = evm.DisplayedItems as IEnumerable ?? Array.Empty<object>();
-                        itemsSourceUsed = "ViewModel.DisplayedItems";
-                    }
-                }
+                if (!TryGetItemsEnumerable(dg, out var items, out var itemsSourceUsed))
+                    return;
+
                 var total = (items ?? Array.Empty<object>()).Cast<object?>().Count();
                 var before = dg.SelectedItems?.Count ?? 0;
                 var toSelect = new List<Models.ExplorerItemModel>();
@@ -1793,7 +1692,9 @@ namespace Jaya.Ui.Views
             }
             else if (control is ListBox lb)
             {
-                var items = lb.Items as IEnumerable ?? Array.Empty<object>();
+                if (!TryGetItemsEnumerable(lb, out var items, out _))
+                    return;
+
                 var total = (items ?? Array.Empty<object>()).Cast<object?>().Count();
                 var before = lb.SelectedItems?.Count ?? 0;
                 var toSelect = new List<Models.ExplorerItemModel>();
@@ -1834,32 +1735,17 @@ namespace Jaya.Ui.Views
             if (pathSet.Count == 0)
                 return;
 
-            var details = DetailsDataGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
-            var list = ListListBox ?? this.FindControl<ListBox>("ListListBox");
-            var icons = IconsListBox ?? this.FindControl<ListBox>("IconsListBox");
-            var tiles = TilesListBox ?? this.FindControl<ListBox>("TilesListBox");
-            var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
+            foreach (var entry in EnumerateItemControls())
+            {
+                if (entry.control?.IsVisible == true && SelectInControl(entry.control, pathSet))
+                    return;
+            }
 
-            if (details?.IsVisible == true && SelectInDataGrid(details, pathSet))
-                return;
-            if (list?.IsVisible == true && SelectInListBox(list, pathSet))
-                return;
-            if (icons?.IsVisible == true && SelectInListBox(icons, pathSet))
-                return;
-            if (tiles?.IsVisible == true && SelectInListBox(tiles, pathSet))
-                return;
-            if (content?.IsVisible == true && SelectInListBox(content, pathSet))
-                return;
-
-            if (SelectInDataGrid(details, pathSet))
-                return;
-            if (SelectInListBox(list, pathSet))
-                return;
-            if (SelectInListBox(icons, pathSet))
-                return;
-            if (SelectInListBox(tiles, pathSet))
-                return;
-            SelectInListBox(content, pathSet);
+            foreach (var entry in EnumerateItemControls())
+            {
+                if (SelectInControl(entry.control, pathSet))
+                    return;
+            }
         }
 
         static HashSet<string> BuildPathSet(IReadOnlyList<string> paths)
