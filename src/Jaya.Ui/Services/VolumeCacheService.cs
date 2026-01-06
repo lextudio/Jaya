@@ -25,6 +25,12 @@ namespace Jaya.Ui.Services
 
         public IReadOnlyList<VolumeModel> CurrentVolumes => _volumes;
 
+        // Returns the cached volumes after applying platform-appropriate filters
+        public IReadOnlyList<VolumeModel> GetFilteredVolumesSnapshot()
+        {
+            return ApplyFilters(_volumes);
+        }
+
         public DateTime LastRefreshUtc => _lastRefreshUtc;
 
         public void WarmUp()
@@ -61,6 +67,12 @@ namespace Jaya.Ui.Services
             Logger.Debug("Volume cache snapshot requested (stale not allowed or empty). Refreshing.");
             await RefreshAsync().ConfigureAwait(false);
             return _volumes;
+        }
+
+        public async Task<IReadOnlyList<VolumeModel>> GetFilteredVolumesSnapshotAsync(bool allowStale = true)
+        {
+            var vols = await GetVolumesSnapshotAsync(allowStale).ConfigureAwait(false);
+            return ApplyFilters(vols);
         }
 
         public async Task RefreshAsync()
@@ -146,6 +158,55 @@ namespace Jaya.Ui.Services
                 return Path.GetPathRoot(mountPoint) ?? mountPoint;
 
             return trimmed;
+        }
+
+        static IReadOnlyList<VolumeModel> ApplyFilters(IReadOnlyList<VolumeModel> volumes)
+        {
+            if (volumes == null || volumes.Count == 0)
+                return Array.Empty<VolumeModel>();
+
+            var result = new List<VolumeModel>(volumes.Count);
+            var seen = new HashSet<string>(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+
+            foreach (var vol in volumes)
+            {
+                if (vol == null)
+                    continue;
+
+                var mount = NormalizeMountPoint(vol.MountPoint);
+                if (string.IsNullOrWhiteSpace(mount))
+                    continue;
+
+                // Deduplicate by mount point
+                if (!seen.Add(mount))
+                    continue;
+
+                var lower = mount.ToLowerInvariant();
+
+                // Exclude common pseudo/system mounts on Unix-like systems
+                if (!OperatingSystem.IsWindows())
+                {
+                    if (lower.StartsWith("/proc") || lower.StartsWith("/sys") || lower.StartsWith("/run") || lower.StartsWith("/dev") || lower.StartsWith("/var") || lower.StartsWith("/private") || lower.StartsWith("/System/Volumes"))
+                        continue;
+
+                    if (lower.Contains("/snap/") || lower.Contains("/containers/") || lower.Contains("/core") || lower.Contains("/gvfs") || lower.Contains("/Library/Developer/CoreSimulator"))
+                        continue;
+                }
+
+                // Prefer volumes that are internal or removable or have a human name
+                if (!vol.IsInternal && !vol.IsRemovable && string.IsNullOrWhiteSpace(vol.Name))
+                    continue;
+
+                result.Add(vol);
+            }
+
+            return result;
+        }
+
+        // Public utility to filter an arbitrary set of volumes using the same heuristics
+        public static IReadOnlyList<VolumeModel> FilterVolumes(IReadOnlyList<VolumeModel> volumes)
+        {
+            return ApplyFilters(volumes);
         }
     }
 

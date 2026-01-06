@@ -28,11 +28,12 @@ namespace Jaya.Ui.ViewModels
         static readonly ILogger Logger = Log.ForContext(typeof(NavigationViewModel)).ForContext("SourceContext", "ViewModels");
         ICommand? _populateCommand;
         ICommand? _selectLocationCommand;
+        
         TreeNodeModel? _selectedNode;
         bool _suppressPublish;
         bool _suppressPopulateOnExpand;
         readonly VolumeCacheService? _volumeCacheService;
-        ObservableCollection<TreeNodeModel>? _favorites = new();
+        ObservableCollection<LocationItemViewModel>? _favorites = new();
             ObservableCollection<LocationItemViewModel>? _locations = new();
             LocationItemViewModel? _selectedLocation;
 
@@ -90,6 +91,8 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
+        
+
         public PaneConfigModel PaneConfig => _shared?.PaneConfiguration ?? new PaneConfigModel();
 
         public ApplicationConfigModel ApplicationConfig => _shared?.ApplicationConfiguration ?? new ApplicationConfigModel();
@@ -127,10 +130,10 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
-        public ObservableCollection<TreeNodeModel> Favorites
+        public ObservableCollection<LocationItemViewModel> Favorites
         {
-            get => _favorites ?? (_favorites = new ObservableCollection<TreeNodeModel>());
-            private set => Set(ref _favorites, value ?? new ObservableCollection<TreeNodeModel>());
+            get => _favorites ?? (_favorites = new ObservableCollection<LocationItemViewModel>());
+            private set => Set(ref _favorites, value ?? new ObservableCollection<LocationItemViewModel>());
         }
 
         public ObservableCollection<LocationItemViewModel> Locations
@@ -353,11 +356,85 @@ namespace Jaya.Ui.ViewModels
                 try
                 {
                     await RefreshFileSystemVolumeNodesAsync(e.Volumes);
+                    // Also refresh the Locations list to include current volumes
+                    try { await UpdateLocationsWithVolumesAsync(e.Volumes).ConfigureAwait(false); } catch { }
                 }
                 catch (Exception ex)
                 {
                     Logger.Debug(ex, "Volume cache change handling failed");
                 }
+            });
+        }
+
+        async Task UpdateLocationsWithVolumesAsync(IReadOnlyList<VolumeModel>? volumes)
+        {
+            if (IsDesignMode)
+                return;
+
+            if (volumes == null || volumes.Count == 0)
+                return;
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                try
+                {
+                    // Preserve Home and Trash entries already in Locations; insert volumes after Home
+                    var existingHome = Locations.FirstOrDefault(l => string.Equals(l.Directory?.Path, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), StringComparison.OrdinalIgnoreCase));
+                    var trashPath = GetTrashPath();
+
+                    // Build new list: Home, volumes..., Trash (if exists)
+                    var newLocations = new List<LocationItemViewModel>();
+                    if (existingHome != null)
+                        newLocations.Add(existingHome);
+
+                    var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var v in volumes)
+                    {
+                        var mount = v.MountPoint ?? string.Empty;
+                        if (string.IsNullOrWhiteSpace(mount) || !seen.Add(mount))
+                            continue;
+
+                        var lower = mount.ToLowerInvariant();
+                        if (lower.StartsWith("/proc") || lower.StartsWith("/sys") || lower.StartsWith("/run") || lower.StartsWith("/dev") || lower.StartsWith("/var") || lower.StartsWith("/private"))
+                            continue;
+                        if (lower.Contains("/snap/") || lower.Contains("/containers/") || lower.Contains("/core") || lower.Contains("/gvfs"))
+                            continue;
+                        if (!v.IsInternal && !v.IsRemovable && string.IsNullOrWhiteSpace(v.Name))
+                            continue;
+
+                        var label = GetVolumeDisplayName(v);
+                        var volDir = new DirectoryModel { Path = mount, Name = label };
+                        var volLocation = new LocationItemViewModel
+                        {
+                            Label = label,
+                            Directory = volDir,
+                            Service = existingHome?.Service,
+                            Account = existingHome?.Account,
+                            ImageResourceKey = "Icon.Drive.Image"
+                        };
+                        newLocations.Add(volLocation);
+                    }
+
+                    if (!string.IsNullOrEmpty(trashPath))
+                    {
+                        var trashDir = new DirectoryModel { Path = trashPath, Name = trashPath };
+                        var trashLocation = new LocationItemViewModel
+                        {
+                            Label = "Trash",
+                            Directory = trashDir,
+                            Service = existingHome?.Service,
+                            Account = existingHome?.Account,
+                            ImageResourceKey = "Icon.Delete.Image"
+                        };
+                        newLocations.Add(trashLocation);
+                    }
+
+                    // Replace Locations collection contents
+                    Locations.Clear();
+                    foreach (var loc in newLocations)
+                        Locations.Add(loc);
+                }
+                catch { }
             });
         }
 
@@ -865,9 +942,9 @@ namespace Jaya.Ui.ViewModels
             IReadOnlyList<VolumeModel>? volumes = null;
             if (_volumeCacheService != null)
             {
-                Logger.Debug("GetVolumeForPath: querying volume cache snapshot.");
-                volumes = await _volumeCacheService.GetVolumesSnapshotAsync().ConfigureAwait(false);
-                Logger.Debug("GetVolumeForPath: volume cache snapshot count={Count}", volumes?.Count ?? 0);
+                Logger.Debug("GetVolumeForPath: querying filtered volume cache snapshot.");
+                volumes = await _volumeCacheService.GetFilteredVolumesSnapshotAsync().ConfigureAwait(false);
+                Logger.Debug("GetVolumeForPath: filtered volume cache snapshot count={Count}", volumes?.Count ?? 0);
             }
 
             volumes ??= Array.Empty<VolumeModel>();
@@ -877,6 +954,8 @@ namespace Jaya.Ui.ViewModels
                 try
                 {
                     volumes = await FileSystem.Default.GetVolumesAsync().ConfigureAwait(false);
+                    // Apply filters as a best-effort for direct results
+                    volumes = Jaya.Ui.Services.VolumeCacheService.FilterVolumes(volumes ?? Array.Empty<VolumeModel>());
                 }
                 catch (Exception ex)
                 {
@@ -996,7 +1075,7 @@ namespace Jaya.Ui.ViewModels
                     }
                     catch { }
 
-                    var favoritesLocal = new List<TreeNodeModel>();
+                    var favoritesLocal = new List<LocationItemViewModel>();
 
                     // Populate Locations (Home, Downloads, Trash)
                     var locationsLocal = new List<LocationItemViewModel>();
@@ -1024,9 +1103,7 @@ namespace Jaya.Ui.ViewModels
                         };
                     }
 
-                    favoritesLocal.Add(homeNode);
-
-                    // Add locations Home
+                    // Add Home to Locations (Home stays in Locations, above Trash)
                     var homeLocation = new LocationItemViewModel
                     {
                         Label = Environment.UserName,
@@ -1036,6 +1113,51 @@ namespace Jaya.Ui.ViewModels
                         ImageResourceKey = "Icon.FolderOpen.Image"
                     };
                     locationsLocal.Add(homeLocation);
+
+                    // Add mounted volumes (drives) to Locations after Home
+                    try
+                    {
+                        IReadOnlyList<VolumeModel>? vols = null;
+                        if (_volumeCacheService != null)
+                        {
+                            vols = await _volumeCacheService.GetFilteredVolumesSnapshotAsync().ConfigureAwait(false);
+                        }
+
+                        if (vols == null || vols.Count == 0)
+                        {
+                            try
+                            {
+                                var raw = await FileSystem.Default.GetVolumesAsync().ConfigureAwait(false) ?? Array.Empty<VolumeModel>();
+                                vols = raw.Count > 0 ? raw : Array.Empty<VolumeModel>();
+                                // Apply same filters locally as a fallback
+                                vols = Jaya.Ui.Services.VolumeCacheService.FilterVolumes(vols);
+                            }
+                            catch { vols = Array.Empty<VolumeModel>(); }
+                        }
+
+                        if (vols != null && vols.Count > 0)
+                        {
+                            foreach (var vol in vols)
+                            {
+                                var mount = vol.MountPoint ?? string.Empty;
+                                if (string.IsNullOrWhiteSpace(mount))
+                                    continue;
+
+                                var label = GetVolumeDisplayName(vol);
+                                var volDir = new DirectoryModel { Path = mount, Name = label };
+                                var volLocation = new LocationItemViewModel
+                                {
+                                    Label = label,
+                                    Directory = volDir,
+                                    Service = fileService,
+                                    Account = fileAccount,
+                                    ImageResourceKey = "Icon.Drive.Image"
+                                };
+                                locationsLocal.Add(volLocation);
+                            }
+                        }
+                    }
+                    catch { }
 
                     // Downloads entry
                     try
@@ -1060,8 +1182,7 @@ namespace Jaya.Ui.ViewModels
                                 FileSystemObject = downloadsDir
                             };
                         }
-                        favoritesLocal.Add(downloadsNode);
-
+                        // Place Downloads in Favorites (above Locations) — add LocationItemViewModel
                         var downloadsLocation = new LocationItemViewModel
                         {
                             Label = "Downloads",
@@ -1070,7 +1191,7 @@ namespace Jaya.Ui.ViewModels
                             Account = fileAccount,
                             ImageResourceKey = "Icon.ArrowDown.Image"
                         };
-                        locationsLocal.Add(downloadsLocation);
+                        favoritesLocal.Add(downloadsLocation);
                     }
                     catch { }
 
@@ -1090,6 +1211,71 @@ namespace Jaya.Ui.ViewModels
                                 ImageResourceKey = "Icon.Delete.Image"
                             };
                             locationsLocal.Add(trashLocation);
+                        }
+                    }
+                    catch { }
+
+                    // Add Desktop to favorites
+                    try
+                    {
+                        var desktopPath = System.IO.Path.Combine(homePath, "Desktop");
+                        var desktopDir = new DirectoryModel { Path = desktopPath, Name = desktopPath };
+                        TreeNodeModel desktopNode;
+                        if (fileService != null && fileAccount != null)
+                        {
+                            desktopNode = new TreeNodeModel(fileService, fileAccount, ItemType.Directory)
+                            {
+                                Label = "Desktop",
+                                FileSystemObject = desktopDir
+                            };
+                        }
+                        else
+                        {
+                            desktopNode = new TreeNodeModel(null, null, ItemType.File)
+                            {
+                                Label = "Desktop",
+                                FileSystemObject = desktopDir
+                            };
+                        }
+                        // Add Desktop as a favorite LocationItem
+                        var desktopLocation = new LocationItemViewModel
+                        {
+                            Label = "Desktop",
+                            Directory = desktopDir,
+                            Service = fileService,
+                            Account = fileAccount,
+                            ImageResourceKey = "Icon.Computer.Image"
+                        };
+                        favoritesLocal.Add(desktopLocation);
+                    }
+                    catch { }
+
+                    // Try to add cache volume to Locations (if available in volume cache)
+                    try
+                    {
+                        if (_volumeCacheService != null)
+                        {
+                            var vols = await _volumeCacheService.GetFilteredVolumesSnapshotAsync().ConfigureAwait(false);
+                            if (vols != null)
+                            {
+                                var cacheVol = vols.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v.Name) && v.Name.IndexOf("cache", StringComparison.OrdinalIgnoreCase) >= 0);
+                                if (cacheVol == null)
+                                    cacheVol = vols.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v.MountPoint) && v.MountPoint.IndexOf("cache", StringComparison.OrdinalIgnoreCase) >= 0);
+
+                                if (cacheVol != null)
+                                {
+                                    var cacheDir = new DirectoryModel { Path = cacheVol.MountPoint, Name = GetVolumeDisplayName(cacheVol) };
+                                    var cacheLocation = new LocationItemViewModel
+                                    {
+                                        Label = "Cache",
+                                        Directory = cacheDir,
+                                        Service = fileService,
+                                        Account = fileAccount,
+                                        ImageResourceKey = "Icon.Drive.Image"
+                                    };
+                                    locationsLocal.Add(cacheLocation);
+                                }
+                            }
                         }
                     }
                     catch { }
