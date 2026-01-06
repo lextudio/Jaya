@@ -112,7 +112,7 @@ namespace Jaya.Ui.Views
                                             if (currentDir != null)
                                             {
                                                 vm.SaveDirectorySort(currentDir.Path, sortMember, asc);
-                                                Logger.Information("Details sort changed: Path={Path} Member={Member} Ascending={Ascending}",
+                                                Logger.Debug("Details sort changed: Path={Path} Member={Member} Ascending={Ascending}",
                                                     currentDir.Path,
                                                     sortMember,
                                                     asc);
@@ -312,9 +312,14 @@ namespace Jaya.Ui.Views
                         {
                             try
                             {
+                                Logger.Debug("CopyPathRequestedEventArgs received");
+
                                 var vm = DataContext as ExplorerViewModel;
                                 if (vm == null)
+                                {
+                                    Logger.Warning("CopyPath handler: DataContext is not ExplorerViewModel");
                                     return;
+                                }
 
                                 var selected = DetailsDataGrid?.SelectedItem as Models.ExplorerItemModel
                                                ?? ListListBox?.SelectedItem as Models.ExplorerItemModel
@@ -322,17 +327,43 @@ namespace Jaya.Ui.Views
                                                ?? TilesListBox?.SelectedItem as Models.ExplorerItemModel
                                                ?? ContentListBox?.SelectedItem as Models.ExplorerItemModel;
 
-                                if (selected?.Object is Jaya.Shared.Models.FileSystemObjectModel fso && !string.IsNullOrWhiteSpace(fso.Path))
+                                if (selected == null)
                                 {
-                                    try
+                                    Logger.Debug("CopyPath handler: no selected item found");
+                                    return;
+                                }
+
+                                if (selected.Object is Jaya.Shared.Models.FileSystemObjectModel fso)
+                                {
+                                    if (string.IsNullOrWhiteSpace(fso.Path))
                                     {
-                                        ClipboardService.CopyText(fso.Path);
-                                        Logger.Debug("Copied path to clipboard: {Path}", fso.Path);
+                                        Logger.Debug("CopyPath handler: selected item has empty Path");
+                                        return;
                                     }
-                                    catch (Exception ex) { Logger.Warning(ex, "CopyPath failed"); }
+
+                                    // Use async clipboard call to avoid blocking the UI thread.
+                                    Dispatcher.UIThread.Post(async () =>
+                                    {
+                                        try
+                                        {
+                                            await ClipboardService.CopyTextAsync(fso.Path);
+                                            Logger.Debug("Copied path to clipboard: {Path}", fso.Path);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Logger.Warning(ex, "CopyPath failed");
+                                        }
+                                    });
+                                }
+                                else
+                                {
+                                    Logger.Debug("CopyPath handler: selected item is not a FileSystemObjectModel (type={Type})", selected?.Object?.GetType().FullName);
                                 }
                             }
-                            catch { }
+                            catch (Exception ex)
+                            {
+                                Logger.Warning(ex, "Exception in CopyPath request handler");
+                            }
                         });
                     });
 
@@ -475,14 +506,14 @@ namespace Jaya.Ui.Views
                 }
                 if (dir == null)
                 {
-                    Logger.Information("ApplySavedDetailsSort skipped: current directory is null.");
+                    Logger.Debug("ApplySavedDetailsSort skipped: current directory is null.");
                     return;
                 }
 
                 var sort = vm.GetDirectorySort(dir.Path);
                 if (!sort.HasValue)
                 {
-                    Logger.Information("No saved details sort to apply: Path={Path}", dir.Path);
+                    Logger.Debug("No saved details sort to apply: Path={Path}", dir.Path);
                     return;
                 }
 
@@ -494,7 +525,7 @@ namespace Jaya.Ui.Views
                         var sortMember = dgCol?.SortMemberPath ?? col.Header?.ToString();
                         if (!string.IsNullOrWhiteSpace(sortMember) && string.Equals(sortMember, sort.Value.sortMember, StringComparison.OrdinalIgnoreCase))
                         {
-                            Logger.Information("Applying details sort: Path={Path} Member={Member} Ascending={Ascending}",
+                            Logger.Debug("Applying details sort: Path={Path} Member={Member} Ascending={Ascending}",
                                 dir.Path,
                                 sort.Value.sortMember,
                                 sort.Value.ascending);
@@ -510,7 +541,7 @@ namespace Jaya.Ui.Views
                     }
                     catch { }
                 }
-                Logger.Information("Details sort apply finished: Path={Path}", dir.Path);
+                Logger.Debug("Details sort apply finished: Path={Path}", dir.Path);
             });
         }
 
@@ -1088,41 +1119,133 @@ namespace Jaya.Ui.Views
             var content = ContentListBox ?? this.FindControl<ListBox>("ContentListBox");
 
             if (details?.IsVisible == true)
-                return GetSelectedItems(details.SelectedItems, details.SelectedItem);
+            {
+                var sel = GetSelectedItems(details.SelectedItems, details.SelectedItem);
+                Logger.Debug("GetSelectedItems: using DetailsDataGrid selectionCount={Count}", sel.Count);
+                try
+                {
+                    ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(sel.Count);
+                    Logger.Debug("SharedService.UpdateSelectionAvailability called with count={Count}", sel.Count);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning(ex, "Failed calling UpdateSelectionAvailability from DetailsDataGrid path");
+                }
+                return sel;
+            }
 
             if (list?.IsVisible == true)
-                return GetSelectedItems(list.SelectedItems, list.SelectedItem);
+            {
+                var sel = GetSelectedItems(list.SelectedItems, list.SelectedItem);
+                Logger.Debug("GetSelectedItems: using ListListBox selectionCount={Count}", sel.Count);
+                try
+                {
+                    ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(sel.Count);
+                    Logger.Debug("SharedService.UpdateSelectionAvailability called with count={Count}", sel.Count);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning(ex, "Failed calling UpdateSelectionAvailability from ListListBox path");
+                }
+                return sel;
+            }
 
             if (icons?.IsVisible == true)
-                return GetSelectedItems(icons.SelectedItems, icons.SelectedItem);
+            {
+                var sel = GetSelectedItems(icons.SelectedItems, icons.SelectedItem);
+                Logger.Debug("GetSelectedItems: using IconsListBox selectionCount={Count}", sel.Count);
+                try
+                {
+                    ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(sel.Count);
+                    Logger.Debug("SharedService.UpdateSelectionAvailability called with count={Count}", sel.Count);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning(ex, "Failed calling UpdateSelectionAvailability from IconsListBox path");
+                }
+                return sel;
+            }
 
             if (tiles?.IsVisible == true)
-                return GetSelectedItems(tiles.SelectedItems, tiles.SelectedItem);
+            {
+                var sel = GetSelectedItems(tiles.SelectedItems, tiles.SelectedItem);
+                Logger.Debug("GetSelectedItems: using TilesListBox selectionCount={Count}", sel.Count);
+                try
+                {
+                    ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(sel.Count);
+                    Logger.Debug("SharedService.UpdateSelectionAvailability called with count={Count}", sel.Count);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning(ex, "Failed calling UpdateSelectionAvailability from TilesListBox path");
+                }
+                return sel;
+            }
 
             if (content?.IsVisible == true)
-                return GetSelectedItems(content.SelectedItems, content.SelectedItem);
+            {
+                var sel = GetSelectedItems(content.SelectedItems, content.SelectedItem);
+                Logger.Debug("GetSelectedItems: using ContentListBox selectionCount={Count}", sel.Count);
+                try
+                {
+                    ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(sel.Count);
+                    Logger.Debug("SharedService.UpdateSelectionAvailability called with count={Count}", sel.Count);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning(ex, "Failed calling UpdateSelectionAvailability from ContentListBox path");
+                }
+                return sel;
+            }
 
             var selection = GetSelectedItems(details?.SelectedItems, details?.SelectedItem);
+            Logger.Debug("GetSelectedItems fallback: details selectionCount={Count}", selection.Count);
             if (selection.Count > 0)
+            {
+                try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(selection.Count); } catch { }
                 return selection;
+            }
 
             selection = GetSelectedItems(list?.SelectedItems, list?.SelectedItem);
+            Logger.Debug("GetSelectedItems fallback: list selectionCount={Count}", selection.Count);
             if (selection.Count > 0)
+            {
+                try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(selection.Count); } catch { }
                 return selection;
+            }
 
             selection = GetSelectedItems(icons?.SelectedItems, icons?.SelectedItem);
+            Logger.Debug("GetSelectedItems fallback: icons selectionCount={Count}", selection.Count);
             if (selection.Count > 0)
+            {
+                try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(selection.Count); } catch { }
                 return selection;
+            }
 
             selection = GetSelectedItems(tiles?.SelectedItems, tiles?.SelectedItem);
+            Logger.Debug("GetSelectedItems fallback: tiles selectionCount={Count}", selection.Count);
             if (selection.Count > 0)
+            {
+                try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(selection.Count); } catch { }
                 return selection;
+            }
 
             selection = GetSelectedItems(content?.SelectedItems, content?.SelectedItem);
+            Logger.Debug("GetSelectedItems fallback: content selectionCount={Count}", selection.Count);
             if (selection.Count > 0)
+            {
+                try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(selection.Count); } catch { }
                 return selection;
+            }
 
-            return new List<Models.ExplorerItemModel>();
+            var empty = new List<Models.ExplorerItemModel>();
+            try
+            {
+                var shared = ServiceLocator.Instance.GetService<SharedService>();
+                shared?.UpdateSelectionAvailability(0);
+            }
+            catch { }
+            return empty;
         }
 
         void PerformSelectAll()
@@ -1180,6 +1303,12 @@ namespace Jaya.Ui.Views
                 {
                     Logger.Debug("PerformSelectAll fallback: using {Name}", firstWithItems.name);
                     SelectAllInItemsControl(firstWithItems.ctrl);
+                    try
+                    {
+                        var sel = GetSelectedItems();
+                        ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(sel.Count);
+                    }
+                    catch { }
                 }
             }
             catch { }
@@ -1208,13 +1337,14 @@ namespace Jaya.Ui.Views
                     details.SelectedItems?.Clear();
                     details.SelectedItem = null;
                     Logger.Debug("PerformSelectNone: cleared DetailsDataGrid selection (afterCount={Count})", details.SelectedItems?.Count ?? 0);
+                    try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(0); } catch { }
                     return;
                 }
 
-                if (list?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing ListListBox"); list.SelectedItems?.Clear(); list.SelectedItem = null; return; }
-                if (icons?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing IconsListBox"); icons.SelectedItems?.Clear(); icons.SelectedItem = null; return; }
-                if (tiles?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing TilesListBox"); tiles.SelectedItems?.Clear(); tiles.SelectedItem = null; return; }
-                if (content?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing ContentListBox"); content.SelectedItems?.Clear(); content.SelectedItem = null; return; }
+                if (list?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing ListListBox"); list.SelectedItems?.Clear(); list.SelectedItem = null; try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(0); } catch { } return; }
+                if (icons?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing IconsListBox"); icons.SelectedItems?.Clear(); icons.SelectedItem = null; try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(0); } catch { } return; }
+                if (tiles?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing TilesListBox"); tiles.SelectedItems?.Clear(); tiles.SelectedItem = null; try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(0); } catch { } return; }
+                if (content?.IsVisible == true) { Logger.Debug("PerformSelectNone: clearing ContentListBox"); content.SelectedItems?.Clear(); content.SelectedItem = null; try { ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(0); } catch { } return; }
 
                 // Fallback: clear the first control that has items
                 var firstWithItems = new (string name, object? ctrl)[] {

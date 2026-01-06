@@ -68,19 +68,29 @@ namespace Jaya.Shared
             container.AddSingleton<IPlatformService, PlatformService>();
 
             var assemblies = new List<Assembly>();
+            var seen = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var fileName in GetProviderDllPaths())
             {
-                var assembly = Assembly.LoadFrom(fileName);
-                assemblies.Add(assembly);
+                try
+                {
+                    var assembly = Assembly.LoadFrom(fileName);
+                    var name = assembly.FullName ?? assembly.GetName().Name ?? fileName;
+                    if (seen.Add(name))
+                        assemblies.Add(assembly);
+                }
+                catch { }
             }
 
             var currentDomainAssemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var assembly in currentDomainAssemblies)
             {
                 var fullName = assembly.FullName ?? string.Empty;
-                if (fullName.StartsWith("Jaya.", StringComparison.InvariantCultureIgnoreCase) &&
-                    !fullName.StartsWith("Jaya.Shared", StringComparison.InvariantCultureIgnoreCase))
+                if (!fullName.StartsWith("Jaya.", StringComparison.InvariantCultureIgnoreCase) ||
+                    fullName.StartsWith("Jaya.Shared", StringComparison.InvariantCultureIgnoreCase))
+                    continue;
+
+                if (seen.Add(fullName))
                     assemblies.Add(assembly);
             }
 
@@ -172,8 +182,14 @@ namespace Jaya.Shared
         {
             if (Container == null)
             {
-                Container = RegisterServices();
-                IsCacheInitialized = InitializeCache();
+                lock (_syncRoot)
+                {
+                    if (Container == null)
+                    {
+                        Container = RegisterServices();
+                        IsCacheInitialized = InitializeCache();
+                    }
+                }
             }
 
             return _providersCache.Values;
@@ -183,8 +199,14 @@ namespace Jaya.Shared
         {
             if (Container == null)
             {
-                Container = RegisterServices();
-                IsCacheInitialized = InitializeCache();
+                lock (_syncRoot)
+                {
+                    if (Container == null)
+                    {
+                        Container = RegisterServices();
+                        IsCacheInitialized = InitializeCache();
+                    }
+                }
             }
 
             if (_serviceCache.TryGetValue(typeof(T).Name, out var service))
@@ -197,8 +219,14 @@ namespace Jaya.Shared
         {
             if (Container == null)
             {
-                Container = RegisterServices();
-                IsCacheInitialized = InitializeCache();
+                lock (_syncRoot)
+                {
+                    if (Container == null)
+                    {
+                        Container = RegisterServices();
+                        IsCacheInitialized = InitializeCache();
+                    }
+                }
             }
 
             if (_providersCache.TryGetValue(typeof(T).Name, out var service))

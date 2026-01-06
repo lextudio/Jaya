@@ -32,9 +32,21 @@ namespace Jaya.Ui.ViewModels
             if (e == null || string.IsNullOrEmpty(e.PropertyName)) return;
             if (e.PropertyName == nameof(SharedService.IsPasteEnabled))
                 Invoke(() => RaisePropertyChanged(nameof(IsPasteEnabled)));
+            if (e.PropertyName == nameof(SharedService.IsCutEnabled))
+                Invoke(() => RaisePropertyChanged(nameof(IsCutEnabled)));
+            if (e.PropertyName == nameof(SharedService.IsCopyPathEnabled))
+                Invoke(() => RaisePropertyChanged(nameof(IsCopyPathEnabled)));
+            if (e.PropertyName == nameof(SharedService.IsCopyEnabled))
+                Invoke(() => RaisePropertyChanged(nameof(IsCopyEnabled)));
         }
 
         public bool IsPasteEnabled => _shared?.IsPasteEnabled ?? false;
+
+        public bool IsCutEnabled => _shared?.IsCutEnabled ?? false;
+
+        public bool IsCopyPathEnabled => _shared?.IsCopyPathEnabled ?? false;
+
+        public bool IsCopyEnabled => _shared?.IsCopyEnabled ?? false;
 
         public ToolbarConfigModel ToolbarConfig => _shared?.ToolbarConfiguration ?? new ToolbarConfigModel();
 

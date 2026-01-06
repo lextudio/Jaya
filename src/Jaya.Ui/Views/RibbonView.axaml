@@ -59,6 +59,7 @@
                                     ribbon:KeyTip.KeyTipKeys="CO"
                                     Content="Copy"
                                     MaxSize="Large"
+                                    IsEnabled="{Binding IsCopyEnabled}"
                                     MinSize="Large">
                                 <ribbon:RibbonButton.LargeIcon>
                                     <Image Source="{DynamicResource Icon.Copy.Image}" Width="32" Height="32" />
@@ -81,7 +82,8 @@
                                     CommandParameter="{x:Static local:CommandType.Cut}"
                                     ribbon:KeyTip.KeyTipKeys="T"
                                     Content="Cut"
-                                    MaxSize="Medium"
+                                MaxSize="Medium"
+                                IsEnabled="{Binding IsCutEnabled}"
                                     MinSize="Small">
                                 <ribbon:RibbonButton.Icon>
                                     <Image Source="{DynamicResource Icon.Cut.Image}" Width="16" Height="16" />
@@ -92,6 +94,7 @@
                                     Content="Copy Path"
                                     Command="{Binding SimpleCommand}"
                                     CommandParameter="{x:Static local:CommandType.CopyPath}"
+                                    IsEnabled="{Binding IsCopyPathEnabled}"
                                     MaxSize="Medium"
                                     MinSize="Small">
                                 <ribbon:RibbonButton.Icon>

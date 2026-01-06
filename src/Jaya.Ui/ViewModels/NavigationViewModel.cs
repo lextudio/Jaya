@@ -169,7 +169,7 @@ namespace Jaya.Ui.ViewModels
 
         void OnNodeExpanded(TreeNodeModel node, bool isExpaded)
         {
-            Log.ForContext<NavigationViewModel>().Information("Node {ExpandedState}: Label={Label}, Service={Service}, Path={Path}",
+            Logger.Debug("Node {ExpandedState}: Label={Label}, Service={Service}, Path={Path}",
                 isExpaded ? "Expanded" : "Collapsed",
                 node.Label,
                 node.Service?.Name,
@@ -204,7 +204,7 @@ namespace Jaya.Ui.ViewModels
                 if (!exists)
                 {
                     node.Children.Add(childNode);
-                    Log.ForContext<NavigationViewModel>().Information("Child added: Parent={Parent}, Child={Child}, Path={Path}",
+                    Logger.Debug("Child added: Parent={Parent}, Child={Child}, Path={Path}",
                         node.Label, childNode.Label, (childNode.FileSystemObject as DirectoryModel)?.Path);
                 }
             });
@@ -227,7 +227,7 @@ namespace Jaya.Ui.ViewModels
                 if (!exists)
                 {
                     node.Children.Add(childNode);
-                    Log.ForContext<NavigationViewModel>().Information("Child added: Parent={Parent}, Child={Child}, Path={Path}",
+                    Logger.Debug("Child added: Parent={Parent}, Child={Child}, Path={Path}",
                         node.Label, childNode.Label, (childNode.FileSystemObject as DirectoryModel)?.Path);
                 }
             });
@@ -1139,7 +1139,7 @@ namespace Jaya.Ui.ViewModels
                         var serviceInstance = service as ProviderServiceBase;
 
                         // log provider discovered
-                        Log.ForContext<NavigationViewModel>().Information("Discovered provider: Name={Name}, Type={Type}, IsEnabled={IsEnabled}",
+                        Logger.Debug("Discovered provider: Name={Name}, Type={Type}, IsEnabled={IsEnabled}",
                             service?.Name ?? string.Empty,
                             service?.GetType().Name ?? string.Empty,
                             serviceInstance?.IsEnabled ?? false);
@@ -1147,7 +1147,7 @@ namespace Jaya.Ui.ViewModels
                         // skip disabled providers
                         if (serviceInstance != null && !serviceInstance.IsEnabled)
                         {
-                            Log.ForContext<NavigationViewModel>().Information("Skipping disabled provider: Name={Name}, Type={Type}", service?.Name, service?.GetType().Name);
+                            Logger.Debug("Skipping disabled provider: Name={Name}, Type={Type}", service?.Name, service?.GetType().Name);
                             continue;
                         }
 
@@ -1172,14 +1172,14 @@ namespace Jaya.Ui.ViewModels
                                 if (e.PropertyName == nameof(ProviderServiceBase.IsEnabled))
                                 {
                                     // log the change
-                                    Log.ForContext<NavigationViewModel>().Information("Provider IsEnabled changed: Name={Name}, NewValue={IsEnabled}", serviceInstance.Name, serviceInstance.IsEnabled);
+                                    Logger.Debug("Provider IsEnabled changed: Name={Name}, NewValue={IsEnabled}", serviceInstance.Name, serviceInstance.IsEnabled);
 
                                     // run on UI thread
                                     Invoke(async () =>
                                     {
                                         if (serviceInstance.IsEnabled)
                                         {
-                                            Log.ForContext<NavigationViewModel>().Information("Enabling provider node: Name={Name}", serviceInstance.Name);
+                                            Logger.Debug("Enabling provider node: Name={Name}", serviceInstance.Name);
                                             // add node if it doesn't exist
                                             var exists = Node?.Children != null && Node.Children.Any(n => (n.Service?.GetHashCode() ?? 0) == serviceInstance.GetHashCode());
                                             if (!exists)
@@ -1198,7 +1198,7 @@ namespace Jaya.Ui.ViewModels
                                         }
                                         else
                                         {
-                                            Log.ForContext<NavigationViewModel>().Information("Disabling provider node: Name={Name}", serviceInstance.Name);
+                                            Logger.Debug("Disabling provider node: Name={Name}", serviceInstance.Name);
                                             // remove existing node(s)
                                             var toRemove = Node?.Children?.Where(n => (n.Service?.GetHashCode() ?? 0) == serviceInstance.GetHashCode()).ToList() ?? new System.Collections.Generic.List<TreeNodeModel>();
                                             var parentNode2 = Node;
@@ -1227,7 +1227,7 @@ namespace Jaya.Ui.ViewModels
                         ProviderHash = n.Service?.GetHashCode()
                     }).ToArray();
 
-                    Logger.Information("Navigation top-tier nodes detailed: {@Nodes}", topNodesDetailed);
+                    Logger.Debug("Navigation top-tier nodes detailed: {@Nodes}", topNodesDetailed);
                 }
                 catch (Exception ex)
                 {

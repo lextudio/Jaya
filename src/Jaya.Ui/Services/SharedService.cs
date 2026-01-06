@@ -47,6 +47,51 @@ namespace Jaya.Ui.Services
             }
         }
 
+        bool _isCutEnabled = false;
+        public bool IsCutEnabled
+        {
+            get => _isCutEnabled;
+            private set
+            {
+                if (_isCutEnabled == value) return;
+                _isCutEnabled = value;
+                PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(IsCutEnabled)));
+            }
+        }
+
+        bool _isCopyPathEnabled = false;
+        public bool IsCopyPathEnabled
+        {
+            get => _isCopyPathEnabled;
+            private set
+            {
+                if (_isCopyPathEnabled == value) return;
+                _isCopyPathEnabled = value;
+                PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(IsCopyPathEnabled)));
+            }
+        }
+
+        bool _isCopyEnabled = false;
+        public bool IsCopyEnabled
+        {
+            get => _isCopyEnabled;
+            private set
+            {
+                if (_isCopyEnabled == value) return;
+                _isCopyEnabled = value;
+                PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(IsCopyEnabled)));
+            }
+        }
+
+        // Update selection-related button availability based on selection count.
+        public void UpdateSelectionAvailability(int selectionCount)
+        {
+            // Cut and Copy Path require at least one selected item.
+            IsCutEnabled = selectionCount > 0;
+            IsCopyPathEnabled = selectionCount > 0;
+            IsCopyEnabled = selectionCount > 0;
+        }
+
         public void UpdatePasteAvailability(System.Collections.IEnumerable? clipboardItems)
         {
             // Only consider file system objects as valid clipboard items for paste
@@ -105,7 +150,7 @@ namespace Jaya.Ui.Services
                 ApplicationConfiguration.PropertyChanged += ApplicationConfiguration_PropertyChanged;
                 Logger.Debug("Initial ApplicationConfiguration.IsFileNameExtensionVisible={IsFileNameExtensionVisible}", ApplicationConfiguration.IsFileNameExtensionVisible);
                 Logger.Debug("Initial ApplicationConfiguration.IsHiddenItemVisible={IsHiddenItemVisible}", ApplicationConfiguration.IsHiddenItemVisible);
-                Logger.Information("Initial ApplicationConfiguration.DetailsViewSortSettings count={Count}",
+                Logger.Debug("Initial ApplicationConfiguration.DetailsViewSortSettings count={Count}",
                     ApplicationConfiguration.DetailsViewSortSettings?.Count ?? 0);
             }
         }

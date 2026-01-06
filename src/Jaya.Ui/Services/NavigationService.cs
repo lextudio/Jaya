@@ -15,7 +15,7 @@ namespace Jaya.Ui.Services
 {
     public sealed class NavigationService : IService
     {
-        static readonly ILogger Logger = Log.ForContext<NavigationService>();
+        static readonly ILogger Logger = Log.ForContext(typeof(NavigationService)).ForContext("SourceContext", "Service").ForContext("Area", "Navigation");
 
         readonly CommandService? _commandService;
         readonly Stack<SelectionChangedEventArgs> _backwardStack, _forwardStack;

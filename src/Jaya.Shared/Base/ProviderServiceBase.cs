@@ -14,7 +14,7 @@ namespace Jaya.Shared.Base
 {
     public abstract class ProviderServiceBase : ModelBase, IProviderService
     {
-        static readonly ILogger Logger = Log.ForContext<ProviderServiceBase>();
+        static readonly ILogger Logger = Log.ForContext(typeof(ProviderServiceBase)).ForContext("SourceContext", "Provider");
 
         IMemoryCacheService? _cache;
         IConfigurationService? _config;
@@ -46,7 +46,7 @@ namespace Jaya.Shared.Base
                 {
                     // Use Set to avoid persistence during construction
                     Set<bool>(cfg.IsEnabled, nameof(IsEnabled), raiseNotification: false);
-                    Logger.Information("Loaded provider config: {ProviderType} IsEnabled={IsEnabled}", this.GetType().Name, cfg.IsEnabled);
+                    Logger.Debug("Loaded provider config: {ProviderType} IsEnabled={IsEnabled}", this.GetType().Name, cfg.IsEnabled);
                 }
                 else
                 {
@@ -54,11 +54,11 @@ namespace Jaya.Shared.Base
                     if (this.GetType().Name.Contains("FileSystem", StringComparison.OrdinalIgnoreCase))
                     {
                         Set<bool>(true, nameof(IsEnabled), raiseNotification: false);
-                        Logger.Information("No persisted config for {ProviderType}; enabling FileSystem provider by default", this.GetType().Name);
+                        Logger.Debug("No persisted config for {ProviderType}; enabling FileSystem provider by default", this.GetType().Name);
                     }
                     else
                     {
-                        Logger.Information("No persisted config for {ProviderType}; leaving disabled by default", this.GetType().Name);
+                        Logger.Debug("No persisted config for {ProviderType}; leaving disabled by default", this.GetType().Name);
                     }
                 }
             }
@@ -146,10 +146,10 @@ namespace Jaya.Shared.Base
                         }
                         else
                         {
-                            Logger.Information("Persisting provider config: {ProviderType} IsEnabled={IsEnabled}", this.GetType().Name, value);
+                            Logger.Debug("Persisting provider config: {ProviderType} IsEnabled={IsEnabled}", this.GetType().Name, value);
                             var cfg = new Jaya.Shared.Models.ProviderConfigModel { IsEnabled = value };
                             SetConfiguration(cfg);
-                            Logger.Information("Persisted provider config for {ProviderType}", this.GetType().Name);
+                            Logger.Debug("Persisted provider config for {ProviderType}", this.GetType().Name);
                         }
                     }
                     catch (Exception ex)

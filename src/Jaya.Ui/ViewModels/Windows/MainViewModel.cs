@@ -15,7 +15,7 @@ namespace Jaya.Ui.ViewModels.Windows
     {
         readonly Subscription<SelectionChangedEventArgs>? _onDirectoryChanged;
         readonly SharedService? _shared;
-        static readonly ILogger Logger = Log.ForContext<MainViewModel>();
+        static readonly ILogger Logger = Log.ForContext(typeof(MainViewModel)).ForContext("SourceContext", "ViewModels").ForContext("Area", "Windows");
         public MainViewModel()
         {
             WindowTitle = Constants.APP_NAME;

@@ -22,7 +22,6 @@ namespace Jaya.Shared.Services
         readonly object _sync = new object();
         readonly Dictionary<string, JsonElement> _sections = new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
         int _schemaVersion = 1;
-        // No periodic/automatic saves: persistence will occur only when FlushSave() is called
 
         public ConfigurationService()
         {
@@ -74,7 +73,7 @@ namespace Jaya.Shared.Services
                     _sections[prop.Name] = prop.Value.Clone();
                 }
 
-                Logger.Information("Loaded settings: Path={Path} Sections={Count}", _settingsFilePath, _sections.Count);
+                Logger.Debug("Loaded settings: Path={Path} Sections={Count}", _settingsFilePath, _sections.Count);
             }
         }
 
@@ -157,7 +156,7 @@ namespace Jaya.Shared.Services
                         };
 
                         var result = elem.Deserialize<T>(options);
-                        Logger.Information("Loaded configuration section: Key={Key} Type={Type}", key, type.Name);
+                        Logger.Debug("Loaded configuration section: Key={Key} Type={Type}", key, type.Name);
                         return result;
                     }
                     catch (Exception ex)
@@ -168,7 +167,7 @@ namespace Jaya.Shared.Services
                 }
             }
 
-            Logger.Information("Configuration section not found: Key={Key} Type={Type}", key, type.Name);
+            Logger.Debug("Configuration section not found: Key={Key} Type={Type}", key, type.Name);
             return default;
         }
 

@@ -24,8 +24,10 @@ namespace Jaya.Ui.ViewModels
 {
     public class ExplorerViewModel : ViewModelBase
     {
-        static readonly ILogger FileSystemLogger = Log.ForContext("SourceContext", "FileSystem")
-                                                       .ForContext("Area", "FileSystem");
+        static readonly ILogger SettingsLogger = Log.ForContext("SourceContext", "Settings")
+                                                       .ForContext("Area", "ExplorerViewModel");
+        static readonly ILogger ViewsLogger = Log.ForContext("SourceContext", "Views")
+                                                   .ForContext("Area", "ExplorerViewModel");
 
         readonly Subscription<SelectionChangedEventArgs>? _onSelectionChanged;
         readonly Subscription<NewFolderRequestedEventArgs>? _onNewFolder;
@@ -101,20 +103,17 @@ namespace Jaya.Ui.ViewModels
             };
             ApplicationConfig.DetailsViewSortDefault = setting;
             ApplicationConfig.DetailsViewSortSettings?.Clear();
-            FileSystemLogger.Information("Saved global details sort: Member={Member} Ascending={Ascending}",
-                sortMember,
-                ascending);
-            FileSystemLogger.Information("Updated default details sort: Member={Member} Ascending={Ascending}",
+            SettingsLogger.Debug("Saved global details sort: Member={Member} Ascending={Ascending}",
                 sortMember,
                 ascending);
             try
             {
                 _shared?.SaveConfigurations();
-                FileSystemLogger.Information("Persisted details sort settings.");
+                SettingsLogger.Debug("Persisted details sort settings.");
             }
             catch (Exception ex)
             {
-                FileSystemLogger.Warning(ex, "Failed to persist details sort settings");
+                SettingsLogger.Warning(ex, "Failed to persist details sort settings");
             }
         }
 
@@ -123,13 +122,13 @@ namespace Jaya.Ui.ViewModels
             var fallback = ApplicationConfig.DetailsViewSortDefault;
             if (fallback != null && !string.IsNullOrWhiteSpace(fallback.SortMember))
             {
-                FileSystemLogger.Information("Using global details sort: Member={Member} Ascending={Ascending}",
+                SettingsLogger.Debug("Using global details sort: Member={Member} Ascending={Ascending}",
                     fallback.SortMember,
                     fallback.Ascending);
                 return (fallback.SortMember, fallback.Ascending);
             }
 
-            FileSystemLogger.Information("No global details sort configured.");
+            SettingsLogger.Debug("No global details sort configured.");
 
             return null;
         }
@@ -303,18 +302,18 @@ namespace Jaya.Ui.ViewModels
                         var file = obj.Object as FileModel;
                         var path = file?.Path;
 
-                        FileSystemLogger.Information("File activated: {Label} path={Path}", obj.Label, path ?? "<unknown>");
+                        SettingsLogger.Information("File activated: {Label} path={Path}", obj.Label, path ?? "<unknown>");
 
                         if (!string.IsNullOrEmpty(path))
                         {
                             try
                             {
                                 OpenFile(path);
-                                FileSystemLogger.Information("Launched file: {Path}", path);
+                                SettingsLogger.Information("Launched file: {Path}", path);
                             }
                             catch (Exception ex)
                             {
-                                FileSystemLogger.Error(ex, "Failed to open file: {Path}", path);
+                                SettingsLogger.Error(ex, "Failed to open file: {Path}", path);
                             }
                         }
 
@@ -352,20 +351,20 @@ namespace Jaya.Ui.ViewModels
             if (items == null || items.Count == 0)
                 return;
 
-            FileSystemLogger.Debug("DeleteItems invoked: Count={Count}, Service={Service}, Account={Account}",
+            SettingsLogger.Debug("DeleteItems invoked: Count={Count}, Service={Service}, Account={Account}",
                 items.Count,
                 _service?.Name ?? "<null>",
                 _account?.Name ?? "<null>");
 
             if (_service == null || _account == null)
             {
-                FileSystemLogger.Debug("Delete skipped: missing service/account context.");
+                SettingsLogger.Debug("Delete skipped: missing service/account context.");
                 return;
             }
 
             if (_service is not IFileDeleteService deleteService)
             {
-                FileSystemLogger.Warning("Delete requested but service does not support delete.");
+                SettingsLogger.Warning("Delete requested but service does not support delete.");
                 return;
             }
 
@@ -378,14 +377,14 @@ namespace Jaya.Ui.ViewModels
 
             if (targets.Count == 0)
             {
-                FileSystemLogger.Debug("Delete skipped: no file or directory targets in selection.");
+                SettingsLogger.Debug("Delete skipped: no file or directory targets in selection.");
                 return;
             }
 
             try
             {
                 var deleted = deleteService.DeleteAsync(_account, targets, DeleteMode.Trash).GetAwaiter().GetResult();
-                FileSystemLogger.Information("Delete requested for {Count} items (anyDeleted={AnyDeleted})", targets.Count, deleted);
+                SettingsLogger.Information("Delete requested for {Count} items (anyDeleted={AnyDeleted})", targets.Count, deleted);
                 if (deleted)
                 {
                     Invoke(() => RemoveItemsFromView(targets));
@@ -393,7 +392,7 @@ namespace Jaya.Ui.ViewModels
             }
             catch (Exception ex)
             {
-                FileSystemLogger.Error(ex, "Failed to delete {Count} items", targets.Count);
+                SettingsLogger.Error(ex, "Failed to delete {Count} items", targets.Count);
             }
         }
 
@@ -468,7 +467,7 @@ namespace Jaya.Ui.ViewModels
                     preferIterm = System.IO.Directory.Exists("/Applications/iTerm.app") || System.IO.File.Exists("/Applications/iTerm.app");
                 }
 
-                FileSystemLogger.Information("OpenTerminal requested: target={TargetPath} preferIterm={PreferIterm}", targetPath, preferIterm);
+                SettingsLogger.Information("OpenTerminal requested: target={TargetPath} preferIterm={PreferIterm}", targetPath, preferIterm);
 
                 if (OperatingSystem.IsMacOS())
                 {
@@ -483,16 +482,16 @@ namespace Jaya.Ui.ViewModels
                         {
                             var tmpPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"jaya-terminal-{Guid.NewGuid()}.applescript");
                             System.IO.File.WriteAllText(tmpPath, script);
-                            FileSystemLogger.Debug("OpenTerminal: wrote appleScript to {TmpPath} scriptStart=\n{Script}\nscriptEnd", tmpPath, script);
+                            SettingsLogger.Debug("OpenTerminal: wrote appleScript to {TmpPath} scriptStart=\n{Script}\nscriptEnd", tmpPath, script);
                             var psi = new ProcessStartInfo("osascript", tmpPath) { UseShellExecute = false };
-                            FileSystemLogger.Information("OpenTerminal: executing osascript {TmpPath}", tmpPath);
+                            SettingsLogger.Information("OpenTerminal: executing osascript {TmpPath}", tmpPath);
                             var p = Process.Start(psi);
                             try { p?.WaitForExit(2000); } catch { }
                             try { System.IO.File.Delete(tmpPath); } catch { }
                         }
                         catch (Exception ex)
                         {
-                            FileSystemLogger.Warning(ex, "Failed to run AppleScript via temporary file");
+                            SettingsLogger.Warning(ex, "Failed to run AppleScript via temporary file");
                         }
                     }
 
@@ -506,7 +505,7 @@ namespace Jaya.Ui.ViewModels
                                      "  end tell\n" +
                                      "  activate\n" +
                                      "end tell";
-                        FileSystemLogger.Information("OpenTerminal: running iTerm appleScript (preferIterm=true)");
+                        SettingsLogger.Information("OpenTerminal: running iTerm appleScript (preferIterm=true)");
                         RunAppleScriptFromFile(script);
                     }
                     else
@@ -516,7 +515,7 @@ namespace Jaya.Ui.ViewModels
                                      $"  do script \"cd '{shellSafePath}'; clear\"\n" +
                                      "  activate\n" +
                                      "end tell";
-                        FileSystemLogger.Information("OpenTerminal: running Terminal appleScript (preferIterm=false)");
+                        SettingsLogger.Information("OpenTerminal: running Terminal appleScript (preferIterm=false)");
                         RunAppleScriptFromFile(script);
                     }
                 }
@@ -525,26 +524,26 @@ namespace Jaya.Ui.ViewModels
                     // Use wt (Windows Terminal) if available, otherwise cmd
                     try
                         {
-                            FileSystemLogger.Information("OpenTerminal: launching wt -d {TargetPath}", targetPath);
+                            SettingsLogger.Information("OpenTerminal: launching wt -d {TargetPath}", targetPath);
                             Process.Start(new ProcessStartInfo("wt", $"-d \"{targetPath}\"") { UseShellExecute = true });
                     }
                     catch
                     {
-                            FileSystemLogger.Information("OpenTerminal: wt failed, falling back to cmd /K cd /d {TargetPath}", targetPath);
+                            SettingsLogger.Information("OpenTerminal: wt failed, falling back to cmd /K cd /d {TargetPath}", targetPath);
                             Process.Start(new ProcessStartInfo("cmd", $"/K cd /d \"{targetPath}\"") { UseShellExecute = true });
                     }
                 }
                 else
                 {
                     // Linux: try gnome-terminal, x-terminal-emulator, or xterm
-                        try { FileSystemLogger.Information("OpenTerminal: launching gnome-terminal --working-directory={TargetPath}", targetPath); Process.Start(new ProcessStartInfo("gnome-terminal", $"--working-directory=\"{targetPath}\"") { UseShellExecute = true }); return; } catch (Exception ex) { FileSystemLogger.Debug(ex, "gnome-terminal failed"); }
-                        try { FileSystemLogger.Information("OpenTerminal: launching x-terminal-emulator --working-directory={TargetPath}", targetPath); Process.Start(new ProcessStartInfo("x-terminal-emulator", $"--working-directory=\"{targetPath}\"") { UseShellExecute = true }); return; } catch (Exception ex) { FileSystemLogger.Debug(ex, "x-terminal-emulator failed"); }
-                        try { FileSystemLogger.Information("OpenTerminal: launching xterm and cd to {TargetPath}", targetPath); Process.Start(new ProcessStartInfo("xterm", $"-e \"cd \"{targetPath}\"; bash\"") { UseShellExecute = true }); return; } catch (Exception ex) { FileSystemLogger.Debug(ex, "xterm failed"); }
+                        try { SettingsLogger.Information("OpenTerminal: launching gnome-terminal --working-directory={TargetPath}", targetPath); Process.Start(new ProcessStartInfo("gnome-terminal", $"--working-directory=\"{targetPath}\"") { UseShellExecute = true }); return; } catch (Exception ex) { SettingsLogger.Debug(ex, "gnome-terminal failed"); }
+                        try { SettingsLogger.Information("OpenTerminal: launching x-terminal-emulator --working-directory={TargetPath}", targetPath); Process.Start(new ProcessStartInfo("x-terminal-emulator", $"--working-directory=\"{targetPath}\"") { UseShellExecute = true }); return; } catch (Exception ex) { SettingsLogger.Debug(ex, "x-terminal-emulator failed"); }
+                        try { SettingsLogger.Information("OpenTerminal: launching xterm and cd to {TargetPath}", targetPath); Process.Start(new ProcessStartInfo("xterm", $"-e \"cd \"{targetPath}\"; bash\"") { UseShellExecute = true }); return; } catch (Exception ex) { SettingsLogger.Debug(ex, "xterm failed"); }
                 }
             }
             catch (Exception ex)
             {
-                FileSystemLogger.Error(ex, "Failed to open terminal");
+                SettingsLogger.Error(ex, "Failed to open terminal");
             }
         }
 
@@ -577,14 +576,14 @@ namespace Jaya.Ui.ViewModels
                 if (string.IsNullOrWhiteSpace(targetPath))
                     return;
 
-                FileSystemLogger.Information("OpenVsCode requested: target={TargetPath}", targetPath);
+                SettingsLogger.Information("OpenVsCode requested: target={TargetPath}", targetPath);
 
                 var cmd = new Jaya.Ui.Commands.OpenVsCodeCommand();
                 cmd.Execute(targetPath);
             }
             catch (Exception ex)
             {
-                FileSystemLogger.Error(ex, "Failed to open VS Code");
+                SettingsLogger.Error(ex, "Failed to open VS Code");
             }
         }
 
@@ -629,11 +628,11 @@ namespace Jaya.Ui.ViewModels
 
             try
             {
-                FileSystemLogger.Debug("CommitRename: starting for item={Label} currentDisplayName={DisplayName} editableName={EditableName}", item?.Label, item?.DisplayName, item?.EditableName);
+                SettingsLogger.Debug("CommitRename: starting for item={Label} currentDisplayName={DisplayName} editableName={EditableName}", item?.Label, item?.DisplayName, item?.EditableName);
                 // Check for local conflict (destination exists)
                 var parentDir = System.IO.Path.GetDirectoryName(fso.Path) ?? string.Empty;
                 var destPath = System.IO.Path.Combine(parentDir, newName);
-                FileSystemLogger.Debug("CommitRename: computed parentDir={ParentDir} destPath={Dest}", parentDir, destPath);
+                SettingsLogger.Debug("CommitRename: computed parentDir={ParentDir} destPath={Dest}", parentDir, destPath);
                 ConflictPromptViewModel? cvm = null;
                 if (System.IO.File.Exists(destPath) || System.IO.Directory.Exists(destPath))
                 {
@@ -665,7 +664,7 @@ namespace Jaya.Ui.ViewModels
                 }
                 // determine overwrite flag
                 bool overwrite = _applyOverwriteToAll;
-                FileSystemLogger.Debug("CommitRename: overwrite initial={OverwriteFlag} applyOverwriteToAll={ApplyAll}", overwrite, _applyOverwriteToAll);
+                SettingsLogger.Debug("CommitRename: overwrite initial={OverwriteFlag} applyOverwriteToAll={ApplyAll}", overwrite, _applyOverwriteToAll);
                 // if we previously showed a dialog, cvm variable will carry user's choice
 
                 if (serviceLocal is not Jaya.Shared.Services.IFileRenameService renameService)
@@ -685,9 +684,9 @@ namespace Jaya.Ui.ViewModels
                 var accountForCall = accountLocal!;
                 var fsoPath = fso.Path ?? string.Empty;
 
-                FileSystemLogger.Debug("CommitRename: calling provider.RenameAsync account={Account} sourcePath={Source} newName={NewName} overwrite={Overwrite}", accountForCall.Name, fsoPath, newName, overwrite);
+                SettingsLogger.Debug("CommitRename: calling provider.RenameAsync account={Account} sourcePath={Source} newName={NewName} overwrite={Overwrite}", accountForCall.Name, fsoPath, newName, overwrite);
                 var result = await renameService.RenameAsync(accountForCall, fso, newName, overwrite, progress, System.Threading.CancellationToken.None);
-                FileSystemLogger.Debug("CommitRename: provider.RenameAsync returned resultName={Result}", result?.Path);
+                SettingsLogger.Debug("CommitRename: provider.RenameAsync returned resultName={Result}", result?.Path);
                 if (result != null)
                 {
                     Invoke(() =>
@@ -726,7 +725,7 @@ namespace Jaya.Ui.ViewModels
             }
             catch (Exception ex)
             {
-                FileSystemLogger.Warning(ex, "Rename failed for {Path}", fso.Path);
+                SettingsLogger.Warning(ex, "Rename failed for {Path}", fso.Path);
             }
             finally
             {
@@ -777,26 +776,26 @@ namespace Jaya.Ui.ViewModels
         {
             if (_clipboardItems == null || _clipboardItems.Count == 0)
             {
-                FileSystemLogger.Debug("Paste skipped: clipboard is empty.");
+                SettingsLogger.Debug("Paste skipped: clipboard is empty.");
                 return;
             }
 
             if (_service == null || _account == null)
             {
-                FileSystemLogger.Debug("Paste skipped: missing service/account context.");
+                SettingsLogger.Debug("Paste skipped: missing service/account context.");
                 return;
             }
 
             if (_service is not IFileTransferService transferService)
             {
-                FileSystemLogger.Warning("Paste requested but service does not support transfer.");
+                SettingsLogger.Warning("Paste requested but service does not support transfer.");
                 return;
             }
 
             var targetDirectory = Item?.Object as DirectoryModel;
             if (targetDirectory == null || string.IsNullOrWhiteSpace(targetDirectory.Path))
             {
-                FileSystemLogger.Debug("Paste skipped: no target directory.");
+                SettingsLogger.Debug("Paste skipped: no target directory.");
                 return;
             }
 
@@ -834,7 +833,7 @@ namespace Jaya.Ui.ViewModels
                     _clipboardMode,
                     progress,
                     cancellation.Token);
-                FileSystemLogger.Information("Paste requested for {Count} items (created={Created})", _clipboardItems.Count, createdItems.Count);
+                SettingsLogger.Information("Paste requested for {Count} items (created={Created})", _clipboardItems.Count, createdItems.Count);
 
                 if (createdItems.Count > 0)
                 {
@@ -868,7 +867,7 @@ namespace Jaya.Ui.ViewModels
             }
             catch (Exception ex)
             {
-                FileSystemLogger.Error(ex, "Failed to paste {Count} items", _clipboardItems.Count);
+                SettingsLogger.Error(ex, "Failed to paste {Count} items", _clipboardItems.Count);
             }
         }
 
@@ -886,13 +885,13 @@ namespace Jaya.Ui.ViewModels
 
             if (targets.Count == 0)
             {
-                FileSystemLogger.Debug("Clipboard skipped: no file or directory targets in selection.");
+                SettingsLogger.Debug("Clipboard skipped: no file or directory targets in selection.");
                 return;
             }
 
             _clipboardItems = targets;
             _clipboardMode = mode;
-            FileSystemLogger.Debug("Clipboard stored {Count} items with mode={Mode}.", targets.Count, mode);
+            SettingsLogger.Debug("Clipboard stored {Count} items with mode={Mode}.", targets.Count, mode);
             CanPaste = _clipboardItems != null && _clipboardItems.Count > 0;
             try
             {
@@ -912,7 +911,7 @@ namespace Jaya.Ui.ViewModels
             }
             catch (Exception ex)
             {
-                FileSystemLogger.Warning(ex, "NewFolderRequested handler failed");
+                SettingsLogger.Warning(ex, "NewFolderRequested handler failed");
             }
         }
 
@@ -924,7 +923,7 @@ namespace Jaya.Ui.ViewModels
             }
             catch (Exception ex)
             {
-                FileSystemLogger.Warning(ex, "OpenTerminalRequested handler failed");
+                SettingsLogger.Warning(ex, "OpenTerminalRequested handler failed");
             }
         }
 
@@ -935,7 +934,7 @@ namespace Jaya.Ui.ViewModels
                 var currentDir = Item?.Object as DirectoryModel;
                 if (currentDir == null || string.IsNullOrWhiteSpace(currentDir.Path))
                 {
-                    FileSystemLogger.Debug("CreateNewFolder skipped: no current directory context.");
+                    SettingsLogger.Debug("CreateNewFolder skipped: no current directory context.");
                     return;
                 }
 
@@ -964,7 +963,7 @@ namespace Jaya.Ui.ViewModels
                 // Require provider support: only create via provider's IFileCreateService.
                 if (!(_service is Jaya.Shared.Services.IFileCreateService createService) || _account == null)
                 {
-                    FileSystemLogger.Debug("CreateNewFolder skipped: service does not support IFileCreateService or account missing.");
+                    SettingsLogger.Debug("CreateNewFolder skipped: service does not support IFileCreateService or account missing.");
                     return;
                 }
 
@@ -990,13 +989,13 @@ namespace Jaya.Ui.ViewModels
                     }
                     catch (Exception ex)
                     {
-                        FileSystemLogger.Warning(ex, "Provider CreateDirectoryAsync failed for candidate {Candidate}", candidate);
+                        SettingsLogger.Warning(ex, "Provider CreateDirectoryAsync failed for candidate {Candidate}", candidate);
                     }
                 }
 
                 if (createdObj == null)
                 {
-                    FileSystemLogger.Debug("CreateNewFolder: provider failed to create any candidate name.");
+                    SettingsLogger.Debug("CreateNewFolder: provider failed to create any candidate name.");
                     return;
                 }
 
@@ -1025,7 +1024,7 @@ namespace Jaya.Ui.ViewModels
             }
             catch (Exception ex)
             {
-                FileSystemLogger.Warning(ex, "CreateNewFolderAsync failed");
+                SettingsLogger.Warning(ex, "CreateNewFolderAsync failed");
             }
         }
 
@@ -1082,7 +1081,7 @@ namespace Jaya.Ui.ViewModels
 
             if (_service == null || _account == null)
             {
-                FileSystemLogger.Debug("Drop ignored: missing service/account context.");
+                SettingsLogger.Debug("Drop ignored: missing service/account context.");
                 return;
             }
 
@@ -1091,7 +1090,7 @@ namespace Jaya.Ui.ViewModels
                 var transferService = ServiceLocator.Instance.GetProviders().OfType<IFileTransferService>().FirstOrDefault();
                 if (transferService == null)
                 {
-                    FileSystemLogger.Warning("Drop requested but transfer service not available.");
+                    SettingsLogger.Warning("Drop requested but transfer service not available.");
                     return;
                 }
 
@@ -1136,7 +1135,7 @@ namespace Jaya.Ui.ViewModels
                 }
 
                 var results = await transferService.TransferAsync(_account, items, targetDirectory ?? new DirectoryModel(), mode, progress, cancellation.Token);
-                FileSystemLogger.Information("Drop transfer requested for {Count} items (created={Created})", items.Count, results?.Count ?? 0);
+                SettingsLogger.Information("Drop transfer requested for {Count} items (created={Created})", items.Count, results?.Count ?? 0);
 
                 if (results != null && results.Count > 0)
                 {
@@ -1171,7 +1170,7 @@ namespace Jaya.Ui.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    FileSystemLogger.Warning(ex, "Failed to remove moved items from view");
+                    SettingsLogger.Warning(ex, "Failed to remove moved items from view");
                 }
 
                 // Close the progress window on UI thread to ensure it doesn't stay open
@@ -1189,7 +1188,7 @@ namespace Jaya.Ui.ViewModels
             }
             catch (Exception ex)
             {
-                FileSystemLogger.Error(ex, "Failed to handle drop for {Count} items", sourcePaths.Length);
+                SettingsLogger.Error(ex, "Failed to handle drop for {Count} items", sourcePaths.Length);
             }
         }
 
@@ -1211,11 +1210,11 @@ namespace Jaya.Ui.ViewModels
 
             if (toRemove.Count == 0)
             {
-                FileSystemLogger.Debug("Delete succeeded but no matching items found in view.");
+                SettingsLogger.Debug("Delete succeeded but no matching items found in view.");
             }
             else
             {
-                FileSystemLogger.Debug("Removed {Count} items from view after delete.", toRemove.Count);
+                SettingsLogger.Debug("Removed {Count} items from view after delete.", toRemove.Count);
             }
         }
 
@@ -1334,7 +1333,7 @@ namespace Jaya.Ui.ViewModels
             if (e.PropertyName == nameof(ApplicationConfigModel.IsFileNameExtensionVisible) ||
                 e.PropertyName == nameof(ApplicationConfigModel.IsHiddenItemVisible))
             {
-                FileSystemLogger.Debug("Explorer view refresh requested due to config change: {Property}", e.PropertyName);
+                SettingsLogger.Debug("Explorer view refresh requested due to config change: {Property}", e.PropertyName);
                 // Re-run the last selection to refresh displayed items
                 if (_lastSelectionArgs != null)
                 {
@@ -1352,7 +1351,7 @@ namespace Jaya.Ui.ViewModels
             if (root?.Children == null)
                 return;
 
-            FileSystemLogger.Information("Displaying {Count} items for {Context}", root.Children.Count, context);
+            ViewsLogger.Information("Displaying {Count} items for {Context}", root.Children.Count, context);
 
             foreach (var child in root.Children)
             {
@@ -1391,7 +1390,7 @@ namespace Jaya.Ui.ViewModels
                 path ??= fsObject?.Path;
                 id ??= fsObject?.Id;
 
-                FileSystemLogger.Verbose(
+                SettingsLogger.Verbose(
                     "Displayed item {Label} as {DisplayName} (ItemType={ItemType}, ObjectType={ObjectType}, Extension={Extension}, Size={Size}) path={Path} id={Id} under {Context}",
                     label,
                     child.DisplayName,
