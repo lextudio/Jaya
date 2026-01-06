@@ -62,7 +62,6 @@ namespace Jaya.Ui.Views
             this.InitializeComponent();
             this.AddHandler(KeyDownEvent, ExplorerView_KeyDown, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             this.AddHandler(Avalonia.Input.InputElement.PointerPressedEvent, ExplorerView_PointerPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel);
-            this.AddHandler(ContextRequestedEvent, ExplorerView_ContextRequested, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             this.AddHandler(Avalonia.Input.InputElement.PointerPressedEvent, Root_PointerPressed, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             this.AddHandler(Avalonia.Input.InputElement.PointerMovedEvent, Root_PointerMoved, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             this.AddHandler(Avalonia.Input.InputElement.PointerReleasedEvent, Root_PointerReleased, Avalonia.Interactivity.RoutingStrategies.Tunnel);
@@ -76,7 +75,9 @@ namespace Jaya.Ui.Views
                 {
                     try
                     {
-                        AttachMenuItemHandlers(this);
+                        // Attach ContextMenuBehavior: set the resource key for the empty-space menu
+                        Jaya.Ui.Behaviors.ContextMenuBehavior.SetEmptySpaceMenuResourceKey(this, "EmptySpaceMenu");
+
                         // Also attach handlers to DataGrid for drag-drop in Details view
                         var dataGrid = this.FindControl<DataGrid>("DetailsDataGrid");
                         if (dataGrid != null)
@@ -88,6 +89,11 @@ namespace Jaya.Ui.Views
                             dataGrid.AddHandler(DragDrop.DropEvent, DetailsDataGrid_Drop, Avalonia.Interactivity.RoutingStrategies.Tunnel);
                             dataGrid.AddHandler(DragDrop.DragOverEvent, DetailsDataGrid_DragOver, Avalonia.Interactivity.RoutingStrategies.Bubble);
                             dataGrid.AddHandler(DragDrop.DropEvent, DetailsDataGrid_Drop, Avalonia.Interactivity.RoutingStrategies.Bubble);
+
+                            // Attach the new behavior as well (safe to call even if already wired)
+                            Jaya.Ui.Behaviors.DragDropBehavior.SetIsEnabled(dataGrid, true);
+                            Jaya.Ui.Behaviors.DragDropBehavior.SetIsEnabled(this, true);
+
                             // Clear selection when clicking empty space in Details view
                             dataGrid.AddHandler(Avalonia.Input.InputElement.PointerPressedEvent, DetailsDataGrid_PointerPressed, Avalonia.Interactivity.RoutingStrategies.Bubble);
                             // Save sort settings when user sorts columns
@@ -427,11 +433,7 @@ namespace Jaya.Ui.Views
                 // Restore directory sort when ViewModel.Item changes
                 this.DataContextChanged += (s, e) =>
                 {
-                    try
-                    {
-                        AttachViewModel(this.DataContext as ExplorerViewModel);
-                    }
-                    catch { }
+                    AttachViewModel(this.DataContext as ExplorerViewModel);
                 };
             }
 
@@ -439,41 +441,37 @@ namespace Jaya.Ui.Views
 
         void ExplorerView_KeyDown(object? sender, Avalonia.Input.KeyEventArgs e)
         {
-            try
+            if (e == null)
+                return;
+
+            if (e.Key == Avalonia.Input.Key.Delete)
             {
-                if (e == null)
-                    return;
-
-                if (e.Key == Avalonia.Input.Key.Delete)
+                // If focus is inside a TextBox that is used for inline editing (EditableName), ignore delete
+                var focused = Avalonia.Controls.TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() as Avalonia.Controls.Control;
+                if (focused is Avalonia.Controls.TextBox tb)
                 {
-                    // If focus is inside a TextBox that is used for inline editing (EditableName), ignore delete
-                    var focused = Avalonia.Controls.TopLevel.GetTopLevel(this)?.FocusManager?.GetFocusedElement() as Avalonia.Controls.Control;
-                    if (focused is Avalonia.Controls.TextBox tb)
+                    // assume inline edit TextBoxes have Tag bound to the model or share class names; check DataContext
+                    var dc = tb.DataContext;
+                    if (dc is Jaya.Ui.Models.ExplorerItemModel)
                     {
-                        // assume inline edit TextBoxes have Tag bound to the model or share class names; check DataContext
-                        var dc = tb.DataContext;
-                        if (dc is Jaya.Ui.Models.ExplorerItemModel)
-                        {
-                            // user is editing filename — do not trigger delete
-                            e.Handled = true;
-                            return;
-                        }
+                        // user is editing filename — do not trigger delete
+                        e.Handled = true;
+                        return;
                     }
+                }
 
-                    // Otherwise, invoke the delete command via ViewModel
-                    var vm = this.DataContext as Jaya.Ui.ViewModels.ExplorerViewModel;
-                    if (vm != null)
+                // Otherwise, invoke the delete command via ViewModel
+                var vm = this.DataContext as Jaya.Ui.ViewModels.ExplorerViewModel;
+                if (vm != null)
+                {
+                    if (vm.SimpleCommand != null)
                     {
-                        if (vm.SimpleCommand != null)
-                        {
-                            // Command parameter for delete
-                            vm.SimpleCommand.Execute((byte)Jaya.Ui.CommandType.Delete);
-                            e.Handled = true;
-                        }
+                        // Command parameter for delete
+                        vm.SimpleCommand.Execute((byte)Jaya.Ui.CommandType.Delete);
+                        e.Handled = true;
                     }
                 }
             }
-            catch { }
         }
 
         void AttachViewModel(ExplorerViewModel? vm)
@@ -602,8 +600,7 @@ namespace Jaya.Ui.Views
                                 Dispatcher.UIThread.Post(async () =>
                                 {
                                     await System.Threading.Tasks.Task.Delay(2000).ConfigureAwait(false);
-                                    try { _suppressSelectionDuringApplySavedSort = false; }
-                                    catch { }
+                                    _suppressSelectionDuringApplySavedSort = false;
                                 });
 
                                 break;
@@ -822,8 +819,6 @@ namespace Jaya.Ui.Views
             }
         }
 
-        
-
         void ExplorerView_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
         {
             try
@@ -833,7 +828,7 @@ namespace Jaya.Ui.Views
 
                 var point = e.GetCurrentPoint(this);
                 if (point.Properties.IsLeftButtonPressed)
-                    CloseOpenContextMenus();
+                    Jaya.Ui.Behaviors.ContextMenuBehavior.CloseAllContextMenus(this);
 
                 // If focus is inside an inline TextBox and the pointer press occurred outside
                 // of any TextBox within the items area, move focus to a safe focus target
@@ -870,8 +865,8 @@ namespace Jaya.Ui.Views
                                 return;
                             }
 
-                            var count = _detailsGrid.SelectedItems?.Count ?? 0;
-                            var items = (_detailsGrid.SelectedItems ?? Array.Empty<object>()).OfType<Models.ExplorerItemModel>().ToList();
+                            var count = _detailsGrid?.SelectedItems?.Count ?? 0;
+                            var items = (_detailsGrid?.SelectedItems ?? Array.Empty<object>()).OfType<Models.ExplorerItemModel>().ToList();
                             Logger.Information("DetailsDataGrid selection changed: Count={Count} Items={Items}", count, DescribeSelection(items));
                             ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
 
@@ -883,30 +878,7 @@ namespace Jaya.Ui.Views
             catch { }
         }
 
-        void ExplorerView_ContextRequested(object? sender, ContextRequestedEventArgs e)
-        {
-            try
-            {
-                if (e == null)
-                    return;
-
-                if (IsWithinItem(e.Source as Avalonia.Visual))
-                    return;
-
-                if (EmptySpaceMenu == null)
-                    return;
-
-                if (e.TryGetPosition(this, out var point))
-                {
-                    EmptySpaceMenu.PlacementTarget = this;
-                    EmptySpaceMenu.PlacementRect = new Avalonia.Rect(point, new Avalonia.Size(1, 1));
-                }
-
-                EmptySpaceMenu.Open(this);
-                e.Handled = true;
-            }
-            catch { }
-        }
+        // Empty-space context menu is handled by ContextMenuBehavior attached to the view.
 
         static bool IsWithinItem(Avalonia.Visual? visual)
         {
@@ -1047,56 +1019,6 @@ namespace Jaya.Ui.Views
                 _dragStartArgs = null;
                 _isDragging = false;
             }
-        }
-
-        void CloseOpenContextMenus()
-        {
-            try
-            {
-                if (ContextMenu is ContextMenu rootMenu && rootMenu.IsOpen)
-                {
-                    rootMenu.Close();
-                    return;
-                }
-
-                foreach (var control in this.GetVisualDescendants().OfType<Control>())
-                {
-                    if (control.ContextMenu is ContextMenu menu && menu.IsOpen)
-                    {
-                        menu.Close();
-                        break;
-                    }
-                }
-            }
-            catch { }
-        }
-
-        void AttachMenuItemHandlers(Control root)
-        {
-            // Find all ContextMenu instances defined in the control's resources and visual tree
-            var menus = root.GetVisualDescendants().OfType<ContextMenu>().ToList();
-            foreach (var menu in menus)
-            {
-                foreach (var mi in menu.Items.OfType<MenuItem>())
-                {
-                    mi.Click -= MenuItem_Click_CloseContext;
-                    mi.Click += MenuItem_Click_CloseContext;
-                }
-            }
-        }
-
-        void MenuItem_Click_CloseContext(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-        {
-            try
-            {
-                // Close any context menus within this view to ensure they disappear immediately
-                var menus = this.GetVisualDescendants().OfType<ContextMenu>().ToList();
-                foreach (var cm in menus)
-                {
-                    cm.Close();
-                }
-            }
-            catch { }
         }
 
         void ExplorerView_DetachedFromVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
