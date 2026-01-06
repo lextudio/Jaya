@@ -44,7 +44,6 @@ namespace Jaya.Ui.Views
         Avalonia.Input.PointerPressedEventArgs? _dragStartArgs;
         bool _isDragging;
         ExplorerViewModel? _viewModel;
-        bool _suppressSelectionDuringApplySavedSort = false;
         PropertyChangedEventHandler? _viewModelPropertyChanged;
         DataGrid? _detailsGrid;
         EventHandler<AvaloniaPropertyChangedEventArgs>? _detailsGridPropertyChanged;
@@ -514,19 +513,18 @@ namespace Jaya.Ui.Views
 
             Dispatcher.UIThread.Post(() =>
             {
-                _suppressSelectionDuringApplySavedSort = true;
                 var grid = _detailsGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
                 var dir = vm.Item?.Object as Jaya.Shared.Models.DirectoryModel;
                 if (grid == null)
                 {
                     Logger.Information("ApplySavedDetailsSort skipped: DetailsDataGrid not found.");
-                    _suppressSelectionDuringApplySavedSort = false;
                     return;
                 }
+                // Instruct SelectionBehavior to suppress updates while applying saved sort
+                try { Jaya.Ui.Behaviors.SelectionBehavior.SetSuppressWhile(grid, true); } catch { }
                 if (dir == null)
                 {
                     Logger.Debug("ApplySavedDetailsSort skipped: current directory is null.");
-                    _suppressSelectionDuringApplySavedSort = false;
                     return;
                 }
 
@@ -534,7 +532,6 @@ namespace Jaya.Ui.Views
                 if (!sort.HasValue)
                 {
                     Logger.Debug("No saved details sort to apply: Path={Path}", dir.Path);
-                    _suppressSelectionDuringApplySavedSort = false;
                     return;
                 }
 
@@ -596,7 +593,7 @@ namespace Jaya.Ui.Views
                                         finally
                                         {
                                             // Allow selection handling again after the delayed safe-selection attempt
-                                            _suppressSelectionDuringApplySavedSort = false;
+                                            try { Jaya.Ui.Behaviors.SelectionBehavior.SetSuppressWhile(grid, false); } catch { }
                                         }
                                     });
 
@@ -604,7 +601,7 @@ namespace Jaya.Ui.Views
                                 Dispatcher.UIThread.Post(async () =>
                                 {
                                     await System.Threading.Tasks.Task.Delay(2000).ConfigureAwait(false);
-                                    _suppressSelectionDuringApplySavedSort = false;
+                                    try { Jaya.Ui.Behaviors.SelectionBehavior.SetSuppressWhile(grid, false); } catch { }
                                 });
 
                                 break; 
@@ -616,8 +613,6 @@ namespace Jaya.Ui.Views
                 finally
                 {
                     Logger.Debug("Details sort apply finished: Path={Path}", dir.Path);
-                    // Allow selection handling again after applying saved sort
-                    _suppressSelectionDuringApplySavedSort = false;
                 }
             });
         }
