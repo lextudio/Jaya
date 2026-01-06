@@ -375,6 +375,12 @@ namespace Jaya.Ui.Views
                                 {
                                     try
                                     {
+                                        if (string.IsNullOrEmpty(payload))
+                                        {
+                                            Logger.Debug("CopyPath: payload is empty, aborting clipboard call");
+                                            return;
+                                        }
+
                                         await ClipboardService.CopyTextAsync(payload);
                                         Logger.Debug("Copied path(s) to clipboard: Count={Count}", paths.Length);
                                     }
@@ -561,7 +567,10 @@ namespace Jaya.Ui.Views
                                 // set a safe selected item (first visible non-hidden item) or leave null.
                                 Dispatcher.UIThread.Post(async () =>
                                 {
-                                    await System.Threading.Tasks.Task.Delay(200).ConfigureAwait(false);
+                                    await System.Threading.Tasks.Task.Delay(200);
+                                    // Post the UI work back onto the UI thread to avoid cross-thread access to Avalonia objects
+                                    Dispatcher.UIThread.Post(() =>
+                                    {
                                         try
                                         {
                                             if (grid == null)
@@ -596,14 +605,8 @@ namespace Jaya.Ui.Views
                                             try { Jaya.Ui.Behaviors.SelectionBehavior.SetSuppressWhile(grid, false); } catch { }
                                         }
                                     });
-
-                                // Safety: ensure suppress flag is cleared after a timeout if something goes wrong
-                                Dispatcher.UIThread.Post(async () =>
-                                {
-                                    await System.Threading.Tasks.Task.Delay(2000).ConfigureAwait(false);
-                                    try { Jaya.Ui.Behaviors.SelectionBehavior.SetSuppressWhile(grid, false); } catch { }
                                 });
-
+                                System.Threading.Tasks.Task.Delay(2000).ContinueWith(_ => Dispatcher.UIThread.Post(() => { try { Jaya.Ui.Behaviors.SelectionBehavior.SetSuppressWhile(grid, false); } catch { } }));
                                 break; 
                             }
                         }
