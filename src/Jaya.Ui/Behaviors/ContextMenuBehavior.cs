@@ -233,6 +233,8 @@ namespace Jaya.Ui.Behaviors
                                     rowMenu.PlacementTarget = control;
                                     rowMenu.PlacementRect = new Rect(rpt, new Size(1, 1));
                                 }
+                                // Ensure the menu's DataContext is the item's DataContext so bindings like CommandParameter="{Binding}" work
+                                rowMenu.DataContext = dataContext;
                                 TrackMenu(rowMenu);
                                 Logger.Debug("ContextMenuBehavior: Opening row context menu Menu={Menu} DataContextType={DataContext}", rowMenu, dataContext?.GetType().Name ?? "<null>");
                                 rowMenu.Open(control);
@@ -253,7 +255,7 @@ namespace Jaya.Ui.Behaviors
 
                     // Fallback: if the item container itself has a ContextMenu, open it and track it.
                     var containerMenu = itemControl?.ContextMenu;
-                    if (containerMenu != null)
+                        if (containerMenu != null)
                     {
                         // Determine the actual control that owns this ContextMenu instance. It's possible
                         // the ContextMenu object comes from a shared resource or from a parent control's
@@ -266,6 +268,8 @@ namespace Jaya.Ui.Behaviors
                             containerMenu.PlacementTarget = ownerForMenu ?? itemControl;
                             containerMenu.PlacementRect = new Rect(rpt, new Size(1, 1));
                         }
+                        // Ensure container menu DataContext is the item's DataContext so MenuItem bindings referencing relative DataContext work
+                        try { containerMenu.DataContext = dataContext; } catch { }
                         TrackMenu(containerMenu);
                         Logger.Debug("ContextMenuBehavior: Opening container ContextMenu Menu={Menu} DataContextType={DataContext} Owner={Owner}", containerMenu, dataContext?.GetType().Name ?? "<null>", ownerForMenu?.Name ?? ownerForMenu?.GetType().Name ?? "<unknown>");
                         try
