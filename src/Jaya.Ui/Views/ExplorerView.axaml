@@ -90,6 +90,11 @@
               <Image Source="{DynamicResource Icon.VSCode.Image}" Width="16" Height="16" />
             </MenuItem.Icon>
           </MenuItem>
+          <MenuItem Command="{Binding OpenInFinderCommand}" Header="Open in Finder">
+            <MenuItem.Icon>
+              <Image Source="{DynamicResource Icon.Finder.Image}" Width="16" Height="16" />
+            </MenuItem.Icon>
+          </MenuItem>
         </ContextMenu>
       </Grid.ContextMenu>
 
@@ -168,6 +173,14 @@
                   <MenuItem.Header>Open in VS Code</MenuItem.Header>
                   <MenuItem.Icon>
                     <Image Source="{DynamicResource Icon.VSCode.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem
+                  Command="{Binding DataContext.OpenInFinderCommand, ElementName=ExplorerRoot}"
+                  CommandParameter="{Binding}">
+                  <MenuItem.Header>Open in Finder</MenuItem.Header>
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.Finder.Image}" Width="16" Height="16" />
                   </MenuItem.Icon>
                 </MenuItem>
                 <Separator />

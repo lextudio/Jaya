@@ -34,6 +34,7 @@ namespace Jaya.Ui.ViewModels
         readonly Subscription<NewFolderRequestedEventArgs>? _onNewFolder;
         readonly Subscription<OpenTerminalRequestedEventArgs>? _onOpenTerminalRequested;
         readonly Subscription<OpenVsCodeRequestedEventArgs>? _onOpenVsCodeRequested;
+        readonly Subscription<OpenInFinderRequestedEventArgs>? _onOpenInFinderRequested;
         readonly SharedService? _shared;
         SelectionChangedEventArgs? _lastSelectionArgs;
 
@@ -47,6 +48,7 @@ namespace Jaya.Ui.ViewModels
         ICommand? _pasteItems;
         ICommand? _openTerminalCommand;
         ICommand? _openVsCodeCommand;
+        ICommand? _openInFinderCommand;
         ProviderServiceBase? _service;
         bool _applyOverwriteToAll = false;
         AccountModelBase? _account;
@@ -61,6 +63,7 @@ namespace Jaya.Ui.ViewModels
             _onNewFolder = EventAggregator?.Subscribe<NewFolderRequestedEventArgs>(NewFolderRequested);
             _onOpenTerminalRequested = EventAggregator?.Subscribe<OpenTerminalRequestedEventArgs>(OnOpenTerminalRequested);
             _onOpenVsCodeRequested = EventAggregator?.Subscribe<OpenVsCodeRequestedEventArgs>(OnOpenVsCodeRequested);
+            _onOpenInFinderRequested = EventAggregator?.Subscribe<OpenInFinderRequestedEventArgs>(OnOpenInFinderRequested);
             // If navigation service already has a selection (published before this VM subscribed), apply it now
             try
             {
@@ -89,6 +92,8 @@ namespace Jaya.Ui.ViewModels
                 EventAggregator?.UnSubscribe(_onOpenTerminalRequested);
             if (_onOpenVsCodeRequested != null)
                 EventAggregator?.UnSubscribe(_onOpenVsCodeRequested);
+            if (_onOpenInFinderRequested != null)
+                EventAggregator?.UnSubscribe(_onOpenInFinderRequested);
             if (_shared?.ApplicationConfiguration != null)
                 _shared.ApplicationConfiguration.PropertyChanged -= ApplicationConfiguration_PropertyChanged;
         }
@@ -226,6 +231,16 @@ namespace Jaya.Ui.ViewModels
                 if (_openVsCodeCommand == null)
                     _openVsCodeCommand = new RelayCommand<object?>(OpenVsCode);
                 return _openVsCodeCommand!;
+            }
+        }
+
+        public ICommand OpenInFinderCommand
+        {
+            get
+            {
+                if (_openInFinderCommand == null)
+                    _openInFinderCommand = new RelayCommand<object?>(OpenInFinder);
+                return _openInFinderCommand!;
             }
         }
 
@@ -593,6 +608,55 @@ namespace Jaya.Ui.ViewModels
             try
             {
                 OpenVsCode(SelectedExplorerItem);
+            }
+            catch { }
+        }
+
+        void OpenInFinder(object? parameter)
+        {
+            try
+            {
+                string targetPath = string.Empty;
+                var paramItem = parameter as ExplorerItemModel ?? SelectedExplorerItem;
+                if (paramItem != null)
+                {
+                    var obj = paramItem.Object as FileSystemObjectModel;
+                    targetPath = obj?.Path ?? string.Empty;
+                }
+
+                if (string.IsNullOrWhiteSpace(targetPath))
+                {
+                    var fsObj = Item?.Object as FileSystemObjectModel;
+                    if (fsObj != null)
+                    {
+                        targetPath = fsObj.Path ?? string.Empty;
+                    }
+                    else
+                    {
+                        var dirModel = Item?.Object as DirectoryModel;
+                        targetPath = dirModel?.Path ?? string.Empty;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(targetPath))
+                    return;
+
+                SettingsLogger.Information("OpenInFinder requested: target={TargetPath}", targetPath);
+
+                var cmd = new Jaya.Ui.Commands.OpenInFinderCommand();
+                cmd.Execute(targetPath);
+            }
+            catch (Exception ex)
+            {
+                SettingsLogger.Error(ex, "Failed to open in Finder");
+            }
+        }
+
+        void OnOpenInFinderRequested(OpenInFinderRequestedEventArgs args)
+        {
+            try
+            {
+                OpenInFinder(SelectedExplorerItem);
             }
             catch { }
         }

@@ -18,6 +18,7 @@ namespace Jaya.Ui.ViewModels
         ICommand? _toggleRibbon;
         ICommand? _openTerminal;
         ICommand? _openVsCode;
+        ICommand? _openInFinder;
         ICommand? _simpleCommand;
 
         public RibbonViewModel()
@@ -98,6 +99,17 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
+        public ICommand OpenInFinderCommand
+        {
+            get
+            {
+                if (_openInFinder == null)
+                    _openInFinder = new RelayCommand(OpenInFinderAction);
+
+                return _openInFinder!;
+            }
+        }
+
         public new ICommand SimpleCommand
         {
             get
@@ -137,6 +149,15 @@ namespace Jaya.Ui.ViewModels
             try
             {
                 EventAggregator?.Publish(new OpenVsCodeRequestedEventArgs());
+            }
+            catch { }
+        }
+
+        void OpenInFinderAction()
+        {
+            try
+            {
+                EventAggregator?.Publish(new OpenInFinderRequestedEventArgs());
             }
             catch { }
         }

@@ -244,6 +244,15 @@
                                     <Image Source="{DynamicResource Icon.VSCode.Image}" Width="16" Height="16" />
                                 </ribbon:RibbonButton.Icon>
                             </ribbon:RibbonButton>
+                            <ribbon:RibbonButton
+                                Command="{Binding OpenInFinderCommand}"
+                                Content="Finder"
+                                MaxSize="Medium"
+                                MinSize="Small">
+                                <ribbon:RibbonButton.Icon>
+                                    <Image Source="{DynamicResource Icon.Finder.Image}" Width="16" Height="16" />
+                                </ribbon:RibbonButton.Icon>
+                            </ribbon:RibbonButton>
                         </ribbon:RibbonGroupBox>
                         <ribbon:RibbonGroupBox Header="Select">
                             <ribbon:RibbonButton

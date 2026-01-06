@@ -921,6 +921,46 @@
           </GeometryDrawing.Brush>
         </GeometryDrawing-->
       </DrawingGroup>
+      <DrawingGroup x:Key="Icon.Finder">
+        <!-- Mac Finder style face: left light blue, right darker blue, with smiling face cutout -->
+        <GeometryDrawing Geometry="M 0 0 L 32 0 L 32 32 L 0 32 Z">
+          <GeometryDrawing.Brush>
+            <StaticResource ResourceKey="IconRes.GreyBrush" />
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M 1 1 L 31 1 L 31 31 L 1 31 Z">
+          <GeometryDrawing.Brush>
+            <StaticResource ResourceKey="IconRes.WhiteBrush" />
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M 1 1 L 16 1 L 16 31 L 1 31 Z">
+          <GeometryDrawing.Brush>
+            <StaticResource ResourceKey="IconRes.LightGreyBrush" />
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M 16 1 L 31 1 L 31 31 L 16 31 Z">
+          <GeometryDrawing.Brush>
+            <StaticResource ResourceKey="IconRes.BlueBrush" />
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <!-- eyes -->
+        <GeometryDrawing Geometry="M 8 12 L 12 12 L 12 16 L 8 16 Z">
+          <GeometryDrawing.Brush>
+            <StaticResource ResourceKey="IconRes.GreyBrush" />
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <GeometryDrawing Geometry="M 20 12 L 24 12 L 24 16 L 20 16 Z">
+          <GeometryDrawing.Brush>
+            <StaticResource ResourceKey="IconRes.WhiteBrush" />
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+        <!-- mouth -->
+        <GeometryDrawing Geometry="M 8 22 C 12 26, 20 26, 24 22 L 24 20 C 20 24, 12 24, 8 20 Z">
+          <GeometryDrawing.Brush>
+            <StaticResource ResourceKey="IconRes.GreyBrush" />
+          </GeometryDrawing.Brush>
+        </GeometryDrawing>
+      </DrawingGroup>
       <!-- Ensure DrawingImage aliases exist for referenced icons -->
       <DrawingImage x:Key="Icon.CloudFolder.Image" Drawing="{StaticResource Icon.CloudFolder}" />
       <DrawingImage x:Key="Icon.TextFile.Image" Drawing="{StaticResource Icon.TextFile}" />
@@ -1194,6 +1234,7 @@
       <DrawingImage x:Key="Icon.ContentType.Image" Drawing="{StaticResource Icon.ContentType}" />
       <DrawingImage x:Key="Icon.CodeFile.Image" Drawing="{StaticResource Icon.CodeFile}" />
       <DrawingImage x:Key="Icon.VSCode.Image" Drawing="{StaticResource Icon.VSCode}" />
+      <DrawingImage x:Key="Icon.Finder.Image" Drawing="{StaticResource Icon.Finder}" />
       <DrawingImage x:Key="Icon.History.Image" Drawing="{StaticResource Icon.History}" />
       <DrawingImage x:Key="Icon.Save.Image" Drawing="{StaticResource Icon.Save}" />
       <DrawingImage x:Key="Icon.Help.Image" Drawing="{StaticResource Icon.Help}" />

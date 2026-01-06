@@ -86,23 +86,26 @@ namespace Jaya.Ui.Behaviors
 
         static readonly AttachedProperty<bool> IsTopLevelHookedProperty = AvaloniaProperty.RegisterAttached<Control, bool>("IsTopLevelHooked", typeof(ContextMenuBehavior));
 
-        public static string? GetEmptySpaceMenuResourceKey(Control control) => control.GetValue(EmptySpaceMenuResourceKeyProperty);
-        public static void SetEmptySpaceMenuResourceKey(Control control, string? value)
+        public static string? GetEmptySpaceMenuResourceKey(Control? control) => control == null ? null : control.GetValue(EmptySpaceMenuResourceKeyProperty);
+        public static void SetEmptySpaceMenuResourceKey(Control? control, string? value)
         {
+            if (control == null) return;
             control.SetValue(EmptySpaceMenuResourceKeyProperty, value);
             EnsureHandlers(control);
         }
 
-        public static ContextMenu? GetEmptySpaceContextMenu(Control control) => control.GetValue(EmptySpaceContextMenuProperty);
-        public static void SetEmptySpaceContextMenu(Control control, ContextMenu? value)
+        public static ContextMenu? GetEmptySpaceContextMenu(Control? control) => control == null ? null : control.GetValue(EmptySpaceContextMenuProperty);
+        public static void SetEmptySpaceContextMenu(Control? control, ContextMenu? value)
         {
+            if (control == null) return;
             control.SetValue(EmptySpaceContextMenuProperty, value);
             EnsureHandlers(control);
         }
 
-        public static Func<object?, ContextMenu?>? GetRowContextMenuFactory(Control control) => control.GetValue(RowContextMenuFactoryProperty);
-        public static void SetRowContextMenuFactory(Control control, Func<object?, ContextMenu?>? value)
+        public static Func<object?, ContextMenu?>? GetRowContextMenuFactory(Control? control) => control == null ? null : control.GetValue(RowContextMenuFactoryProperty);
+        public static void SetRowContextMenuFactory(Control? control, Func<object?, ContextMenu?>? value)
         {
+            if (control == null) return;
             control.SetValue(RowContextMenuFactoryProperty, value);
             EnsureHandlers(control);
         }

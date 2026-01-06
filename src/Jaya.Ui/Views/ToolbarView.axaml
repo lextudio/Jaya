@@ -164,6 +164,9 @@
             <Button Command="{Binding OpenVsCodeCommand}" ToolTip.Tip="Open in VS Code">
                 <Image Source="{DynamicResource Icon.VSCode.Image}" Width="16" Height="16" Stretch="Uniform" />
             </Button>
+            <Button Command="{Binding OpenInFinderCommand}" ToolTip.Tip="Open in Finder">
+                <Image Source="{DynamicResource Icon.Finder.Image}" Width="16" Height="16" Stretch="Uniform" />
+            </Button>
         </StackPanel>
 
         <StackPanel>

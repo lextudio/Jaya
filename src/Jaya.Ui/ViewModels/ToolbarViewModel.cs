@@ -17,6 +17,7 @@ namespace Jaya.Ui.ViewModels
         ICommand? _openWindow;
         ICommand? _openTerminal;
         ICommand? _openVsCode;
+        ICommand? _openInFinder;
 
         public ToolbarViewModel()
         {
@@ -75,6 +76,17 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
+        public ICommand OpenInFinderCommand
+        {
+            get
+            {
+                if (_openInFinder == null)
+                    _openInFinder = new RelayCommand(OpenInFinderAction);
+
+                return _openInFinder!;
+            }
+        }
+
         void OpenTerminalAction()
         {
             try
@@ -89,6 +101,15 @@ namespace Jaya.Ui.ViewModels
             try
             {
                 EventAggregator?.Publish(new OpenVsCodeRequestedEventArgs());
+            }
+            catch { }
+        }
+
+        void OpenInFinderAction()
+        {
+            try
+            {
+                EventAggregator?.Publish(new OpenInFinderRequestedEventArgs());
             }
             catch { }
         }
