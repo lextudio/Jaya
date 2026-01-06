@@ -67,9 +67,10 @@ namespace Jaya.Ui.Views
                     try
                     {
                         // Attach ContextMenuBehavior: assign the empty-space menu directly from resources if available
+                        ContextMenu? cm = null;
                         if (this.Resources.ContainsKey("EmptySpaceMenu"))
                         {
-                            var cm = this.FindControl<ContextMenu>("EmptySpaceMenu");
+                            cm = this.FindControl<ContextMenu>("EmptySpaceMenu");
                             if (cm != null) Jaya.Ui.Behaviors.ContextMenuBehavior.SetEmptySpaceContextMenu(this, cm);
                         }
                         // Provide a row-context menu factory that chooses a menu per item DataContext
@@ -164,6 +165,8 @@ namespace Jaya.Ui.Views
                                 }
                             }
                             catch { }
+                            // Ensure ContextMenuBehavior is attached to the data grid so container ContextMenus are tracked
+                            try { Jaya.Ui.Behaviors.ContextMenuBehavior.SetRowContextMenuFactory(dataGrid, null); if (cm != null) Jaya.Ui.Behaviors.ContextMenuBehavior.SetEmptySpaceContextMenu(dataGrid, cm); } catch { }
                         }
                     }
                     catch { }
@@ -444,6 +447,23 @@ namespace Jaya.Ui.Views
                 {
                     AttachViewModel(this.DataContext as ExplorerViewModel);
                 };
+                // Also attach ContextMenuBehavior handlers to listbox controls so container ContextMenus are tracked
+                try
+                {
+                    var list = this.FindControl<ListBox>("ListListBox");
+                    var listCm = this.FindControl<ContextMenu>("EmptySpaceMenu");
+                    if (list != null) { Jaya.Ui.Behaviors.ContextMenuBehavior.SetRowContextMenuFactory(list, null); if (listCm != null) Jaya.Ui.Behaviors.ContextMenuBehavior.SetEmptySpaceContextMenu(list, listCm); }
+                    var icons = this.FindControl<ListBox>("IconsListBox");
+                    var iconsCm = this.FindControl<ContextMenu>("EmptySpaceMenu");
+                    if (icons != null) { Jaya.Ui.Behaviors.ContextMenuBehavior.SetRowContextMenuFactory(icons, null); if (iconsCm != null) Jaya.Ui.Behaviors.ContextMenuBehavior.SetEmptySpaceContextMenu(icons, iconsCm); }
+                    var tiles = this.FindControl<ListBox>("TilesListBox");
+                    var tilesCm = this.FindControl<ContextMenu>("EmptySpaceMenu");
+                    if (tiles != null) { Jaya.Ui.Behaviors.ContextMenuBehavior.SetRowContextMenuFactory(tiles, null); if (tilesCm != null) Jaya.Ui.Behaviors.ContextMenuBehavior.SetEmptySpaceContextMenu(tiles, tilesCm); }
+                    var content = this.FindControl<ListBox>("ContentListBox");
+                    var contentCm = this.FindControl<ContextMenu>("EmptySpaceMenu");
+                    if (content != null) { Jaya.Ui.Behaviors.ContextMenuBehavior.SetRowContextMenuFactory(content, null); if (contentCm != null) Jaya.Ui.Behaviors.ContextMenuBehavior.SetEmptySpaceContextMenu(content, contentCm); }
+                }
+                catch { }
             }
 
         }
