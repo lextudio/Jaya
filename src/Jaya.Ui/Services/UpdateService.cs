@@ -17,7 +17,7 @@ using System.Text.Json.Serialization;
 
 namespace Jaya.Ui.Services
 {
-    public sealed class UpdateService: IService
+    public sealed class UpdateService : IService
     {
         const string GITHUB_API = "https://api.github.com/";
 
@@ -32,9 +32,9 @@ namespace Jaya.Ui.Services
 
             _isPortable = true;
 
-                Version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0,0,0,0);
-                var v = Version;
-                VersionString = string.Format("{0}.{1}.{2}.{3}", v.Major, v.Minor, v.Build, v.Revision);
+            Version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
+            var v = Version;
+            VersionString = string.Format("{0}.{1}.{2}.{3}", v.Major, v.Minor, v.Build, v.Revision);
             Bitness = Environment.Is64BitOperatingSystem ? (byte)64 : (byte)32;
         }
 
@@ -83,23 +83,22 @@ namespace Jaya.Ui.Services
             if (_sharedService != null && _sharedService.UpdateConfiguration != null)
             {
                 _sharedService.UpdateConfiguration.Checked = DateTime.Now;
-                _sharedService.SaveConfigurations();
             }
-                if (releases != null && releases.Length > 0 && releases[0] != null)
+            // Update the checked timestamp once and persist below.
+            if (releases != null && releases.Length > 0 && releases[0] != null)
+            {
+                var latest = releases[0];
+                if (latest != null && latest.Downloads != null && latest.Downloads.Length > 0 && Version.CompareTo(latest.Version) < 0)
                 {
-                    var latest = releases[0];
-                        if (latest != null && latest.Downloads != null && latest.Downloads.Length > 0 && Version.CompareTo(latest.Version) < 0)
-                        {
-                            if (_sharedService?.UpdateConfiguration != null)
-                                _sharedService.UpdateConfiguration.Update = latest;
-                        }
+                    if (_sharedService?.UpdateConfiguration != null)
+                        _sharedService.UpdateConfiguration.Update = latest;
                 }
+            }
 
-                if (_sharedService != null && _sharedService.UpdateConfiguration != null)
-                {
-                    _sharedService.UpdateConfiguration.Checked = DateTime.Now;
-                    _sharedService.SaveConfigurations();
-                }
+            if (_sharedService != null && _sharedService.UpdateConfiguration != null)
+            {
+                _sharedService.UpdateConfiguration.Checked = DateTime.Now;
+            }
         }
 
         public async Task DownloadUpdate()
@@ -107,11 +106,11 @@ namespace Jaya.Ui.Services
             if (Update == null)
                 return;
 
-                var platform = _platformService != null ? _platformService.GetPlatform() : OSPlatform.Create("unknown");
-                var updateFilePrefix = string.Format("{0}{1}", platform.ToString(), _isPortable ? "_portable" : string.Empty);
+            var platform = _platformService != null ? _platformService.GetPlatform() : OSPlatform.Create("unknown");
+            var updateFilePrefix = string.Format("{0}{1}", platform.ToString(), _isPortable ? "_portable" : string.Empty);
 
             Uri? url = null;
-            foreach(var download in Update?.Downloads ?? Array.Empty<ReleaseAssetModel>())
+            foreach (var download in Update?.Downloads ?? Array.Empty<ReleaseAssetModel>())
             {
                 if (download?.Url == null)
                     continue;

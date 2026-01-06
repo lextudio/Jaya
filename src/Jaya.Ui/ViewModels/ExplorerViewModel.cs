@@ -103,18 +103,9 @@ namespace Jaya.Ui.ViewModels
             };
             ApplicationConfig.DetailsViewSortDefault = setting;
             ApplicationConfig.DetailsViewSortSettings?.Clear();
-            SettingsLogger.Debug("Saved global details sort: Member={Member} Ascending={Ascending}",
+            SettingsLogger.Debug("Saved global details sort in memory: Member={Member} Ascending={Ascending}",
                 sortMember,
                 ascending);
-            try
-            {
-                _shared?.SaveConfigurations();
-                SettingsLogger.Debug("Persisted details sort settings.");
-            }
-            catch (Exception ex)
-            {
-                SettingsLogger.Warning(ex, "Failed to persist details sort settings");
-            }
         }
 
         public (string sortMember, bool ascending)? GetDirectorySort(string? directoryPath)
