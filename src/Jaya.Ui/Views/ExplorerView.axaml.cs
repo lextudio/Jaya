@@ -14,7 +14,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Jaya.Ui.Services;
 using System.Reflection;
@@ -54,6 +53,7 @@ namespace Jaya.Ui.Views
         Avalonia.Input.PointerPressedEventArgs? _dragStartArgs;
         bool _isDragging;
         ExplorerViewModel? _viewModel;
+        bool _suppressSelectionDuringApplySavedSort = false;
         PropertyChangedEventHandler? _viewModelPropertyChanged;
         DataGrid? _detailsGrid;
         EventHandler<AvaloniaPropertyChangedEventArgs>? _detailsGridPropertyChanged;
@@ -295,9 +295,9 @@ namespace Jaya.Ui.Views
                                 try
                                 {
                                     var vm = DataContext as ExplorerViewModel;
-                                    if (vm != null && vm.Item?.Children != null)
+                                    if (vm != null && vm.DisplayedItems != null)
                                     {
-                                        var editing = vm.Item.Children.FirstOrDefault(c => c.IsEditing);
+                                        var editing = vm.DisplayedItems.FirstOrDefault(c => c.IsEditing);
                                         if (editing != null)
                                         {
                                             // search visual tree for a TextBox whose DataContext matches the editing model
@@ -513,16 +513,19 @@ namespace Jaya.Ui.Views
 
             Dispatcher.UIThread.Post(() =>
             {
+                _suppressSelectionDuringApplySavedSort = true;
                 var grid = _detailsGrid ?? this.FindControl<DataGrid>("DetailsDataGrid");
                 var dir = vm.Item?.Object as Jaya.Shared.Models.DirectoryModel;
                 if (grid == null)
                 {
                     Logger.Information("ApplySavedDetailsSort skipped: DetailsDataGrid not found.");
+                    _suppressSelectionDuringApplySavedSort = false;
                     return;
                 }
                 if (dir == null)
                 {
                     Logger.Debug("ApplySavedDetailsSort skipped: current directory is null.");
+                    _suppressSelectionDuringApplySavedSort = false;
                     return;
                 }
 
@@ -530,34 +533,92 @@ namespace Jaya.Ui.Views
                 if (!sort.HasValue)
                 {
                     Logger.Debug("No saved details sort to apply: Path={Path}", dir.Path);
+                    _suppressSelectionDuringApplySavedSort = false;
                     return;
                 }
 
-                foreach (var col in grid.Columns)
+                try
                 {
-                    try
+                    foreach (var col in grid.Columns)
                     {
-                        var dgCol = col as Avalonia.Controls.DataGridColumn;
-                        var sortMember = dgCol?.SortMemberPath ?? col.Header?.ToString();
-                        if (!string.IsNullOrWhiteSpace(sortMember) && string.Equals(sortMember, sort.Value.sortMember, StringComparison.OrdinalIgnoreCase))
+                        try
                         {
-                            Logger.Debug("Applying details sort: Path={Path} Member={Member} Ascending={Ascending}",
-                                dir.Path,
-                                sort.Value.sortMember,
-                                sort.Value.ascending);
-                            foreach (var other in grid.Columns)
+                            var dgCol = col as Avalonia.Controls.DataGridColumn;
+                            var sortMember = dgCol?.SortMemberPath ?? col.Header?.ToString();
+                            if (!string.IsNullOrWhiteSpace(sortMember) && string.Equals(sortMember, sort.Value.sortMember, StringComparison.OrdinalIgnoreCase))
                             {
-                                if (!ReferenceEquals(other, col))
-                                    (other as Avalonia.Controls.DataGridColumn)?.ClearSort();
-                            }
+                                Logger.Debug("Applying details sort: Path={Path} Member={Member} Ascending={Ascending}",
+                                    dir.Path,
+                                    sort.Value.sortMember,
+                                    sort.Value.ascending);
+                                foreach (var other in grid.Columns)
+                                {
+                                    if (!ReferenceEquals(other, col))
+                                        (other as Avalonia.Controls.DataGridColumn)?.ClearSort();
+                                }
 
-                            dgCol?.Sort(sort.Value.ascending ? ListSortDirection.Ascending : ListSortDirection.Descending);
-                            break;
+                                dgCol?.Sort(sort.Value.ascending ? ListSortDirection.Ascending : ListSortDirection.Descending);
+
+                                // After the DataGrid processes its internal deferred refresh and currency changes,
+                                // set a safe selected item (first visible non-hidden item) or leave null.
+                                Dispatcher.UIThread.Post(async () =>
+                                {
+                                    await System.Threading.Tasks.Task.Delay(200).ConfigureAwait(false);
+                                        try
+                                        {
+                                            if (grid == null)
+                                                return;
+
+                                            // Find a safe first item to select, if any
+                                            var items = (grid.ItemsSource as System.Collections.IEnumerable)?.Cast<object>().OfType<Models.ExplorerItemModel>().ToList() ?? new List<Models.ExplorerItemModel>();
+                                            var safe = items.FirstOrDefault();
+                                            if (safe != null)
+                                            {
+                                                try
+                                                {
+                                                    grid.SelectedItems?.Clear();
+                                                    grid.SelectedItems?.Add(safe);
+                                                    grid.SelectedItem = safe;
+                                                    Logger.Debug("Set safe selected item after sort: {Item}", safe.DisplayName ?? safe.Label);
+                                                    ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(1);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    Logger.Debug(ex, "Failed to set safe selected item after sort");
+                                                }
+                                            }
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Logger.Warning(ex, "Error while setting safe selection after details sort");
+                                        }
+                                        finally
+                                        {
+                                            // Allow selection handling again after the delayed safe-selection attempt
+                                            _suppressSelectionDuringApplySavedSort = false;
+                                        }
+                                    });
+
+                                // Safety: ensure suppress flag is cleared after a timeout if something goes wrong
+                                Dispatcher.UIThread.Post(async () =>
+                                {
+                                    await System.Threading.Tasks.Task.Delay(2000).ConfigureAwait(false);
+                                    try { _suppressSelectionDuringApplySavedSort = false; }
+                                    catch { }
+                                });
+
+                                break;
+                            }
                         }
+                        catch { }
                     }
-                    catch { }
                 }
-                Logger.Debug("Details sort apply finished: Path={Path}", dir.Path);
+                finally
+                {
+                    Logger.Debug("Details sort apply finished: Path={Path}", dir.Path);
+                    // Allow selection handling again after applying saved sort
+                    _suppressSelectionDuringApplySavedSort = false;
+                }
             });
         }
 
@@ -580,11 +641,18 @@ namespace Jaya.Ui.Views
                     {
                         try
                         {
+                            if (_suppressSelectionDuringApplySavedSort)
+                            {
+                                Logger.Debug("DetailsDataGrid selection collection change ignored due to suppress flag");
+                                return;
+                            }
+
                             var count = _detailsGrid.SelectedItems?.Count ?? 0;
-                            Logger.Information("DetailsDataGrid selection changed: Count={Count}", count);
+                            var items = (_detailsGrid.SelectedItems ?? Array.Empty<object>()).OfType<Models.ExplorerItemModel>().ToList();
+                            Logger.Information("DetailsDataGrid selection changed: Count={Count} Items={Items}", count, DescribeSelection(items));
                             ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
                         }
-                        catch { }
+                        catch (Exception ex) { Logger.Warning(ex, "Error in details selection collection handler"); }
                     };
                     // Ensure not double-attached
                     incc.CollectionChanged -= _detailsSelectionChangedHandler;
@@ -599,12 +667,20 @@ namespace Jaya.Ui.Views
                 {
                     try
                     {
+                        if (_suppressSelectionDuringApplySavedSort)
+                        {
+                            Logger.Debug("DetailsDataGrid.SelectionChanged ignored due to suppress flag");
+                            return;
+                        }
+
                         var dg = s as DataGrid;
-                        var count = dg?.SelectedItems?.Count ?? 0;
-                        Logger.Information("DetailsDataGrid.SelectionChanged handler: Count={Count}", count);
-                        ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
+                        var items = (dg?.SelectedItems ?? Array.Empty<object>()).OfType<Models.ExplorerItemModel>().ToList();
+                        var count = items.Count;
+                        Logger.Information("DetailsDataGrid.SelectionChanged handler: Count={Count} Items={Items}", count, DescribeSelection(items));
+
+                        ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(dg?.SelectedItems?.Count ?? 0);
                     }
-                    catch { }
+                    catch (Exception ex) { Logger.Warning(ex, "Error in details SelectionChanged handler"); }
                 };
                 _detailsGrid.SelectionChanged -= _detailsSelectionChangedEventHandler;
                 _detailsGrid.SelectionChanged += _detailsSelectionChangedEventHandler;
@@ -779,16 +855,25 @@ namespace Jaya.Ui.Views
 
                     if (!clickedInsideTextBox)
                     {
-                        // Prefer focusing a visible items control to keep keyboard navigation sensible
-                        Avalonia.Controls.Control? focusTarget = null;
-                        if (DetailsDataGrid?.IsVisible == true) focusTarget = DetailsDataGrid;
-                        else if (ListListBox?.IsVisible == true) focusTarget = ListListBox;
-                        else if (IconsListBox?.IsVisible == true) focusTarget = IconsListBox;
-                        else if (TilesListBox?.IsVisible == true) focusTarget = TilesListBox;
-                        else if (ContentListBox?.IsVisible == true) focusTarget = ContentListBox;
-                        else focusTarget = this;
+                        _detailsSelectionChangedHandler = (s, e) =>
+                        {
+                            Avalonia.Controls.Control? focusTarget = null;
+                            if (DetailsDataGrid?.IsVisible == true) focusTarget = DetailsDataGrid;
+                            else if (ListListBox?.IsVisible == true) focusTarget = ListListBox;
 
-                        try { focusTarget?.Focus(); } catch { }
+                            if (_suppressSelectionDuringApplySavedSort)
+                            {
+                                Logger.Debug("Details selection changed ignored due to suppress flag");
+                                return;
+                            }
+
+                            var count = _detailsGrid.SelectedItems?.Count ?? 0;
+                            var items = (_detailsGrid.SelectedItems ?? Array.Empty<object>()).OfType<Models.ExplorerItemModel>().ToList();
+                            Logger.Information("DetailsDataGrid selection changed: Count={Count} Items={Items}", count, DescribeSelection(items));
+                            ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
+
+                            try { focusTarget?.Focus(); } catch { }
+                        };
                     }
                 }
             }
@@ -858,6 +943,7 @@ namespace Jaya.Ui.Views
                 _dragStartArgs = e;
                 _isDragging = false;
                 Logger.Debug("Root_PointerPressed: drag candidates prepared");
+                ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(_detailsGrid?.SelectedItems?.Count ?? 0);
             }
             catch (Exception ex)
             {
@@ -1427,8 +1513,8 @@ namespace Jaya.Ui.Views
                     if (pair.ctrl is DataGrid dg2)
                     {
                         items = dg2.ItemsSource as IEnumerable ?? Array.Empty<object>();
-                        if (!items.Cast<object?>().Any() && dg2.DataContext is ExplorerViewModel evm && evm.Item?.Children != null)
-                            items = evm.Item.Children as IEnumerable ?? Array.Empty<object>();
+                        if (!items.Cast<object?>().Any() && dg2.DataContext is ExplorerViewModel evm)
+                            items = evm.DisplayedItems as IEnumerable ?? Array.Empty<object>();
                     }
                     else if (pair.ctrl is ListBox lb2)
                         items = lb2.Items;
@@ -1570,11 +1656,11 @@ namespace Jaya.Ui.Views
                 var itemsSourceUsed = "ItemsSource";
                 if (!(items ?? Array.Empty<object>()).Cast<object?>().Any())
                 {
-                    // fallback to ViewModel's Item.Children if available
-                    if (dg.DataContext is ExplorerViewModel evm && evm.Item?.Children != null)
+                    // fallback to ViewModel's DisplayedItems if available
+                    if (dg.DataContext is ExplorerViewModel evm)
                     {
-                        items = evm.Item.Children as IEnumerable ?? Array.Empty<object>();
-                        itemsSourceUsed = "ViewModel.Item.Children";
+                        items = evm.DisplayedItems as IEnumerable ?? Array.Empty<object>();
+                        itemsSourceUsed = "ViewModel.DisplayedItems";
                     }
                 }
                 Logger.Debug("InvertSelectionInItemsControl: DataGrid.{Source} type={Type} isEmpty={IsEmpty}", itemsSourceUsed, items?.GetType().FullName ?? "(null)", !(items ?? Array.Empty<object>()).Cast<object?>().Any());
@@ -1679,10 +1765,10 @@ namespace Jaya.Ui.Views
                 var itemsSourceUsed = "ItemsSource";
                 if (!(items ?? Array.Empty<object>()).Cast<object?>().Any())
                 {
-                    if (dg.DataContext is ExplorerViewModel evm && evm.Item?.Children != null)
+                    if (dg.DataContext is ExplorerViewModel evm)
                     {
-                        items = evm.Item.Children as IEnumerable ?? Array.Empty<object>();
-                        itemsSourceUsed = "ViewModel.Item.Children";
+                        items = evm.DisplayedItems as IEnumerable ?? Array.Empty<object>();
+                        itemsSourceUsed = "ViewModel.DisplayedItems";
                     }
                 }
                 var total = (items ?? Array.Empty<object>()).Cast<object?>().Count();

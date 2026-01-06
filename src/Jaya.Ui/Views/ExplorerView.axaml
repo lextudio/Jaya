@@ -106,7 +106,7 @@
       <Grid Grid.Row="1">
         <Grid.Styles>
           <Style Selector="DataGrid[IsVisible=True]">
-            <Setter Property="ItemsSource" Value="{Binding Item.Children, Mode=OneWay}"/>
+            <Setter Property="ItemsSource" Value="{Binding DisplayedItems, Mode=OneWay}"/>
           </Style>
           <Style Selector="DataGridRow">
             <Setter Property="IsVisible" Value="{Binding IsHidden, Mode=OneWay, Converter={StaticResource TreeNodeVisibilityConverter}, FallbackValue=True}" />
@@ -184,7 +184,7 @@
             <Setter Property="input:DragDrop.AllowDrop" Value="True" />
           </Style>
           <Style Selector="ListBox[IsVisible=True]">
-            <Setter Property="ItemsSource" Value="{Binding Item.Children, Mode=OneWay}"/>
+            <Setter Property="ItemsSource" Value="{Binding DisplayedItems, Mode=OneWay}"/>
           </Style>
           <Style Selector="ListBoxItem">
             <Setter Property="IsVisible" Value="{Binding IsHidden, Mode=OneWay, Converter={StaticResource TreeNodeVisibilityConverter}, FallbackValue=True}" />
@@ -640,7 +640,7 @@
         <TextBlock
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            IsVisible="{Binding !Item.Children.Count, Mode=OneWay}"
+            IsVisible="{Binding HasDisplayedItems, Converter={x:Static c:BooleanInverseConverter.Instance}}"
             Text="This folder is empty." />
 
         <Border

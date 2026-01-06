@@ -14,6 +14,7 @@ using Jaya.Ui.Views;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -51,6 +52,7 @@ namespace Jaya.Ui.ViewModels
         AccountModelBase? _account;
         List<FileSystemObjectModel> _clipboardItems = new();
         TransferMode _clipboardMode = TransferMode.Copy;
+        readonly ObservableCollection<ExplorerItemModel> _displayedItems = new();
 
         public ExplorerViewModel()
         {
@@ -257,10 +259,18 @@ namespace Jaya.Ui.ViewModels
 
         public PaneConfigModel PaneConfig => _shared!.PaneConfiguration;
 
+        public ObservableCollection<ExplorerItemModel> DisplayedItems => _displayedItems;
+
+        public bool HasDisplayedItems => _displayedItems.Count > 0;
+
         public ExplorerItemModel? Item
         {
             get => Get<ExplorerItemModel?>();
-            private set => Set(value);
+            private set
+            {
+                if (Set(value))
+                    RefreshDisplayedItems();
+            }
         }
 
         public ExplorerItemModel? SelectedExplorerItem
@@ -1059,6 +1069,8 @@ namespace Jaya.Ui.ViewModels
                 addedPaths?.Add(created.Path);
             }
 
+            RefreshDisplayedItems();
+
             if (selectAdded && addedPaths != null && addedPaths.Count > 0)
             {
                 EventAggregator?.Publish(new SelectItemsRequestedEventArgs(addedPaths));
@@ -1199,6 +1211,8 @@ namespace Jaya.Ui.ViewModels
             foreach (var child in toRemove)
                 Item.Children.Remove(child);
 
+            RefreshDisplayedItems();
+
             if (toRemove.Count == 0)
             {
                 SettingsLogger.Debug("Delete succeeded but no matching items found in view.");
@@ -1325,16 +1339,35 @@ namespace Jaya.Ui.ViewModels
                 e.PropertyName == nameof(ApplicationConfigModel.IsHiddenItemVisible))
             {
                 SettingsLogger.Debug("Explorer view refresh requested due to config change: {Property}", e.PropertyName);
-                // Re-run the last selection to refresh displayed items
-                if (_lastSelectionArgs != null)
+                try
                 {
-                    try
-                    {
-                        Invoke(() => SelectionChanged(_lastSelectionArgs));
-                    }
-                    catch { }
+                    RefreshDisplayedItems();
                 }
+                catch { }
             }
+        }
+
+        void RefreshDisplayedItems()
+        {
+            _displayedItems.Clear();
+
+            var children = Item?.Children;
+            if (children == null || children.Count == 0)
+            {
+                RaisePropertyChanged(nameof(HasDisplayedItems));
+                return;
+            }
+
+            var includeHidden = _shared?.ApplicationConfiguration?.IsHiddenItemVisible ?? true;
+            foreach (var child in children)
+            {
+                if (!includeHidden && child.IsHidden)
+                    continue;
+
+                _displayedItems.Add(child);
+            }
+
+            RaisePropertyChanged(nameof(HasDisplayedItems));
         }
 
         void LogDisplayedItems(string context, ExplorerItemModel? root)
