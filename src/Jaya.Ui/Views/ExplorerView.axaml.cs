@@ -43,6 +43,14 @@ namespace Jaya.Ui.Views
         Subscription<InvertSelectionRequestedEventArgs>? _invertSelectionRequested;
         Subscription<SelectItemsRequestedEventArgs>? _selectItemsRequested;
         Subscription<CopyPathRequestedEventArgs>? _copyPathRequested;
+        System.Collections.Specialized.NotifyCollectionChangedEventHandler? _detailsSelectionChangedHandler;
+        System.Collections.Specialized.NotifyCollectionChangedEventHandler? _listSelectionChangedHandler;
+        System.Collections.Specialized.NotifyCollectionChangedEventHandler? _iconsSelectionChangedHandler;
+        System.Collections.Specialized.NotifyCollectionChangedEventHandler? _tilesSelectionChangedHandler;
+        System.Collections.Specialized.NotifyCollectionChangedEventHandler? _contentSelectionChangedHandler;
+
+        EventHandler<Avalonia.Controls.SelectionChangedEventArgs>? _detailsSelectionChangedEventHandler;
+        EventHandler<Avalonia.Controls.SelectionChangedEventArgs>? _listBoxSelectionChangedEventHandler;
         Avalonia.Input.PointerPressedEventArgs? _dragStartArgs;
         bool _isDragging;
         ExplorerViewModel? _viewModel;
@@ -321,44 +329,39 @@ namespace Jaya.Ui.Views
                                     return;
                                 }
 
-                                var selected = DetailsDataGrid?.SelectedItem as Models.ExplorerItemModel
-                                               ?? ListListBox?.SelectedItem as Models.ExplorerItemModel
-                                               ?? IconsListBox?.SelectedItem as Models.ExplorerItemModel
-                                               ?? TilesListBox?.SelectedItem as Models.ExplorerItemModel
-                                               ?? ContentListBox?.SelectedItem as Models.ExplorerItemModel;
-
-                                if (selected == null)
+                                var selectedItems = GetSelectedItems();
+                                if (selectedItems == null || selectedItems.Count == 0)
                                 {
                                     Logger.Debug("CopyPath handler: no selected item found");
                                     return;
                                 }
 
-                                if (selected.Object is Jaya.Shared.Models.FileSystemObjectModel fso)
-                                {
-                                    if (string.IsNullOrWhiteSpace(fso.Path))
-                                    {
-                                        Logger.Debug("CopyPath handler: selected item has empty Path");
-                                        return;
-                                    }
+                                var paths = selectedItems
+                                    .Where(s => s?.Object is Jaya.Shared.Models.FileSystemObjectModel)
+                                    .Select(s => (s.Object as Jaya.Shared.Models.FileSystemObjectModel)?.Path)
+                                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                                    .ToArray();
 
-                                    // Use async clipboard call to avoid blocking the UI thread.
-                                    Dispatcher.UIThread.Post(async () =>
-                                    {
-                                        try
-                                        {
-                                            await ClipboardService.CopyTextAsync(fso.Path);
-                                            Logger.Debug("Copied path to clipboard: {Path}", fso.Path);
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            Logger.Warning(ex, "CopyPath failed");
-                                        }
-                                    });
-                                }
-                                else
+                                if (paths.Length == 0)
                                 {
-                                    Logger.Debug("CopyPath handler: selected item is not a FileSystemObjectModel (type={Type})", selected?.Object?.GetType().FullName);
+                                    Logger.Debug("CopyPath handler: selected item(s) have empty paths or are not file system objects");
+                                    return;
                                 }
+
+                                var payload = paths.Length == 1 ? paths[0] : string.Join(System.Environment.NewLine, paths);
+                                // Use async clipboard call to avoid blocking the UI thread.
+                                Dispatcher.UIThread.Post(async () =>
+                                {
+                                    try
+                                    {
+                                        await ClipboardService.CopyTextAsync(payload);
+                                        Logger.Debug("Copied path(s) to clipboard: Count={Count}", paths.Length);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Logger.Warning(ex, "CopyPath failed");
+                                    }
+                                });
                             }
                             catch (Exception ex)
                             {
@@ -408,6 +411,19 @@ namespace Jaya.Ui.Views
                     });
 
                     DetachedFromVisualTree += ExplorerView_DetachedFromVisualTree;
+                    // Attach selection-change handlers for list controls so selection actions are logged
+                    try
+                    {
+                        var list = this.FindControl<ListBox>("ListListBox");
+                        AttachListSelectionHandler(list, ref _listSelectionChangedHandler);
+                        var icons = this.FindControl<ListBox>("IconsListBox");
+                        AttachListSelectionHandler(icons, ref _iconsSelectionChangedHandler);
+                        var tiles = this.FindControl<ListBox>("TilesListBox");
+                        AttachListSelectionHandler(tiles, ref _tilesSelectionChangedHandler);
+                        var content = this.FindControl<ListBox>("ContentListBox");
+                        AttachListSelectionHandler(content, ref _contentSelectionChangedHandler);
+                    }
+                    catch { }
                 }
                 // Restore directory sort when ViewModel.Item changes
                 this.DataContextChanged += (s, e) =>
@@ -554,6 +570,46 @@ namespace Jaya.Ui.Views
                 _detailsGrid.PropertyChanged -= _detailsGridPropertyChanged;
 
             _detailsGrid = dataGrid;
+            // Attach selection changed handler to SelectedItems collection if possible
+            try
+            {
+                var sel = _detailsGrid.SelectedItems;
+                if (sel is System.Collections.Specialized.INotifyCollectionChanged incc)
+                {
+                    _detailsSelectionChangedHandler = (s, e) =>
+                    {
+                        try
+                        {
+                            var count = _detailsGrid.SelectedItems?.Count ?? 0;
+                            Logger.Information("DetailsDataGrid selection changed: Count={Count}", count);
+                            ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
+                        }
+                        catch { }
+                    };
+                    // Ensure not double-attached
+                    incc.CollectionChanged -= _detailsSelectionChangedHandler;
+                    incc.CollectionChanged += _detailsSelectionChangedHandler;
+                }
+            }
+            catch { }
+            // Also attach SelectionChanged event for immediate notifications
+            try
+            {
+                _detailsSelectionChangedEventHandler = (s, e) =>
+                {
+                    try
+                    {
+                        var dg = s as DataGrid;
+                        var count = dg?.SelectedItems?.Count ?? 0;
+                        Logger.Information("DetailsDataGrid.SelectionChanged handler: Count={Count}", count);
+                        ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
+                    }
+                    catch { }
+                };
+                _detailsGrid.SelectionChanged -= _detailsSelectionChangedEventHandler;
+                _detailsGrid.SelectionChanged += _detailsSelectionChangedEventHandler;
+            }
+            catch { }
             _detailsGridPropertyChanged = (s, e) =>
             {
                 try
@@ -576,6 +632,51 @@ namespace Jaya.Ui.Views
                 catch { }
             };
             _detailsGrid.PropertyChanged += _detailsGridPropertyChanged;
+        }
+
+        void AttachListSelectionHandler(ListBox? lb, ref System.Collections.Specialized.NotifyCollectionChangedEventHandler? handler)
+        {
+            if (lb == null)
+                return;
+
+            try
+            {
+                var sel = lb.SelectedItems;
+                if (sel is System.Collections.Specialized.INotifyCollectionChanged incc)
+                {
+                    handler = (s, e) =>
+                    {
+                        try
+                        {
+                            var count = lb.SelectedItems?.Count ?? 0;
+                            Logger.Information("ListBox `{Name}` selection changed: Count={Count}", lb.Name, count);
+                            ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
+                        }
+                        catch { }
+                    };
+                    incc.CollectionChanged -= handler;
+                    incc.CollectionChanged += handler;
+                }
+                // Attach SelectionChanged event as well
+                try
+                {
+                    var eventHandler = new EventHandler<Avalonia.Controls.SelectionChangedEventArgs>((s, e) =>
+                    {
+                        try
+                        {
+                            var list = s as ListBox;
+                            var count = list?.SelectedItems?.Count ?? (list?.SelectedItem != null ? 1 : 0);
+                            Logger.Debug("ListBox.SelectionChanged handler `{Name}`: Count={Count}", lb.Name, count);
+                            ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
+                        }
+                        catch { }
+                    });
+                    lb.SelectionChanged -= eventHandler;
+                    lb.SelectionChanged += eventHandler;
+                }
+                catch { }
+            }
+            catch { }
         }
 
         static bool TryGetSortAscending(Avalonia.Controls.DataGridColumn column, out bool ascending)
@@ -927,6 +1028,42 @@ namespace Jaya.Ui.Views
             if (_detailsGrid != null && _detailsGridPropertyChanged != null)
                 _detailsGrid.PropertyChanged -= _detailsGridPropertyChanged;
             _detailsGridPropertyChanged = null;
+            // Detach selection handlers
+            try
+            {
+                if (_detailsSelectionChangedHandler != null && _detailsGrid?.SelectedItems is System.Collections.Specialized.INotifyCollectionChanged dincc)
+                    dincc.CollectionChanged -= _detailsSelectionChangedHandler;
+            }
+            catch { }
+            try
+            {
+                var list = this.FindControl<ListBox>("ListListBox");
+                if (_listSelectionChangedHandler != null && list?.SelectedItems is System.Collections.Specialized.INotifyCollectionChanged lincc)
+                    lincc.CollectionChanged -= _listSelectionChangedHandler;
+            }
+            catch { }
+            try
+            {
+                var icons = this.FindControl<ListBox>("IconsListBox");
+                if (_iconsSelectionChangedHandler != null && icons?.SelectedItems is System.Collections.Specialized.INotifyCollectionChanged iincc)
+                    iincc.CollectionChanged -= _iconsSelectionChangedHandler;
+            }
+            catch { }
+            try
+            {
+                var tiles = this.FindControl<ListBox>("TilesListBox");
+                if (_tilesSelectionChangedHandler != null && tiles?.SelectedItems is System.Collections.Specialized.INotifyCollectionChanged tincc)
+                    tincc.CollectionChanged -= _tilesSelectionChangedHandler;
+            }
+            catch { }
+            try
+            {
+                var content = this.FindControl<ListBox>("ContentListBox");
+                if (_contentSelectionChangedHandler != null && content?.SelectedItems is System.Collections.Specialized.INotifyCollectionChanged cincc)
+                    cincc.CollectionChanged -= _contentSelectionChangedHandler;
+            }
+            catch { }
+
             _detailsGrid = null;
         }
 
