@@ -41,14 +41,6 @@ namespace Jaya.Ui.Views
         Subscription<InvertSelectionRequestedEventArgs>? _invertSelectionRequested;
         Subscription<SelectItemsRequestedEventArgs>? _selectItemsRequested;
         Subscription<CopyPathRequestedEventArgs>? _copyPathRequested;
-        System.Collections.Specialized.NotifyCollectionChangedEventHandler? _detailsSelectionChangedHandler;
-        System.Collections.Specialized.NotifyCollectionChangedEventHandler? _listSelectionChangedHandler;
-        System.Collections.Specialized.NotifyCollectionChangedEventHandler? _iconsSelectionChangedHandler;
-        System.Collections.Specialized.NotifyCollectionChangedEventHandler? _tilesSelectionChangedHandler;
-        System.Collections.Specialized.NotifyCollectionChangedEventHandler? _contentSelectionChangedHandler;
-
-        EventHandler<Avalonia.Controls.SelectionChangedEventArgs>? _detailsSelectionChangedEventHandler;
-        readonly Dictionary<ListBox, EventHandler<Avalonia.Controls.SelectionChangedEventArgs>> _listBoxSelectionChangedHandlers = new();
         Avalonia.Input.PointerPressedEventArgs? _dragStartArgs;
         bool _isDragging;
         ExplorerViewModel? _viewModel;
@@ -75,8 +67,31 @@ namespace Jaya.Ui.Views
                 {
                     try
                     {
-                        // Attach ContextMenuBehavior: set the resource key for the empty-space menu
-                        Jaya.Ui.Behaviors.ContextMenuBehavior.SetEmptySpaceMenuResourceKey(this, "EmptySpaceMenu");
+                        // Attach ContextMenuBehavior: assign the empty-space menu directly from resources if available
+                        if (this.Resources.ContainsKey("EmptySpaceMenu"))
+                        {
+                            var cm = this.FindControl<ContextMenu>("EmptySpaceMenu");
+                            if (cm != null) Jaya.Ui.Behaviors.ContextMenuBehavior.SetEmptySpaceContextMenu(this, cm);
+                        }
+                        // Provide a row-context menu factory that chooses a menu per item DataContext
+                        Jaya.Ui.Behaviors.ContextMenuBehavior.SetRowContextMenuFactory(this, (obj) =>
+                        {
+                            try
+                            {
+                                if (obj == null) return null;
+                                if (obj is Models.ExplorerItemModel em)
+                                {
+                                    if (em.IsDirectory && this.Resources.ContainsKey("DirectoryRowMenu"))
+                                        return this.FindControl<ContextMenu>("DirectoryRowMenu");
+                                    if (!em.IsDirectory && this.Resources.ContainsKey("FileRowMenu"))
+                                        return this.FindControl<ContextMenu>("FileRowMenu");
+                                }
+                                if (this.Resources.ContainsKey("ItemRowMenu"))
+                                    return this.FindControl<ContextMenu>("ItemRowMenu");
+                            }
+                            catch { }
+                            return null;
+                        });
 
                         // Also attach handlers to DataGrid for drag-drop in Details view
                         var dataGrid = this.FindControl<DataGrid>("DetailsDataGrid");
@@ -84,6 +99,8 @@ namespace Jaya.Ui.Views
                         {
                             Logger.Debug("Attaching drag-drop handlers to DetailsDataGrid");
                             AttachDetailsGrid(dataGrid);
+                            // Enable centralized selection behavior
+                            try { Jaya.Ui.Behaviors.SelectionBehavior.SetIsEnabled(dataGrid, true); } catch { }
                             // Try both strategies: Tunnel (from top down) and Bubble (from bottom up)
                             dataGrid.AddHandler(DragDrop.DragOverEvent, DetailsDataGrid_DragOver, Avalonia.Interactivity.RoutingStrategies.Tunnel);
                             dataGrid.AddHandler(DragDrop.DropEvent, DetailsDataGrid_Drop, Avalonia.Interactivity.RoutingStrategies.Tunnel);
@@ -416,19 +433,6 @@ namespace Jaya.Ui.Views
                     });
 
                     DetachedFromVisualTree += ExplorerView_DetachedFromVisualTree;
-                    // Attach selection-change handlers for list controls so selection actions are logged
-                    try
-                    {
-                        var list = this.FindControl<ListBox>("ListListBox");
-                        AttachListSelectionHandler(list, ref _listSelectionChangedHandler);
-                        var icons = this.FindControl<ListBox>("IconsListBox");
-                        AttachListSelectionHandler(icons, ref _iconsSelectionChangedHandler);
-                        var tiles = this.FindControl<ListBox>("TilesListBox");
-                        AttachListSelectionHandler(tiles, ref _tilesSelectionChangedHandler);
-                        var content = this.FindControl<ListBox>("ContentListBox");
-                        AttachListSelectionHandler(content, ref _contentSelectionChangedHandler);
-                    }
-                    catch { }
                 }
                 // Restore directory sort when ViewModel.Item changes
                 this.DataContextChanged += (s, e) =>
@@ -603,7 +607,7 @@ namespace Jaya.Ui.Views
                                     _suppressSelectionDuringApplySavedSort = false;
                                 });
 
-                                break;
+                                break; 
                             }
                         }
                         catch { }
@@ -627,61 +631,7 @@ namespace Jaya.Ui.Views
                 _detailsGrid.PropertyChanged -= _detailsGridPropertyChanged;
 
             _detailsGrid = dataGrid;
-            // Attach selection changed handler to SelectedItems collection if possible
-            try
-            {
-                var sel = _detailsGrid.SelectedItems;
-                if (sel is System.Collections.Specialized.INotifyCollectionChanged incc)
-                {
-                    _detailsSelectionChangedHandler = (s, e) =>
-                    {
-                        try
-                        {
-                            if (_suppressSelectionDuringApplySavedSort)
-                            {
-                                Logger.Debug("DetailsDataGrid selection collection change ignored due to suppress flag");
-                                return;
-                            }
-
-                            var count = _detailsGrid.SelectedItems?.Count ?? 0;
-                            var items = (_detailsGrid.SelectedItems ?? Array.Empty<object>()).OfType<Models.ExplorerItemModel>().ToList();
-                            Logger.Information("DetailsDataGrid selection changed: Count={Count} Items={Items}", count, DescribeSelection(items));
-                            ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
-                        }
-                        catch (Exception ex) { Logger.Warning(ex, "Error in details selection collection handler"); }
-                    };
-                    // Ensure not double-attached
-                    incc.CollectionChanged -= _detailsSelectionChangedHandler;
-                    incc.CollectionChanged += _detailsSelectionChangedHandler;
-                }
-            }
-            catch { }
-            // Also attach SelectionChanged event for immediate notifications
-            try
-            {
-                _detailsSelectionChangedEventHandler = (s, e) =>
-                {
-                    try
-                    {
-                        if (_suppressSelectionDuringApplySavedSort)
-                        {
-                            Logger.Debug("DetailsDataGrid.SelectionChanged ignored due to suppress flag");
-                            return;
-                        }
-
-                        var dg = s as DataGrid;
-                        var items = (dg?.SelectedItems ?? Array.Empty<object>()).OfType<Models.ExplorerItemModel>().ToList();
-                        var count = items.Count;
-                        Logger.Information("DetailsDataGrid.SelectionChanged handler: Count={Count} Items={Items}", count, DescribeSelection(items));
-
-                        ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(dg?.SelectedItems?.Count ?? 0);
-                    }
-                    catch (Exception ex) { Logger.Warning(ex, "Error in details SelectionChanged handler"); }
-                };
-                _detailsGrid.SelectionChanged -= _detailsSelectionChangedEventHandler;
-                _detailsGrid.SelectionChanged += _detailsSelectionChangedEventHandler;
-            }
-            catch { }
+            // Selection behavior takes care of SelectedItems updates; keep grid property handling below.
             _detailsGridPropertyChanged = (s, e) =>
             {
                 try
@@ -705,56 +655,7 @@ namespace Jaya.Ui.Views
             };
             _detailsGrid.PropertyChanged += _detailsGridPropertyChanged;
         }
-
-        void AttachListSelectionHandler(ListBox? lb, ref System.Collections.Specialized.NotifyCollectionChangedEventHandler? handler)
-        {
-            if (lb == null)
-                return;
-
-            try
-            {
-                var sel = lb.SelectedItems;
-                if (sel is System.Collections.Specialized.INotifyCollectionChanged incc)
-                {
-                    handler = (s, e) =>
-                    {
-                        try
-                        {
-                            var count = lb.SelectedItems?.Count ?? 0;
-                            Logger.Information("ListBox `{Name}` selection changed: Count={Count}", lb.Name, count);
-                            ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
-                        }
-                        catch { }
-                    };
-                    incc.CollectionChanged -= handler;
-                    incc.CollectionChanged += handler;
-                }
-                // Attach SelectionChanged event as well
-                try
-                {
-                    if (!_listBoxSelectionChangedHandlers.TryGetValue(lb, out var eventHandler))
-                    {
-                        eventHandler = (s, e) =>
-                        {
-                            try
-                            {
-                                var list = s as ListBox;
-                                var count = list?.SelectedItems?.Count ?? (list?.SelectedItem != null ? 1 : 0);
-                                Logger.Debug("ListBox.SelectionChanged handler `{Name}`: Count={Count}", lb.Name, count);
-                                ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
-                            }
-                            catch { }
-                        };
-                        _listBoxSelectionChangedHandlers[lb] = eventHandler;
-                    }
-                    lb.SelectionChanged -= eventHandler;
-                    lb.SelectionChanged += eventHandler;
-                }
-                catch { }
-            }
-            catch { }
-        }
-
+ 
         static bool TryGetSortAscending(Avalonia.Controls.DataGridColumn column, out bool ascending)
         {
             ascending = true;
@@ -821,64 +722,13 @@ namespace Jaya.Ui.Views
 
         void ExplorerView_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
         {
-            try
-            {
-                if (e == null)
-                    return;
+            if (e == null)
+                return;
 
-                var point = e.GetCurrentPoint(this);
-                if (point.Properties.IsLeftButtonPressed)
-                    Jaya.Ui.Behaviors.ContextMenuBehavior.CloseAllContextMenus(this);
-
-                // If focus is inside an inline TextBox and the pointer press occurred outside
-                // of any TextBox within the items area, move focus to a safe focus target
-                // so the inline editor loses focus and commits/cancels via LostFocus.
-                var top = Avalonia.Controls.TopLevel.GetTopLevel(this);
-                var focused = top?.FocusManager?.GetFocusedElement() as Avalonia.Controls.Control;
-                if (focused is Avalonia.Controls.TextBox tb)
-                {
-                    // Use the event's Source (the visual that received the pointer) and walk up
-                    // the visual parent chain to see whether we clicked inside the same TextBox.
-                    var visual = e.Source as Avalonia.Visual;
-                    bool clickedInsideTextBox = false;
-                    while (visual != null)
-                    {
-                        if (ReferenceEquals(visual, tb))
-                        {
-                            clickedInsideTextBox = true;
-                            break;
-                        }
-                        visual = Avalonia.VisualTree.VisualExtensions.GetVisualParent(visual) as Avalonia.Visual;
-                    }
-
-                    if (!clickedInsideTextBox)
-                    {
-                        _detailsSelectionChangedHandler = (s, e) =>
-                        {
-                            Avalonia.Controls.Control? focusTarget = null;
-                            if (DetailsDataGrid?.IsVisible == true) focusTarget = DetailsDataGrid;
-                            else if (ListListBox?.IsVisible == true) focusTarget = ListListBox;
-
-                            if (_suppressSelectionDuringApplySavedSort)
-                            {
-                                Logger.Debug("Details selection changed ignored due to suppress flag");
-                                return;
-                            }
-
-                            var count = _detailsGrid?.SelectedItems?.Count ?? 0;
-                            var items = (_detailsGrid?.SelectedItems ?? Array.Empty<object>()).OfType<Models.ExplorerItemModel>().ToList();
-                            Logger.Information("DetailsDataGrid selection changed: Count={Count} Items={Items}", count, DescribeSelection(items));
-                            ServiceLocator.Instance.GetService<SharedService>()?.UpdateSelectionAvailability(count);
-
-                            try { focusTarget?.Focus(); } catch { }
-                        };
-                    }
-                }
-            }
-            catch { }
+            var point = e.GetCurrentPoint(this);
+            if (point.Properties.IsLeftButtonPressed)
+                Jaya.Ui.Behaviors.ContextMenuBehavior.CloseAllContextMenus(this);
         }
-
-        // Empty-space context menu is handled by ContextMenuBehavior attached to the view.
 
         static bool IsWithinItem(Avalonia.Visual? visual)
         {
@@ -1041,58 +891,17 @@ namespace Jaya.Ui.Views
             _detailsGridPropertyChanged = null;
             try
             {
-                if (_detailsSelectionChangedEventHandler != null)
-                    _detailsGrid?.SelectionChanged -= _detailsSelectionChangedEventHandler;
-            }
-            catch { }
-            _detailsSelectionChangedEventHandler = null;
-            // Detach selection handlers
-            try
-            {
-                if (_detailsSelectionChangedHandler != null && _detailsGrid?.SelectedItems is System.Collections.Specialized.INotifyCollectionChanged dincc)
-                    dincc.CollectionChanged -= _detailsSelectionChangedHandler;
-            }
-            catch { }
-            _detailsSelectionChangedHandler = null;
-            try
-            {
-                foreach (var entry in _listBoxSelectionChangedHandlers)
-                {
-                    entry.Key.SelectionChanged -= entry.Value;
-                }
-                _listBoxSelectionChangedHandlers.Clear();
-            }
-            catch { }
-            try
-            {
-                var list = this.FindControl<ListBox>("ListListBox");
-                if (_listSelectionChangedHandler != null && list?.SelectedItems is System.Collections.Specialized.INotifyCollectionChanged lincc)
-                    lincc.CollectionChanged -= _listSelectionChangedHandler;
-            }
-            catch { }
-            try
-            {
-                var icons = this.FindControl<ListBox>("IconsListBox");
-                if (_iconsSelectionChangedHandler != null && icons?.SelectedItems is System.Collections.Specialized.INotifyCollectionChanged iincc)
-                    iincc.CollectionChanged -= _iconsSelectionChangedHandler;
-            }
-            catch { }
-            try
-            {
-                var tiles = this.FindControl<ListBox>("TilesListBox");
-                if (_tilesSelectionChangedHandler != null && tiles?.SelectedItems is System.Collections.Specialized.INotifyCollectionChanged tincc)
-                    tincc.CollectionChanged -= _tilesSelectionChangedHandler;
-            }
-            catch { }
-            try
-            {
-                var content = this.FindControl<ListBox>("ContentListBox");
-                if (_contentSelectionChangedHandler != null && content?.SelectedItems is System.Collections.Specialized.INotifyCollectionChanged cincc)
-                    cincc.CollectionChanged -= _contentSelectionChangedHandler;
+                // Disable selection behavior on known item controls
+                if (_detailsGrid != null) Jaya.Ui.Behaviors.SelectionBehavior.SetIsEnabled(_detailsGrid, false);
+                var list = this.FindControl<ListBox>("ListListBox"); if (list != null) Jaya.Ui.Behaviors.SelectionBehavior.SetIsEnabled(list, false);
+                var icons = this.FindControl<ListBox>("IconsListBox"); if (icons != null) Jaya.Ui.Behaviors.SelectionBehavior.SetIsEnabled(icons, false);
+                var tiles = this.FindControl<ListBox>("TilesListBox"); if (tiles != null) Jaya.Ui.Behaviors.SelectionBehavior.SetIsEnabled(tiles, false);
+                var content = this.FindControl<ListBox>("ContentListBox"); if (content != null) Jaya.Ui.Behaviors.SelectionBehavior.SetIsEnabled(content, false);
+
+                _detailsGrid = null;
             }
             catch { }
 
-            _detailsGrid = null;
         }
 
         void Root_DragOver(object? sender, DragEventArgs e)
