@@ -15,7 +15,6 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <j:BitmapValueConverter x:Key="BitmapValueConverter" />
-        <converters:ResourceValueConverter x:Key="ResourceValueConverter" />
         <converters:NullToBoolConverter x:Key="NullToBoolConverter" />
         <c:TreeNodeLabelConverter x:Key="TreeNodeLabelConverter" />
         <c:BooleanToTreeNodeVisibilityConverter x:Key="TreeNodeVisibilityConverter" />
@@ -62,10 +61,21 @@
                                 <ColumnDefinition Width="20" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
+                            <!-- Folder icon for regular folders -->
                             <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,4,0"
-                                Source="{Binding ImageResourceKey, Converter={StaticResource ResourceValueConverter}}" />
+                                Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IconType, Converter={x:Static c:EnumToBoolConverter.Instance}, ConverterParameter=Folder}" />
+                            <!-- Drive icon for mounted volumes -->
                             <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,4,0"
-                                Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}}" />
+                                Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IconType, Converter={x:Static c:EnumToBoolConverter.Instance}, ConverterParameter=Drive}" />
+                            <!-- Download folder icon -->
+                            <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,4,0"
+                                Source="{DynamicResource Icon.ArrowDown.Image}" IsVisible="{Binding IconType, Converter={x:Static c:EnumToBoolConverter.Instance}, ConverterParameter=Download}" />
+                            <!-- Trash icon -->
+                            <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,4,0"
+                                Source="{DynamicResource Icon.Delete.Image}" IsVisible="{Binding IconType, Converter={x:Static c:EnumToBoolConverter.Instance}, ConverterParameter=Trash}" />
+                            <!-- Computer/Desktop icon -->
+                            <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,4,0"
+                                Source="{DynamicResource Icon.Computer.Image}" IsVisible="{Binding IconType, Converter={x:Static c:EnumToBoolConverter.Instance}, ConverterParameter=Computer}" />
                             <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" Foreground="{DynamicResource Window.ForegroundBrush}" FontSize="13" />
                         </Grid>
                     </Button>
@@ -103,10 +113,21 @@
                                 <ColumnDefinition Width="20" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
+                            <!-- Folder icon for Home/regular folders -->
                             <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,4,0"
-                                Source="{Binding ImageResourceKey, Converter={StaticResource ResourceValueConverter}}" />
+                                Source="{DynamicResource Icon.Folder.Image}" IsVisible="{Binding IconType, Converter={x:Static c:EnumToBoolConverter.Instance}, ConverterParameter=Folder}" />
+                            <!-- Drive icon for volumes/cache -->
                             <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,4,0"
-                                Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}}" />
+                                Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IconType, Converter={x:Static c:EnumToBoolConverter.Instance}, ConverterParameter=Drive}" />
+                            <!-- Download folder icon -->
+                            <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,4,0"
+                                Source="{DynamicResource Icon.ArrowDown.Image}" IsVisible="{Binding IconType, Converter={x:Static c:EnumToBoolConverter.Instance}, ConverterParameter=Download}" />
+                            <!-- Trash icon -->
+                            <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,4,0"
+                                Source="{DynamicResource Icon.Delete.Image}" IsVisible="{Binding IconType, Converter={x:Static c:EnumToBoolConverter.Instance}, ConverterParameter=Trash}" />
+                            <!-- Computer/Desktop icon -->
+                            <Image Grid.Column="0" Width="16" Height="16" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,4,0"
+                                Source="{DynamicResource Icon.Computer.Image}" IsVisible="{Binding IconType, Converter={x:Static c:EnumToBoolConverter.Instance}, ConverterParameter=Computer}" />
                             <TextBlock Grid.Column="1" Text="{Binding Label}" VerticalAlignment="Center" Foreground="{DynamicResource Window.ForegroundBrush}" FontSize="13" />
                         </Grid>
                     </Button>
@@ -123,13 +144,15 @@
             <TreeView.ItemTemplate>
                 <TreeDataTemplate DataType="{x:Type m:TreeNodeModel}" ItemsSource="{Binding Children}">
                     <StackPanel Orientation="Horizontal">
+                        <!-- Service: Computer icon -->
                         <Image
                             Classes="Icon"
                             Width="16"
                             Height="16"
                             Stretch="Uniform"
                             IsVisible="{Binding IsService}"
-                            Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}}" />
+                            Source="{DynamicResource Icon.Computer.Image}" />
+                        <!-- Account: Cloud folder icon -->
                         <Image
                             Classes="Icon"
                             Width="16"
@@ -137,6 +160,7 @@
                             Stretch="Uniform"
                             Source="{DynamicResource Icon.CloudFolder.Image}"
                             IsVisible="{Binding IsAccount}" />
+                        <!-- Computer: Computer icon -->
                         <Image
                             Classes="Icon"
                             Width="16"
@@ -144,36 +168,31 @@
                             Stretch="Uniform"
                             Source="{DynamicResource Icon.Computer.Image}"
                             IsVisible="{Binding IsComputer}" />
+                        <!-- Drive: Drive icon -->
                         <Image
                             Classes="Icon"
                             Width="16"
                             Height="16"
                             Stretch="Uniform"
                             Source="{DynamicResource Icon.Drive.Image}"
-                            IsVisible="{Binding IsDriveIconVisible}" />
+                            IsVisible="{Binding IsDrive}" />
+                        <!-- Directory: Folder icon when collapsed -->
                         <Image
                             Classes="Icon"
                             Width="16"
                             Height="16"
                             Stretch="Uniform"
-                            Source="{DynamicResource Icon.ExternalDrive.Image}"
-                            IsVisible="{Binding IsExternalDriveIconVisible}" />
-                        <StackPanel IsVisible="{Binding IsDirectory}" Orientation="Horizontal">
-                            <Image
-                                Classes="Icon"
-                                Width="16"
-                                Height="16"
-                                Stretch="Uniform"
-                                Source="{DynamicResource Icon.Folder.Image}"
-                                IsVisible="{Binding !IsExpanded}" />
-                            <Image
-                                Classes="Icon"
-                                Width="16"
-                                Height="16"
-                                Stretch="Uniform"
-                                Source="{DynamicResource Icon.FolderOpen.Image}"
-                                IsVisible="{Binding IsExpanded}" />
-                        </StackPanel>
+                            Source="{DynamicResource Icon.Folder.Image}"
+                            IsVisible="{Binding IsDirectory}" />
+                        <!-- Directory: FolderOpen icon when expanded (overlay) -->
+                        <Image
+                            Classes="Icon"
+                            Width="16"
+                            Height="16"
+                            Stretch="Uniform"
+                            Source="{DynamicResource Icon.FolderOpen.Image}"
+                            IsVisible="{Binding IsDirectory}" />
+                        <!-- Loading Spinner -->
                         <Image
                             Classes="Spinner"
                             Width="16"

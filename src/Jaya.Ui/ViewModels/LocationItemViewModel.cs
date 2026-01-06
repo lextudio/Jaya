@@ -3,12 +3,22 @@ using Jaya.Shared.Models;
 
 namespace Jaya.Ui.ViewModels
 {
+    public enum LocationIconType
+    {
+        Folder,
+        Download,
+        Trash,
+        Drive,
+        Computer
+    }
+
     public class LocationItemViewModel : ViewModelBase
     {
         DirectoryModel? _directory;
         string? _label;
         string? _imagePath;
         string? _imageResourceKey;
+        LocationIconType _iconType = LocationIconType.Folder;
         ProviderServiceBase? _service;
         AccountModelBase? _account;
 
@@ -34,6 +44,12 @@ namespace Jaya.Ui.ViewModels
         {
             get => _imageResourceKey;
             set => Set(ref _imageResourceKey, value);
+        }
+
+        public LocationIconType IconType
+        {
+            get => _iconType;
+            set => Set(ref _iconType, value);
         }
 
         public ProviderServiceBase? Service

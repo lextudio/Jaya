@@ -269,6 +269,8 @@ namespace Jaya.Ui.ViewModels
                 accountNode.ImagePath = account.ImagePath;
                 accountNode.NodeExpanded += OnNodeExpanded;
                 accountNode.AddDummyChild();
+                Logger.Debug("Created Account Node: Label={Label}, NodeType={NodeType}, IsAccount={IsAccount}, ImagePath={ImagePath}", 
+                    accountNode.Label, accountNode.NodeType, accountNode.IsAccount, accountNode.ImagePath);
                 AddChildNode(node, accountNode);
             }
             else if (action == AccountAction.Removed)
@@ -410,7 +412,7 @@ namespace Jaya.Ui.ViewModels
                             Directory = volDir,
                             Service = existingHome?.Service,
                             Account = existingHome?.Account,
-                            ImageResourceKey = "Icon.Drive.Image"
+                            IconType = LocationIconType.Drive
                         };
                         newLocations.Add(volLocation);
                     }
@@ -424,7 +426,7 @@ namespace Jaya.Ui.ViewModels
                             Directory = trashDir,
                             Service = existingHome?.Service,
                             Account = existingHome?.Account,
-                            ImageResourceKey = "Icon.Delete.Image"
+                            IconType = LocationIconType.Trash
                         };
                         newLocations.Add(trashLocation);
                     }
@@ -833,6 +835,9 @@ namespace Jaya.Ui.ViewModels
                     };
                     newNode.NodeExpanded += OnNodeExpanded;
                     newNode.NeedsPopulate = true;
+                    Logger.Debug("Created {NodeTypeLabel} Node in EnsureFileSystemPathChain: Label={Label}, NodeType={NodeType}, IsDrive={IsDrive}, IsDirectory={IsDirectory}, Path={Path}", 
+                        isRoot ? "Drive" : "Directory",
+                        newNode.Label, newNode.NodeType, newNode.IsDrive, newNode.IsDirectory, path);
                     await AddChildNodeAsync(current, newNode);
                     existing = newNode;
                     Logger.Debug("EnsureFileSystemPathChain: inserted node {Label} path={Path} root={IsRoot}",
@@ -1110,7 +1115,7 @@ namespace Jaya.Ui.ViewModels
                         Directory = homeDir,
                         Service = fileService,
                         Account = fileAccount,
-                        ImageResourceKey = "Icon.FolderOpen.Image"
+                        IconType = LocationIconType.Folder
                     };
                     locationsLocal.Add(homeLocation);
 
@@ -1151,7 +1156,7 @@ namespace Jaya.Ui.ViewModels
                                     Directory = volDir,
                                     Service = fileService,
                                     Account = fileAccount,
-                                    ImageResourceKey = "Icon.Drive.Image"
+                                    IconType = LocationIconType.Drive
                                 };
                                 locationsLocal.Add(volLocation);
                             }
@@ -1189,7 +1194,7 @@ namespace Jaya.Ui.ViewModels
                             Directory = downloadsDir,
                             Service = fileService,
                             Account = fileAccount,
-                            ImageResourceKey = "Icon.ArrowDown.Image"
+                            IconType = LocationIconType.Download
                         };
                         favoritesLocal.Add(downloadsLocation);
                     }
@@ -1208,7 +1213,7 @@ namespace Jaya.Ui.ViewModels
                                 Directory = trashDir,
                                 Service = fileService,
                                 Account = fileAccount,
-                                ImageResourceKey = "Icon.Delete.Image"
+                                IconType = LocationIconType.Trash
                             };
                             locationsLocal.Add(trashLocation);
                         }
@@ -1244,7 +1249,7 @@ namespace Jaya.Ui.ViewModels
                             Directory = desktopDir,
                             Service = fileService,
                             Account = fileAccount,
-                            ImageResourceKey = "Icon.Computer.Image"
+                            IconType = LocationIconType.Computer
                         };
                         favoritesLocal.Add(desktopLocation);
                     }
@@ -1271,7 +1276,7 @@ namespace Jaya.Ui.ViewModels
                                         Directory = cacheDir,
                                         Service = fileService,
                                         Account = fileAccount,
-                                        ImageResourceKey = "Icon.Drive.Image"
+                                        IconType = LocationIconType.Drive
                                     };
                                     locationsLocal.Add(cacheLocation);
                                 }
@@ -1343,6 +1348,8 @@ namespace Jaya.Ui.ViewModels
                             Label = svc?.Name ?? string.Empty,
                             ImagePath = svc?.ImagePath ?? string.Empty
                         };
+                        Logger.Debug("Created Service Node: Label={Label}, NodeType={NodeType}, IsService={IsService}, ImagePath={ImagePath}", 
+                            serviceNode.Label, serviceNode.NodeType, serviceNode.IsService, serviceNode.ImagePath);
                         serviceNode.NodeExpanded += OnNodeExpanded;
                         serviceNode.AddDummyChild();
                         await AddChildNodeAsync(node, serviceNode);
@@ -1451,6 +1458,10 @@ namespace Jaya.Ui.ViewModels
                     accountNode.ImagePath = account.ImagePath;
                     accountNode.NodeExpanded += OnNodeExpanded;
                     accountNode.AddDummyChild();
+                    var isComputer = node.Service.IsRootDrive;
+                    Logger.Debug("Created {NodeTypeLabel} Node in PopulateNodeAsync: Label={Label}, NodeType={NodeType}, IsComputer={IsComputer}, IsAccount={IsAccount}, ImagePath={ImagePath}", 
+                        isComputer ? "Computer" : "Account",
+                        accountNode.Label, accountNode.NodeType, accountNode.IsComputer, accountNode.IsAccount, accountNode.ImagePath);
                     await AddChildNodeAsync(node, accountNode);
                 }
             }
@@ -1474,6 +1485,9 @@ namespace Jaya.Ui.ViewModels
                     fileSystemObjectNode.FileSystemObject = directory;
                     fileSystemObjectNode.NodeExpanded += OnNodeExpanded;
                     fileSystemObjectNode.AddDummyChild();
+                    Logger.Debug("Created {NodeTypeLabel} Node: Label={Label}, NodeType={NodeType}, IsDrive={IsDrive}, IsDirectory={IsDirectory}", 
+                        directory.Type == FileSystemObjectType.Drive ? "Drive" : "Directory",
+                        fileSystemObjectNode.Label, fileSystemObjectNode.NodeType, fileSystemObjectNode.IsDrive, fileSystemObjectNode.IsDirectory);
                     await AddChildNodeAsync(node, fileSystemObjectNode);
                 }
             }
