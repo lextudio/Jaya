@@ -142,6 +142,26 @@ namespace Jaya.Ui.Views
                 var eventAggregator = ServiceLocator.Instance.GetService<ICommandService>()?.EventAggregator;
                 if (eventAggregator != null)
                 {
+                    // Subscribe to Tree drop requests (from NavigationView) and delegate to ExplorerViewModel.HandleDropAsync
+                    var _treeDropRequested = eventAggregator.Subscribe<Jaya.Ui.TreeDropRequestedEventArgs>(args =>
+                    {
+                        Dispatcher.UIThread.Post(async () =>
+                        {
+                            try
+                            {
+                                var vm = DataContext as ExplorerViewModel;
+                                if (vm == null)
+                                    return;
+
+                                if (args?.SourcePaths != null && args.SourcePaths.Length > 0)
+                                {
+                                    await vm.HandleDropAsync(args.SourcePaths, args.TargetDirectory, args.Effect);
+                                }
+                            }
+                            catch { }
+                        });
+                    });
+
                     _openRequested = eventAggregator.Subscribe<OpenRequestedEventArgs>(args =>
                     {
                         // Attempt to open the selected item(s) by invoking ViewModel command on UI thread
