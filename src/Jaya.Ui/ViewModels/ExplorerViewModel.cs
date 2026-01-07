@@ -782,7 +782,17 @@ namespace Jaya.Ui.ViewModels
                                 };
 
                                 var newItem = new ExplorerItemModel(existing.Type, newLabel, result, existing.ImagePath);
+                                // Replace the existing ExplorerItemModel in the tree so bindings update
+                                if (Item?.Children != null && index >= 0 && index < Item.Children.Count)
+                                {
+                                    Item.Children[index] = newItem;
+                                }
 
+                                // Ensure displayed items are refreshed to reflect the replacement
+                                RefreshDisplayedItems();
+
+                                // Select the new item so keyboard focus and selection state remain consistent
+                                SelectedExplorerItem = newItem;
                             }
                         }
                     });

@@ -328,7 +328,8 @@ namespace Jaya.Ui.Views
                                             var tb = this.GetVisualDescendants().OfType<TextBox>().FirstOrDefault(textBox => ReferenceEquals(textBox.DataContext, editing));
                                             if (tb != null)
                                             {
-                                                try { tb.Focus(); } catch { }
+                                                tb.Focus();
+                                                tb.SelectAll();
                                             }
                                         }
                                     }
