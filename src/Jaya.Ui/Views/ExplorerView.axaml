@@ -311,7 +311,7 @@
                                 <Image
                                   Classes="Icon"
                                   IsVisible="{Binding IsService}"
-                                  Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}, ConverterParameter=16}" />
+                                  Source="{Binding Image}" />
                                 <Image Classes="Icon" Source="{DynamicResource Icon.CloudFolder.Image}" IsVisible="{Binding IsAccount}" Width="16" Height="16" Stretch="Uniform" />
                                 <Image Classes="Icon" Source="{DynamicResource Icon.Computer.Image}" IsVisible="{Binding IsComputer}" Width="16" Height="16" Stretch="Uniform" />
                                 <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="16" Height="16" Stretch="Uniform" />
@@ -395,10 +395,10 @@
                           <ia:InvokeCommandAction Command="{Binding $parent[ListBox].DataContext.InvokeObjectCommand}" CommandParameter="{Binding}" />
                         </ia:EventTriggerBehavior>
                       </i:Interaction.Behaviors>
-                      <Image
+                        <Image
                           Classes="Icon"
                           IsVisible="{Binding IsService}"
-                          Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}, ConverterParameter=48}" />
+                          Source="{Binding Image}" />
                         <Image Classes="Icon" Source="{DynamicResource Icon.CloudFolder.Image}" IsVisible="{Binding IsAccount}" Width="48" Height="48" Stretch="Uniform" />
                         <Image Classes="Icon" Source="{DynamicResource Icon.Computer.Image}" IsVisible="{Binding IsComputer}" Width="48" Height="48" Stretch="Uniform" />
                         <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="48" Height="48" Stretch="Uniform" />
@@ -464,10 +464,10 @@
                       <ia:InvokeCommandAction Command="{Binding $parent[ListBox].DataContext.InvokeObjectCommand}" CommandParameter="{Binding}" />
                     </ia:EventTriggerBehavior>
                   </i:Interaction.Behaviors>
-                  <Image
+                    <Image
                       Classes="Icon"
                       IsVisible="{Binding IsService}"
-                      Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}, ConverterParameter=16}" />
+                      Source="{Binding Image}" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.CloudFolder.Image}" IsVisible="{Binding IsAccount}" Width="16" Height="16" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.Computer.Image}" IsVisible="{Binding IsComputer}" Width="16" Height="16" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="16" Height="16" Stretch="Uniform" />
@@ -533,10 +533,10 @@
                       <ia:InvokeCommandAction Command="{Binding $parent[ListBox].DataContext.InvokeObjectCommand}" CommandParameter="{Binding}" />
                     </ia:EventTriggerBehavior>
                   </i:Interaction.Behaviors>
-                  <Image
+                    <Image
                       Classes="Icon"
                       IsVisible="{Binding IsService}"
-                      Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}, ConverterParameter=48}" />
+                      Source="{Binding Image}" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.CloudFolder.Image}" IsVisible="{Binding IsAccount}" Width="48" Height="48" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.Computer.Image}" IsVisible="{Binding IsComputer}" Width="48" Height="48" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="48" Height="48" Stretch="Uniform" />
@@ -612,10 +612,10 @@
                   </ia:EventTriggerBehavior>
                 </i:Interaction.Behaviors>
                 <Panel Name="ObjectEntry" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" DockPanel.Dock="Left">
-                  <Image
+                    <Image
                       Classes="Icon"
                       IsVisible="{Binding IsService}"
-                      Source="{Binding ImagePath, Converter={StaticResource BitmapValueConverter}, ConverterParameter=32}" />
+                      Source="{Binding Image}" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.CloudFolder.Image}" IsVisible="{Binding IsAccount}" Width="32" Height="32" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.Computer.Image}" IsVisible="{Binding IsComputer}" Width="32" Height="32" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="32" Height="32" Stretch="Uniform" />

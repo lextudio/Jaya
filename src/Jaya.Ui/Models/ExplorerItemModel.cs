@@ -6,6 +6,9 @@ using Jaya.Shared.Base;
 using Jaya.Shared.Models;
 using System;
 using System.Collections.ObjectModel;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
+using Avalonia;
 
 namespace Jaya.Ui.Models
 {
@@ -18,6 +21,7 @@ namespace Jaya.Ui.Models
             Children = new ObservableCollection<ExplorerItemModel>();
             Object = obj;
             ImagePath = imagePath;
+            Image = LoadImage(imagePath);
 
             // Compute a display name that matches what the UI shows: prefer explicit label,
             // otherwise use the underlying object's name and include extension for files.
@@ -93,6 +97,42 @@ namespace Jaya.Ui.Models
         {
             get => Get<string?>();
             set => Set(value);
+        }
+
+        public Bitmap? Image
+        {
+            get => Get<Bitmap?>();
+            set => Set(value);
+        }
+
+        Bitmap? LoadImage(string? path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return null;
+
+            try
+            {
+                var uri = new Uri(path, UriKind.RelativeOrAbsolute);
+                var scheme = uri.IsAbsoluteUri ? uri.Scheme : "file";
+                switch (scheme)
+                {
+                    case "file":
+                        return new Bitmap(path);
+                    default:
+                        try
+                        {
+                            return new Bitmap(uri.ToString());
+                        }
+                        catch
+                        {
+                            return null;
+                        }
+                }
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public ObservableCollection<ExplorerItemModel> Children { get; }

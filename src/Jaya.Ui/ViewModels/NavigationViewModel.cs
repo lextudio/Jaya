@@ -16,6 +16,9 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
+using Avalonia;
+using Avalonia.Platform;
+using Avalonia.Media.Imaging;
 using Jaya.IO;
 using Jaya.IO.Models;
 
@@ -24,7 +27,6 @@ namespace Jaya.Ui.ViewModels
     public class NavigationViewModel : ViewModelBase
     {
         readonly SharedService? _shared;
-        readonly Subscription<SelectionChangedEventArgs>? _onSelectionChanged;
         static readonly ILogger Logger = Log.ForContext(typeof(NavigationViewModel)).ForContext("SourceContext", "ViewModels");
         ICommand? _populateCommand;
         ICommand? _selectLocationCommand;
@@ -47,7 +49,6 @@ namespace Jaya.Ui.ViewModels
             Locations = _locations;
             if (!IsDesignMode)
             {
-                _onSelectionChanged = EventAggregator?.Subscribe<SelectionChangedEventArgs>(OnExternalSelectionChanged);
                 if (_volumeCacheService != null)
                     _volumeCacheService.VolumesChanged += OnVolumesChanged;
             }
@@ -56,10 +57,51 @@ namespace Jaya.Ui.ViewModels
                 PopulateCommand?.Execute(Node);
         }
 
+        Bitmap? LoadBitmapFromPath(string? path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return null;
+
+            try
+            {
+                var uri = new Uri(path, UriKind.RelativeOrAbsolute);
+                
+                // Handle avares:// embedded resources using AssetLoader.Open
+                if (uri.IsAbsoluteUri && uri.Scheme == "avares")
+                {
+                    Logger.Debug("Attempting to load avares resource: {Path}", path);
+                    
+                    try
+                    {
+                        // Use Avalonia's AssetLoader.Open static method (per Avalonia docs)
+                        using (var stream = AssetLoader.Open(uri))
+                        {
+                            var bitmap = new Bitmap(stream);
+                            Logger.Debug("Successfully loaded avares resource via AssetLoader.Open: {Path}", path);
+                            return bitmap;
+                        }
+                    }
+                    catch (Exception avEx)
+                    {
+                        Logger.Warning(avEx, "Failed to load avares resource via AssetLoader.Open: {Path}", path);
+                        return null;
+                    }
+                }
+                
+                // Handle file:// or relative paths
+                var bmp = new Bitmap(path);
+                Logger.Debug("Successfully loaded bitmap from path: {Path}", path);
+                return bmp;
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning(ex, "Failed to load bitmap from path: {Path}", path);
+                return null;
+            }
+        }
+
         ~NavigationViewModel()
         {
-            if (_onSelectionChanged != null)
-                EventAggregator?.UnSubscribe(_onSelectionChanged);
             if (_volumeCacheService != null)
                 _volumeCacheService.VolumesChanged -= OnVolumesChanged;
         }
@@ -267,6 +309,9 @@ namespace Jaya.Ui.ViewModels
                 accountNode.Label = account.Name;
                 accountNode.FileSystemObject = new DirectoryModel();
                 accountNode.ImagePath = account.ImagePath;
+                accountNode.Image = account.Image;
+                    if (accountNode.Image == null && !string.IsNullOrEmpty(accountNode.ImagePath))
+                        accountNode.Image = LoadBitmapFromPath(accountNode.ImagePath);
                 accountNode.NodeExpanded += OnNodeExpanded;
                 accountNode.AddDummyChild();
                 Logger.Debug("Created Account Node: Label={Label}, NodeType={NodeType}, IsAccount={IsAccount}, ImagePath={ImagePath}", 
@@ -283,68 +328,6 @@ namespace Jaya.Ui.ViewModels
                     RemoveChildNode(node, accountNode);
                     break;
                 }
-            }
-        }
-
-        async void OnExternalSelectionChanged(SelectionChangedEventArgs args)
-        {
-            if (args == null)
-                return;
-
-            Logger.Debug("External selection: Service={Service}, Account={Account}, Directory={Directory}",
-                args.Service?.Name ?? string.Empty,
-                args.Account?.Name ?? string.Empty,
-                args.Directory?.Path ?? args.Directory?.Name ?? string.Empty);
-
-            // Find the node matching the service/account/directory
-            var target = FindNodeForSelection(Node, args.Service, args.Account, args.Directory);
-            if (target == null)
-            {
-                Logger.Debug("External selection not found in current tree. Ensuring node path.");
-                try
-                {
-                    target = await EnsureNodeForSelectionAsync(args);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Debug(ex, "OnExternalSelectionChanged: failed to ensure tree node for selection");
-                }
-            }
-            if (target != null)
-            {
-                Logger.Debug("External selection matched node: Label={Label}, Path={Path}",
-                    target.Label,
-                    (target.FileSystemObject as DirectoryModel)?.Path ?? string.Empty);
-
-                // Expand ancestors so the node becomes visible in the tree
-                try
-                {
-                    _suppressPopulateOnExpand = true;
-                    var expanded = ExpandAncestors(Node, target);
-                    Logger.Debug("Expanded ancestors for selection. Expanded={Expanded} Label={Label}", expanded, target.Label);
-                }
-                finally
-                {
-                    _suppressPopulateOnExpand = false;
-                }
-
-                // Set SelectedNode (this will publish selection again via setter)
-                try
-                {
-                    _suppressPublish = true;
-                    SelectedNode = target;
-                }
-                finally
-                {
-                    _suppressPublish = false;
-                }
-                // Also update location selection if the selected directory matches a known location
-                try { UpdateLocationSelection(args); } catch { }
-            }
-            else
-            {
-                Logger.Debug("OnExternalSelectionChanged: matching navigation node not found for Service={Service}, Account={Account}, Directory={Directory}",
-                    args.Service?.Name, args.Account?.Name, args.Directory?.Path ?? args.Directory?.Name);
             }
         }
 
@@ -524,6 +507,8 @@ namespace Jaya.Ui.ViewModels
                 };
                 driveNode.NodeExpanded += OnNodeExpanded;
                 driveNode.AddDummyChild();
+                    if (driveNode.Image == null && !string.IsNullOrEmpty(driveNode.ImagePath))
+                        driveNode.Image = LoadBitmapFromPath(driveNode.ImagePath);
                 await AddChildNodeAsync(accountNode, driveNode);
             }
 
@@ -549,26 +534,6 @@ namespace Jaya.Ui.ViewModels
             }
         }
 
-        void UpdateLocationSelection(SelectionChangedEventArgs args)
-        {
-            if (args == null)
-                return;
-
-            try
-            {
-                _suppressPublish = true;
-                // Find location with matching path
-                foreach (var loc in Locations)
-                {
-                    if (loc.Directory != null && args.Directory != null && string.Equals(loc.Directory.Path, args.Directory.Path, StringComparison.OrdinalIgnoreCase))
-                        SelectedLocation = loc;
-                }
-            }
-            finally
-            {
-                _suppressPublish = false;
-            }
-        }
 
         string? GetTrashPath()
         {
@@ -592,127 +557,6 @@ namespace Jaya.Ui.ViewModels
             return string.Empty;
         }
 
-        TreeNodeModel? FindNodeForSelection(TreeNodeModel root, ProviderServiceBase? service, AccountModelBase? account, DirectoryModel? directory)
-        {
-            if (root == null)
-                return null;
-
-            var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-
-            // Check current node
-            if (Equals(root.Service, service) && Equals(root.Account, account))
-            {
-                if (directory == null && (root.FileSystemObject == null || string.IsNullOrEmpty((root.FileSystemObject as DirectoryModel)?.Path)))
-                    return root;
-
-                if (directory != null && root.FileSystemObject is DirectoryModel d)
-                {
-                    var rootPath = NormalizePath(d.Path, comparison);
-                    var dirPath = NormalizePath(directory.Path, comparison);
-                    if (!string.IsNullOrEmpty(rootPath) && !string.IsNullOrEmpty(dirPath) && string.Equals(rootPath, dirPath, comparison))
-                        return root;
-                }
-            }
-
-            // Search children
-            foreach (var child in root.Children)
-            {
-                var found = FindNodeForSelection(child, service, account, directory);
-                if (found != null)
-                    return found;
-            }
-
-            return null;
-        }
-
-        bool ExpandAncestors(TreeNodeModel root, TreeNodeModel target)
-        {
-            if (root == null || target == null)
-                return false;
-
-            // If target is a direct child, expand root and return
-            if (root.Children.Contains(target))
-            {
-                root.IsExpanded = true;
-                return true;
-            }
-
-            foreach (var child in root.Children)
-            {
-                if (ExpandAncestors(child, target))
-                {
-                    root.IsExpanded = true;
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        async Task<TreeNodeModel?> EnsureNodeForSelectionAsync(SelectionChangedEventArgs args)
-        {
-            if (args == null || args.Service == null)
-                return null;
-
-            Logger.Debug("EnsureNodeForSelection: Service={Service}, Account={Account}, Directory={Directory}",
-                args.Service?.Name ?? string.Empty,
-                args.Account?.Name ?? string.Empty,
-                args.Directory?.Path ?? args.Directory?.Name ?? string.Empty);
-
-            await EnsureRootPopulatedAsync();
-
-            var serviceNode = Node.Children.FirstOrDefault(n => Equals(n.Service, args.Service) && n.Account == null);
-            if (serviceNode == null)
-                return null;
-
-            await EnsureNodePopulatedAsync(serviceNode);
-
-            TreeNodeModel? accountNode = null;
-            if (args.Account != null)
-                accountNode = serviceNode.Children.FirstOrDefault(n => Equals(n.Account, args.Account));
-
-            if (accountNode == null)
-                return null;
-
-            if (args.Directory == null || string.IsNullOrWhiteSpace(args.Directory.Path))
-                return accountNode;
-
-            var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-            var targetPath = NormalizePath(args.Directory.Path ?? args.Directory.Name ?? string.Empty, comparison);
-            if (string.IsNullOrEmpty(targetPath))
-                return accountNode;
-
-            if (IsFileSystemService(args.Service))
-            {
-                Logger.Debug("EnsureNodeForSelection: using fast path for File System target={TargetPath}", targetPath);
-                return await EnsureFileSystemPathChainAsync(accountNode, targetPath, comparison) ?? accountNode;
-            }
-
-            await EnsureNodePopulatedAsync(accountNode);
-
-            var current = FindBestPathMatchChild(accountNode, targetPath, comparison);
-            if (current == null)
-                return accountNode;
-
-            var safety = 0;
-            while (current != null && safety++ < 128)
-            {
-                var currentPath = NormalizePath((current.FileSystemObject as DirectoryModel)?.Path, comparison);
-                if (!string.IsNullOrEmpty(currentPath) && string.Equals(currentPath, targetPath, comparison))
-                    return current;
-
-                await EnsureNodePopulatedAsync(current);
-
-                var next = FindBestPathMatchChild(current, targetPath, comparison);
-                if (next == null || ReferenceEquals(next, current))
-                    return current;
-
-                current = next;
-            }
-
-            return current;
-        }
-
         async Task EnsureRootPopulatedAsync()
         {
             if (Node.Children.Count > 0 && !Node.IsHavingDummyChild)
@@ -730,33 +574,6 @@ namespace Jaya.Ui.ViewModels
                 return;
 
             await PopulateNodeAsync(node, updateSelection: false);
-        }
-
-        TreeNodeModel? FindBestPathMatchChild(TreeNodeModel parent, string targetPath, StringComparison comparison)
-        {
-            if (parent == null || parent.Children.Count == 0)
-                return null;
-
-            TreeNodeModel? best = null;
-            var bestLength = -1;
-
-            foreach (var child in parent.Children)
-            {
-                if (child.FileSystemObject is not DirectoryModel dir)
-                    continue;
-
-                var childPath = NormalizePath(dir.Path, comparison);
-                if (string.IsNullOrEmpty(childPath))
-                    continue;
-
-                if (IsPathPrefix(childPath, targetPath, comparison) && childPath.Length > bestLength)
-                {
-                    best = child;
-                    bestLength = childPath.Length;
-                }
-            }
-
-            return best;
         }
 
         static string NormalizePath(string? path, StringComparison comparison)
@@ -797,130 +614,6 @@ namespace Jaya.Ui.ViewModels
             return string.Equals(service?.Name, "File System", StringComparison.OrdinalIgnoreCase);
         }
 
-        async Task<TreeNodeModel?> EnsureFileSystemPathChainAsync(TreeNodeModel accountNode, string targetPath, StringComparison comparison)
-        {
-            if (accountNode == null)
-                return null;
-
-            var volume = await GetVolumeForPathAsync(targetPath, comparison);
-            var volumeRoot = volume != null ? NormalizePath(volume.MountPoint, comparison) : string.Empty;
-            var volumeLabel = GetVolumeLabel(volume, targetPath);
-            Logger.Debug("EnsureFileSystemPathChain: volumeRoot={VolumeRoot} volumeLabel={VolumeLabel}", volumeRoot, volumeLabel);
-            var ancestorPaths = GetAncestorPaths(targetPath, comparison, volumeRoot);
-            if (ancestorPaths.Count == 0)
-                return accountNode;
-
-            Logger.Debug("EnsureFileSystemPathChain: building chain for {TargetPath}. Depth={Depth}",
-                targetPath,
-                ancestorPaths.Count);
-
-            var current = accountNode;
-            foreach (var path in ancestorPaths)
-            {
-                var existing = FindChildByPath(current, path, comparison);
-                if (existing == null)
-                {
-                    var isRoot = IsRootPath(path, comparison);
-                    var dirName = isRoot && !string.IsNullOrEmpty(volumeLabel) ? volumeLabel : GetDisplayNameFromPath(path);
-                    var dirModel = new DirectoryModel(isRoot)
-                    {
-                        Name = dirName,
-                        Path = path
-                    };
-                    var nodeType = isRoot ? ItemType.Drive : ItemType.Directory;
-                    var newNode = new TreeNodeModel(accountNode.Service, accountNode.Account, nodeType)
-                    {
-                        Label = dirName,
-                        FileSystemObject = dirModel
-                    };
-                    newNode.NodeExpanded += OnNodeExpanded;
-                    newNode.NeedsPopulate = true;
-                    Logger.Debug("Created {NodeTypeLabel} Node in EnsureFileSystemPathChain: Label={Label}, NodeType={NodeType}, IsDrive={IsDrive}, IsDirectory={IsDirectory}, Path={Path}", 
-                        isRoot ? "Drive" : "Directory",
-                        newNode.Label, newNode.NodeType, newNode.IsDrive, newNode.IsDirectory, path);
-                    await AddChildNodeAsync(current, newNode);
-                    existing = newNode;
-                    Logger.Debug("EnsureFileSystemPathChain: inserted node {Label} path={Path} root={IsRoot}",
-                        dirName,
-                        path,
-                        isRoot);
-                }
-
-                current = existing;
-            }
-
-            if (current.Children.Count == 0 && !current.IsHavingDummyChild)
-                current.AddDummyChild();
-
-            return current;
-        }
-
-        static List<string> GetAncestorPaths(string path, StringComparison comparison, string? stopAt)
-        {
-            var result = new List<string>();
-            var current = NormalizePath(path, comparison);
-            var stopPath = NormalizePath(stopAt, comparison);
-            while (!string.IsNullOrEmpty(current))
-            {
-                result.Add(current);
-                if (!string.IsNullOrEmpty(stopPath) && string.Equals(current, stopPath, comparison))
-                    break;
-
-                var parent = Path.GetDirectoryName(current);
-                if (string.IsNullOrEmpty(parent))
-                    break;
-
-                var normalizedParent = NormalizePath(parent, comparison);
-                if (string.Equals(normalizedParent, current, comparison))
-                    break;
-
-                current = normalizedParent;
-            }
-
-            result.Reverse();
-            return result;
-        }
-
-        static TreeNodeModel? FindChildByPath(TreeNodeModel parent, string path, StringComparison comparison)
-        {
-            foreach (var child in parent.Children)
-            {
-                if (child.FileSystemObject is DirectoryModel dir)
-                {
-                    var childPath = NormalizePath(dir.Path, comparison);
-                    if (!string.IsNullOrEmpty(childPath) && string.Equals(childPath, path, comparison))
-                        return child;
-                }
-            }
-
-            return null;
-        }
-
-        static bool IsRootPath(string path, StringComparison comparison)
-        {
-            if (string.IsNullOrEmpty(path))
-                return false;
-
-            var root = Path.GetPathRoot(path);
-            if (string.IsNullOrEmpty(root))
-                return false;
-
-            return string.Equals(NormalizePath(path, comparison), NormalizePath(root, comparison), comparison);
-        }
-
-        static string GetDisplayNameFromPath(string path)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-                return string.Empty;
-
-            var trimmed = path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            var name = Path.GetFileName(trimmed);
-            if (!string.IsNullOrEmpty(name))
-                return name;
-
-            return string.IsNullOrEmpty(trimmed) ? path : trimmed;
-        }
-
         static string GetVolumeDisplayName(VolumeModel volume)
         {
             if (!string.IsNullOrWhiteSpace(volume.Name))
@@ -931,108 +624,6 @@ namespace Jaya.Ui.ViewModels
                 return Path.GetFileName(trimmed);
 
             return volume.MountPoint ?? string.Empty;
-        }
-
-        async Task<VolumeModel?> GetVolumeForPathAsync(string targetPath, StringComparison comparison)
-        {
-            if (string.IsNullOrWhiteSpace(targetPath))
-                return null;
-
-            var now = DateTime.UtcNow;
-            if (_volumeCacheService != null)
-            {
-                _volumeCacheService.EnsureFresh(TimeSpan.FromMinutes(5));
-            }
-
-            IReadOnlyList<VolumeModel>? volumes = null;
-            if (_volumeCacheService != null)
-            {
-                Logger.Debug("GetVolumeForPath: querying filtered volume cache snapshot.");
-                volumes = await _volumeCacheService.GetFilteredVolumesSnapshotAsync().ConfigureAwait(false);
-                Logger.Debug("GetVolumeForPath: filtered volume cache snapshot count={Count}", volumes?.Count ?? 0);
-            }
-
-            volumes ??= Array.Empty<VolumeModel>();
-            if (volumes.Count == 0)
-            {
-                Logger.Debug("GetVolumeForPath: cache empty. Querying FileSystem.GetVolumesAsync directly.");
-                try
-                {
-                    volumes = await FileSystem.Default.GetVolumesAsync().ConfigureAwait(false);
-                    // Apply filters as a best-effort for direct results
-                    volumes = Jaya.Ui.Services.VolumeCacheService.FilterVolumes(volumes ?? Array.Empty<VolumeModel>());
-                }
-                catch (Exception ex)
-                {
-                    Logger.Debug(ex, "GetVolumeForPath: failed to query volumes");
-                    volumes = Array.Empty<VolumeModel>();
-                }
-            }
-
-            var normalizedTarget = NormalizePath(targetPath, comparison);
-            VolumeModel? best = null;
-            var bestLength = -1;
-
-            foreach (var volume in volumes)
-            {
-                var mount = NormalizePath(volume.MountPoint, comparison);
-                if (string.IsNullOrEmpty(mount))
-                    continue;
-
-                if (IsPathPrefix(mount, normalizedTarget, comparison) && mount.Length > bestLength)
-                {
-                    best = volume;
-                    bestLength = mount.Length;
-                }
-            }
-
-            return best;
-        }
-
-        static string GetVolumeLabel(VolumeModel? volume, string? fallbackPath)
-        {
-            if (volume == null)
-                return string.Empty;
-
-            if (!string.IsNullOrWhiteSpace(volume.Name))
-                return volume.Name;
-
-            if (!string.IsNullOrWhiteSpace(volume.MountPoint))
-            {
-                var label = TryGetDriveLabel(volume.MountPoint);
-                if (!string.IsNullOrWhiteSpace(label))
-                    return label;
-            }
-
-            if (!string.IsNullOrWhiteSpace(fallbackPath))
-            {
-                try
-                {
-                    var root = Path.GetPathRoot(fallbackPath);
-                    var label = TryGetDriveLabel(root);
-                    if (!string.IsNullOrWhiteSpace(label))
-                        return label;
-                }
-                catch { }
-            }
-
-            return volume.MountPoint ?? string.Empty;
-        }
-
-        static string? TryGetDriveLabel(string? path)
-        {
-            if (string.IsNullOrWhiteSpace(path))
-                return null;
-
-            try
-            {
-                var drive = new DriveInfo(path);
-                if (drive.IsReady && !string.IsNullOrWhiteSpace(drive.VolumeLabel))
-                    return drive.VolumeLabel;
-            }
-            catch { }
-
-            return null;
         }
 
         async Task PopulateNodeAsync(TreeNodeModel node, bool updateSelection)
@@ -1346,10 +937,20 @@ namespace Jaya.Ui.ViewModels
                         var serviceNode = new TreeNodeModel(svc as ProviderServiceBase, null, ItemType.Service)
                         {
                             Label = svc?.Name ?? string.Empty,
-                            ImagePath = svc?.ImagePath ?? string.Empty
+                            ImagePath = svc?.ImagePath ?? string.Empty,
+                            Image = (svc as ProviderServiceBase)?.Image
                         };
                         Logger.Debug("Created Service Node: Label={Label}, NodeType={NodeType}, IsService={IsService}, ImagePath={ImagePath}", 
                             serviceNode.Label, serviceNode.NodeType, serviceNode.IsService, serviceNode.ImagePath);
+                        if (serviceNode.Image == null && !string.IsNullOrEmpty(serviceNode.ImagePath))
+                        {
+                            Logger.Debug("Service node Image is null; attempting fallback load from ImagePath: {ImagePath}", serviceNode.ImagePath);
+                            serviceNode.Image = LoadBitmapFromPath(serviceNode.ImagePath);
+                            if (serviceNode.Image != null)
+                                Logger.Debug("Fallback load succeeded for service node: {Label}", serviceNode.Label);
+                            else
+                                Logger.Warning("Fallback load failed for service node: Label={Label}, ImagePath={ImagePath}", serviceNode.Label, serviceNode.ImagePath);
+                        }
                         serviceNode.NodeExpanded += OnNodeExpanded;
                         serviceNode.AddDummyChild();
                         await AddChildNodeAsync(node, serviceNode);
@@ -1380,8 +981,18 @@ namespace Jaya.Ui.ViewModels
                                                 var newNode = new TreeNodeModel(serviceInstance, null, ItemType.Service)
                                                 {
                                                     Label = serviceInstance.Name,
-                                                    ImagePath = serviceInstance.ImagePath
+                                                    ImagePath = serviceInstance.ImagePath,
+                                                    Image = serviceInstance.Image
                                                 };
+                                                if (newNode.Image == null && !string.IsNullOrEmpty(newNode.ImagePath))
+                                                {
+                                                    Logger.Debug("Dynamic enable: node Image is null; attempting fallback load from ImagePath: {ImagePath}", newNode.ImagePath);
+                                                    newNode.Image = LoadBitmapFromPath(newNode.ImagePath);
+                                                    if (newNode.Image != null)
+                                                        Logger.Debug("Dynamic enable: fallback load succeeded for: {Label}", newNode.Label);
+                                                    else
+                                                        Logger.Warning("Dynamic enable: fallback load failed for: Label={Label}, ImagePath={ImagePath}", newNode.Label, newNode.ImagePath);
+                                                }
                                                 newNode.NodeExpanded += OnNodeExpanded;
                                                 newNode.AddDummyChild();
                                                 var parentNode = Node;
@@ -1456,6 +1067,7 @@ namespace Jaya.Ui.ViewModels
                     accountNode.Label = account.Name;
                     accountNode.FileSystemObject = new DirectoryModel();
                     accountNode.ImagePath = account.ImagePath;
+                    accountNode.Image = account.Image;
                     accountNode.NodeExpanded += OnNodeExpanded;
                     accountNode.AddDummyChild();
                     var isComputer = node.Service.IsRootDrive;

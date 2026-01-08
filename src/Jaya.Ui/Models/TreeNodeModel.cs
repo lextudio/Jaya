@@ -8,6 +8,9 @@ using Jaya.Shared.Models;
 using Jaya.Ui.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
+using System;
 
 namespace Jaya.Ui.Models
 {
@@ -69,6 +72,15 @@ namespace Jaya.Ui.Models
         public string ImagePath
         {
             get => Get<string>();
+            set => Set(value);
+        }
+
+        // New: direct image object for binding in views. If ImagePath is set,
+        // this will attempt to load the image via the asset loader so existing
+        // providers remain compatible.
+        public Bitmap? Image
+        {
+            get => Get<Bitmap?>();
             set => Set(value);
         }
 

@@ -136,6 +136,12 @@ namespace Jaya.Ui.ViewModels
             private set => Set(value);
         }
 
+        public Avalonia.Media.Imaging.Bitmap? Image
+        {
+            get => Get<Avalonia.Media.Imaging.Bitmap?>();
+            private set => Set(value);
+        }
+
         public List<string> PathParts
         {
             get => Get<List<string>>() ?? new List<string>();
@@ -207,6 +213,7 @@ namespace Jaya.Ui.ViewModels
             {
                 SearchWatermark = string.Format("Search {0}", service.Name);
                 ImagePath = service.ImagePath;
+                Image = service.Image;
                 NodeType = ItemType.Service;
             }
             else if (directory == null || string.IsNullOrEmpty(directory.Path))
@@ -215,6 +222,7 @@ namespace Jaya.Ui.ViewModels
 
                 SearchWatermark = string.Format("Search {0}", account.Name);
                 ImagePath = account.ImagePath;
+                Image = account.Image;
                 NodeType = service.IsRootDrive ? ItemType.Computer : ItemType.Account;
             }
             else

@@ -63,7 +63,7 @@
                     <Image
                         Classes="Icon"
                         IsVisible="{Binding IsService}"
-                        Source="{Binding ImagePath, Mode=OneWay, Converter={StaticResource BitmapValueConverter}}" />
+                        Source="{Binding Image}" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.CloudFolder.Image}" IsVisible="{Binding IsAccount}" Width="16" Height="16" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.Computer.Image}" IsVisible="{Binding IsComputer}" Width="16" Height="16" Stretch="Uniform" />
                     <Image Classes="Icon" Source="{DynamicResource Icon.Drive.Image}" IsVisible="{Binding IsDrive}" Width="16" Height="16" Stretch="Uniform" />

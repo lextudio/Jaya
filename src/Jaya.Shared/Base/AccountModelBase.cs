@@ -4,6 +4,7 @@
 //
 using Jaya.Shared.Base;
 using System.Text.Json.Serialization;
+using Avalonia.Media.Imaging;
 
 namespace Jaya.Shared.Models
 {
@@ -32,6 +33,12 @@ namespace Jaya.Shared.Models
         public string ImagePath
         {
             get => Get<string>();
+            set => Set(value);
+        }
+
+        public Bitmap? Image
+        {
+            get => Get<Bitmap?>();
             set => Set(value);
         }
 

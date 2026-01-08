@@ -32,6 +32,7 @@ namespace Jaya.Provider.FileSystem.Services
 
             Name = "File System";
             ImagePath = "avares://Jaya.Provider.FileSystem/Assets/Images/Computer-32.png";
+            Image = LoadImageFromPath(ImagePath);
             Description = "View your local drives, inspect their properties and play with directories & files stored within them.";
             IsRootDrive = true;
             ConfigurationEditorType = typeof(ConfigurationView);

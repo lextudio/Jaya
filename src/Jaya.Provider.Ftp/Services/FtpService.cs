@@ -22,6 +22,7 @@ namespace Jaya.Provider.Ftp.Services
         {
             Name = "FTP/FTPS";
             ImagePath = "avares://Jaya.Provider.Ftp/Assets/Images/Ftp-32.png";
+            Image = LoadImageFromPath(ImagePath);
             Description = "View your FTP/FTPS accounts, inspect their contents and play with directories & files stored within them.";
             ConfigurationEditorType = typeof(ConfigurationView);
         }

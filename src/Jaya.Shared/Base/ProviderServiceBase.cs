@@ -9,6 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
+using Avalonia;
 
 namespace Jaya.Shared.Base
 {
@@ -124,6 +127,57 @@ namespace Jaya.Shared.Base
             get;
             protected set;
         } = string.Empty;
+
+        // New: direct image object for use by views.
+        public Bitmap? Image { get; protected set; }
+
+        protected Bitmap? LoadImageFromPath(string? path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return null;
+
+            try
+            {
+                var uri = new Uri(path, UriKind.RelativeOrAbsolute);
+                var scheme = uri.IsAbsoluteUri ? uri.Scheme : "file";
+                switch (scheme)
+                {
+                    case "file":
+                        try
+                        {
+                            return new Bitmap(path);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex, "Failed loading file-based image from path: {ImagePath}", path);
+                            return null;
+                        }
+                    case "avares":
+                        // Use Avalonia's AssetLoader.Open for embedded resources (per Avalonia docs)
+                        try
+                        {
+                            using (var stream = AssetLoader.Open(uri))
+                            {
+                                Logger.Debug("Successfully loaded avares image: {ImagePath}", path);
+                                return new Bitmap(stream);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex, "Failed loading avares image from path: {ImagePath}", path);
+                            return null;
+                        }
+                    default:
+                        Logger.Warning("Unsupported URI scheme for image loading: {Scheme} Path: {ImagePath}", scheme, path);
+                        return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error in LoadImageFromPath for: {ImagePath}", path);
+                return null;
+            }
+        }
 
         public Type ConfigurationEditorType
         {

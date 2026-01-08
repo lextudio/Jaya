@@ -33,7 +33,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Image Source="{Binding ImagePath, Mode=OneWay, Converter={StaticResource BitmapValueConverter}}" />
+                        <Image Source="{Binding Image}" />
                         <TextBlock Grid.Column="1" Text="{Binding Name, Mode=OneWay}" />
                         <CheckBox Grid.Column="2" IsChecked="{Binding IsEnabled, Mode=TwoWay}" />
                     </Grid>
@@ -54,7 +54,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Image Grid.RowSpan="2" Source="{Binding SelectedPlugin.ImagePath, Mode=OneWay, Converter={StaticResource BitmapValueConverter}}" />
+            <Image Grid.RowSpan="2" Source="{Binding SelectedPlugin.Image}" />
             <TextBlock
                 Grid.Column="1"
                 FontWeight="Bold"

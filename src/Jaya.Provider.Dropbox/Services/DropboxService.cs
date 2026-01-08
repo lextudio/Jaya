@@ -29,6 +29,7 @@ namespace Jaya.Provider.Dropbox.Services
         {
             Name = "Dropbox";
             ImagePath = "avares://Jaya.Provider.Dropbox/Assets/Images/Dropbox-32.png";
+            Image = LoadImageFromPath(ImagePath);
             Description = "View your Dropbox accounts, inspect their contents and play with directories & files stored within them.";
             ConfigurationEditorType = typeof(ConfigurationView);
         }

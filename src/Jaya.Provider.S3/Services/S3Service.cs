@@ -19,6 +19,7 @@ namespace Jaya.Provider.S3.Services
         {
             Name = "Amazon S3";
             ImagePath = "avares://Jaya.Provider.S3/Assets/Images/AmazonS3-32.png";
+            Image = LoadImageFromPath(ImagePath);
             Description = "View your Amazon S3 accounts, inspect their contents and play with directories & files stored within them.";
             ConfigurationEditorType = typeof(ConfigurationView);
         }
