@@ -725,8 +725,6 @@ namespace Jaya.Ui.ViewModels
                             {
                                 var raw = await FileSystem.Default.GetVolumesAsync().ConfigureAwait(false) ?? Array.Empty<VolumeModel>();
                                 vols = raw.Count > 0 ? raw : Array.Empty<VolumeModel>();
-                                // Apply same filters locally as a fallback
-                                vols = Jaya.Ui.Services.VolumeCacheService.FilterVolumes(vols);
                             }
                             catch { vols = Array.Empty<VolumeModel>(); }
                         }

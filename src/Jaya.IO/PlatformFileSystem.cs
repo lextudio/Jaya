@@ -121,7 +121,8 @@ internal class PlatformFileSystem : IFileSystem
     public async Task<IReadOnlyList<VolumeModel>> GetVolumesAsync(CancellationToken cancellationToken = default)
     {
         var volumes = await _platform.EnumerateVolumesAsync(cancellationToken).ConfigureAwait(false);
-        return volumes;
+        var filtered = Jaya.IO.VolumeFilter.ApplyFilters(volumes ?? Array.Empty<VolumeModel>());
+        return filtered;
     }
 
     public Task<bool> ExistsAsync(string path, CancellationToken cancellationToken = default)

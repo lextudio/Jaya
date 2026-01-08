@@ -2,7 +2,9 @@ using Jaya.IO;
 using Jaya.IO.Models;
 using Jaya.Shared.Services;
 using Serilog;
+using System.Linq;
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -28,7 +30,7 @@ namespace Jaya.Ui.Services
         // Returns the cached volumes after applying platform-appropriate filters
         public IReadOnlyList<VolumeModel> GetFilteredVolumesSnapshot()
         {
-            return ApplyFilters(_volumes);
+            return _volumes; // volumes are already filtered by the IFileSystem implementation
         }
 
         public DateTime LastRefreshUtc => _lastRefreshUtc;
@@ -72,7 +74,7 @@ namespace Jaya.Ui.Services
         public async Task<IReadOnlyList<VolumeModel>> GetFilteredVolumesSnapshotAsync(bool allowStale = true)
         {
             var vols = await GetVolumesSnapshotAsync(allowStale).ConfigureAwait(false);
-            return ApplyFilters(vols);
+            return vols; // already filtered
         }
 
         public async Task RefreshAsync()
@@ -89,9 +91,33 @@ namespace Jaya.Ui.Services
                 _lastRefreshUtc = DateTime.UtcNow;
                 Logger.Debug("Volume cache refreshed. Count={Count}", _volumes.Count);
 
+                // Log discovered volumes for debugging (mount, name, device, removable/internal)
+                try
+                {
+                    for (int i = 0; i < _volumes.Count; i++)
+                    {
+                        var v = _volumes[i];
+                        if (v == null)
+                            continue;
+
+                        Logger.Debug("Discovered volume [{Index}] Mount={Mount} Name={Name} DeviceId={DeviceId} Removable={Removable} Internal={Internal}",
+                            i,
+                            v.MountPoint ?? string.Empty,
+                            v.Name ?? string.Empty,
+                            v.DeviceId ?? string.Empty,
+                            v.IsRemovable,
+                            v.IsInternal);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Debug(ex, "Failed to enumerate discovered volumes for logging");
+                }
+
                 if (!AreVolumesEquivalent(previous, _volumes))
                 {
                     Logger.Debug("Volume cache changed. Count={Count}", _volumes.Count);
+                    // Volumes from IFileSystem are already filtered centrally; publish as-is
                     VolumesChanged?.Invoke(this, new VolumeCacheChangedEventArgs(_volumes));
                 }
             }
@@ -158,55 +184,6 @@ namespace Jaya.Ui.Services
                 return Path.GetPathRoot(mountPoint) ?? mountPoint;
 
             return trimmed;
-        }
-
-        static IReadOnlyList<VolumeModel> ApplyFilters(IReadOnlyList<VolumeModel> volumes)
-        {
-            if (volumes == null || volumes.Count == 0)
-                return Array.Empty<VolumeModel>();
-
-            var result = new List<VolumeModel>(volumes.Count);
-            var seen = new HashSet<string>(OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
-
-            foreach (var vol in volumes)
-            {
-                if (vol == null)
-                    continue;
-
-                var mount = NormalizeMountPoint(vol.MountPoint);
-                if (string.IsNullOrWhiteSpace(mount))
-                    continue;
-
-                // Deduplicate by mount point
-                if (!seen.Add(mount))
-                    continue;
-
-                var lower = mount.ToLowerInvariant();
-
-                // Exclude common pseudo/system mounts on Unix-like systems
-                if (!OperatingSystem.IsWindows())
-                {
-                    if (lower.StartsWith("/proc") || lower.StartsWith("/sys") || lower.StartsWith("/run") || lower.StartsWith("/dev") || lower.StartsWith("/var") || lower.StartsWith("/private") || lower.StartsWith("/System/Volumes"))
-                        continue;
-
-                    if (lower.Contains("/snap/") || lower.Contains("/containers/") || lower.Contains("/core") || lower.Contains("/gvfs") || lower.Contains("/Library/Developer/CoreSimulator"))
-                        continue;
-                }
-
-                // Prefer volumes that are internal or removable or have a human name
-                if (!vol.IsInternal && !vol.IsRemovable && string.IsNullOrWhiteSpace(vol.Name))
-                    continue;
-
-                result.Add(vol);
-            }
-
-            return result;
-        }
-
-        // Public utility to filter an arbitrary set of volumes using the same heuristics
-        public static IReadOnlyList<VolumeModel> FilterVolumes(IReadOnlyList<VolumeModel> volumes)
-        {
-            return ApplyFilters(volumes);
         }
     }
 

@@ -81,7 +81,8 @@ internal class MacPlatformFileSystem : IPlatformFileSystem
                 Name = volumeName,
                 DeviceId = deviceId,
                 IsRemovable = drive.DriveType == DriveType.Removable,
-                IsInternal = drive.DriveType == DriveType.Fixed
+                IsInternal = drive.DriveType == DriveType.Fixed,
+                Flags = info?.Flags
             };
         }
 
@@ -95,6 +96,7 @@ internal class MacPlatformFileSystem : IPlatformFileSystem
         public string? VolumeName { get; init; }
         public string? DeviceIdentifier { get; init; }
         public string? MountPoint { get; init; }
+        public IReadOnlyList<string>? Flags { get; init; }
     }
 
     static DiskUtilInfo? TryGetDiskUtilInfo(string path)
@@ -145,11 +147,46 @@ internal class MacPlatformFileSystem : IPlatformFileSystem
 
             var values = ParsePlistDict(dict);
 
+            var mount = GetValue(values, "MountPoint");
+            var name = GetValue(values, "VolumeName");
+            var device = GetValue(values, "DeviceIdentifier");
+
+            var flags = new List<string>();
+            if (!string.IsNullOrWhiteSpace(mount))
+            {
+                var lm = mount.ToLowerInvariant();
+                if (lm.Contains("/library/developer/coresimulator"))
+                    flags.Add("simulator");
+                if (lm.StartsWith("/system/volumes"))
+                {
+                    flags.Add("system-volume");
+                    var seg = lm.TrimEnd('/').Split('/').LastOrDefault();
+                    if (!string.IsNullOrWhiteSpace(seg))
+                    {
+                        flags.Add("system-" + seg);
+                    }
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                var ln = name.ToLowerInvariant();
+                if (ln.Contains("simulator") || ln.Contains("ios") && ln.Contains("simulator"))
+                    flags.Add("simulator");
+                if (ln.Contains("snapshot"))
+                    flags.Add("snapshot");
+            }
+
+            // Device identifier absence can indicate a pseudo mount
+            if (string.IsNullOrWhiteSpace(device))
+                flags.Add("no-device-id");
+
             return new DiskUtilInfo
             {
-                VolumeName = GetValue(values, "VolumeName"),
-                DeviceIdentifier = GetValue(values, "DeviceIdentifier"),
-                MountPoint = GetValue(values, "MountPoint")
+                VolumeName = name,
+                DeviceIdentifier = device,
+                MountPoint = mount,
+                Flags = flags.Count == 0 ? null : flags
             };
         }
         catch
