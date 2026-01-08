@@ -85,12 +85,12 @@
               <Image Source="{DynamicResource Icon.Terminal.Image}" Width="16" Height="16" />
             </MenuItem.Icon>
           </MenuItem>
-          <MenuItem Command="{Binding OpenVsCodeCommand}" Header="Open in VS Code">
+          <MenuItem Command="{Binding OpenVsCodeCommand}" CommandParameter="{Binding Item.Object.Path, ElementName=ExplorerRoot}" Header="Open in VS Code">
             <MenuItem.Icon>
               <Image Source="{DynamicResource Icon.VSCode.Image}" Width="16" Height="16" />
             </MenuItem.Icon>
           </MenuItem>
-          <MenuItem Command="{Binding OpenInFinderCommand}" Header="Open in Finder">
+          <MenuItem Command="{Binding OpenInFinderCommand}" CommandParameter="{Binding Item.Object.Path, ElementName=ExplorerRoot}" Header="Open in Finder">
             <MenuItem.Icon>
               <Image Source="{DynamicResource Icon.Finder.Image}" Width="16" Height="16" />
             </MenuItem.Icon>
@@ -291,6 +291,16 @@
                     <Image Source="{DynamicResource Icon.Terminal.Image}" Width="16" Height="16" />
                   </MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Command="{Binding OpenVsCodeCommand}" CommandParameter="{Binding Item.Object.Path, ElementName=ExplorerRoot}" Header="Open in VS Code">
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.VSCode.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Command="{Binding OpenInFinderCommand}" CommandParameter="{Binding Item.Object.Path, ElementName=ExplorerRoot}" Header="Open in Finder">
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.Finder.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
               </ContextMenu>
             </DataGrid.ContextMenu>
             <DataGrid.Columns>
@@ -379,6 +389,22 @@
                     <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="16" Height="16" />
                   </MenuItem.Icon>
                 </MenuItem>
+                <Separator />
+                <MenuItem Command="{Binding OpenTerminalCommand}" Header="Open Terminal Here">
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.Terminal.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Command="{Binding OpenVsCodeCommand}" CommandParameter="{Binding Item.Object.Path, ElementName=ExplorerRoot}" Header="Open in VS Code">
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.VSCode.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Command="{Binding OpenInFinderCommand}" CommandParameter="{Binding Item.Object.Path, ElementName=ExplorerRoot}" Header="Open in Finder">
+                  <MenuItem.Icon>
+                    <Image Source="{DynamicResource Icon.Finder.Image}" Width="16" Height="16" />
+                  </MenuItem.Icon>
+                </MenuItem>
               </ContextMenu>
             </ListBox.ContextMenu>
             <ListBox.ItemsPanel>
@@ -446,6 +472,22 @@
                 Header="New Folder">
                 <MenuItem.Icon>
                   <Image Source="{DynamicResource Icon.NewFolder.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <Separator />
+              <MenuItem Command="{Binding OpenTerminalCommand}" Header="Open Terminal Here">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.Terminal.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Command="{Binding OpenVsCodeCommand}" CommandParameter="{Binding Item.Object.Path, ElementName=ExplorerRoot}" Header="Open in VS Code">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.VSCode.Image}" Width="16" Height="16" />
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Command="{Binding OpenInFinderCommand}" CommandParameter="{Binding Item.Object.Path, ElementName=ExplorerRoot}" Header="Open in Finder">
+                <MenuItem.Icon>
+                  <Image Source="{DynamicResource Icon.Finder.Image}" Width="16" Height="16" />
                 </MenuItem.Icon>
               </MenuItem>
             </ContextMenu>
