@@ -26,9 +26,17 @@ namespace Jaya.Ui
         // a SynchronizationContext to be ready
         static void Main(string[] args)
         {
+            var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? 
+                #if DEBUG
+                "Development";
+                #else
+                "Production";
+                #endif
+
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                .AddJsonFile($"appsettings.{env}.json", optional: true, reloadOnChange: false)
                 .AddEnvironmentVariables()
                 .Build();
 
