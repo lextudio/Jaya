@@ -1,5 +1,4 @@
 #addin nuget:?package=SharpZipLib
-#addin nuget:?package=Cake.Compression
 
 #tool "nuget:?package=gitreleasemanager"
 
@@ -9,6 +8,21 @@ enum OperatingSystem
     MacOS,
     Linux
 }
+
+// Helper: create a zip using SharpZipLib's FastZip
+Action<DirectoryPath, FilePath> CreateZip = (srcDir, destZip) => {
+    var src = MakeAbsolute(srcDir).FullPath;
+    var dst = MakeAbsolute(destZip).FullPath;
+    // Ensure destination directory exists
+    var dstDir = System.IO.Path.GetDirectoryName(dst);
+    if (!string.IsNullOrEmpty(dstDir) && !System.IO.Directory.Exists(dstDir))
+        System.IO.Directory.CreateDirectory(dstDir);
+    // Remove existing zip if present
+    if (System.IO.File.Exists(dst))
+        System.IO.File.Delete(dst);
+    var fastZip = new ICSharpCode.SharpZipLib.Zip.FastZip();
+    fastZip.CreateZip(dst, src, true, null);
+};
 
 // script arguments and constants
 const string APP_NAME = "Jaya File Manager";
@@ -213,7 +227,7 @@ Task("BuildMacOSUniversal")
     }
 
     // Zip the .app
-    Zip(appBundle, _outputDirectory + File("osx_app_universal.zip"));
+    CreateZip(appBundle, _outputDirectory + File("osx_app_universal.zip"));
     Information("Created osx_app_universal.zip");
 });
 
@@ -258,7 +272,7 @@ Task("BuildWindows64")
         DotNetPublish(GetPath(_sourceDirectory), settings);
 
         Information("Create portable ZIP archive from the build.");
-        Zip(outputDirectory, _outputDirectory + File($"windows_portable_{rid}.zip"));
+        CreateZip(outputDirectory, _outputDirectory + File($"windows_portable_{rid}.zip"));
 
         // Only create Inno Setup installer for win-x64 on Windows hosts
         if (rid == "win-x64" && _operatingSystem == OperatingSystem.Windows)
@@ -315,7 +329,7 @@ Task("BuildMacOS64")
         DotNetPublish(GetPath(_sourceDirectory), settings);
 
         Information("Create portable ZIP archive from the build.");
-        Zip(outputDirectory, _outputDirectory + File($"osx_portable_{rid}.zip"));
+        CreateZip(outputDirectory, _outputDirectory + File($"osx_portable_{rid}.zip"));
 
         Information("Create MacOS application bundle (if present).");
         // Only copy the app bundle if it exists in the build directory (some CI or local setups may not have it)
@@ -324,7 +338,7 @@ Task("BuildMacOS64")
         {
             CopyDirectory(appBundleDir, _outputDirectory + Directory("Jaya.app"));
             CopyDirectory(outputDirectory, _outputDirectory + Directory("Jaya.app/Contents/MacOS"));
-            Zip(_outputDirectory + Directory("Jaya.app/Contents/MacOS"), _outputDirectory + File($"osx_app_{rid}.zip"));
+                CreateZip(_outputDirectory + Directory("Jaya.app/Contents/MacOS"), _outputDirectory + File($"osx_app_{rid}.zip"));
         }
         else
         {
@@ -355,7 +369,7 @@ Task("BuildLinux64")
         DotNetPublish(GetPath(_sourceDirectory), settings);
 
         Information("Create portable ZIP archive from the build.");
-        Zip(outputDirectory, _outputDirectory + File($"linux_portable_{rid}.zip"));
+        CreateZip(outputDirectory, _outputDirectory + File($"linux_portable_{rid}.zip"));
     }
 });
 
