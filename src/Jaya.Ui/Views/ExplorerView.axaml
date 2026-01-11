@@ -110,6 +110,14 @@
 
       <Grid Grid.Row="1">
         <Grid.Styles>
+          <Style Selector="DataGridRow.drop-target">
+            <Setter Property="Background" Value="#203498FF" />
+            <Setter Property="Foreground" Value="White" />
+          </Style>
+          <Style Selector="ListBoxItem.drop-target">
+            <Setter Property="Background" Value="#203498FF" />
+            <Setter Property="Foreground" Value="White" />
+          </Style>
           <Style Selector="DataGrid[IsVisible=True]">
             <Setter Property="ItemsSource" Value="{Binding DisplayedItems, Mode=OneWay}"/>
           </Style>

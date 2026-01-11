@@ -47,6 +47,7 @@ namespace Jaya.Ui.Views
         PropertyChangedEventHandler? _viewModelPropertyChanged;
         DataGrid? _detailsGrid;
         EventHandler<AvaloniaPropertyChangedEventArgs>? _detailsGridPropertyChanged;
+        Avalonia.Controls.Control? _currentDropTargetControl;
 
         public ExplorerView()
         {
@@ -58,6 +59,7 @@ namespace Jaya.Ui.Views
             this.AddHandler(Avalonia.Input.InputElement.PointerReleasedEvent, Root_PointerReleased, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             this.AddHandler(DragDrop.DragOverEvent, Root_DragOver, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             this.AddHandler(DragDrop.DropEvent, Root_Drop, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+            this.AddHandler(DragDrop.DragLeaveEvent, Root_DragLeave, Avalonia.Interactivity.RoutingStrategies.Tunnel);
             AttachViewModel(this.DataContext as ExplorerViewModel);
             if (!Design.IsDesignMode)
             {
@@ -187,7 +189,17 @@ namespace Jaya.Ui.Views
 
                                 if (args?.SourcePaths != null && args.SourcePaths.Length > 0)
                                 {
-                                    await vm.HandleDropAsync(args.SourcePaths, args.TargetDirectory, args.Effect);
+                                    // Validate that target directory is actually a directory
+                                    var targetDir = args.TargetDirectory;
+                                    if (targetDir != null)
+                                    {
+                                        Logger.Debug("TreeDropRequested: validating target directory {Path}", targetDir.Path);
+                                        await vm.HandleDropAsync(args.SourcePaths, targetDir, args.Effect);
+                                    }
+                                    else
+                                    {
+                                        Logger.Debug("TreeDropRequested: target directory is null, rejecting drop");
+                                    }
                                 }
                             }
                             catch { }
@@ -937,6 +949,51 @@ namespace Jaya.Ui.Views
                         e.DragEffects = DragDropEffects.Move;
                     e.Handled = true;
                     Logger.Verbose("DragOver accepted with effects={Effects}", e.DragEffects);
+                    // Determine visual under pointer and update highlight on row/list item
+                    try
+                    {
+                        var pt = e.GetPosition(this);
+                        var hit = this.InputHitTest(pt) as Avalonia.Visual;
+                        var newTarget = FindDropTargetControl(hit);
+
+                        // Only highlight if the underlying model is a directory (or account/computer)
+                        var model = FindExplorerItemModel(hit);
+                        var shouldHighlight = false;
+                        if (model != null)
+                        {
+                            if (model.IsDirectory || model.Type == ItemType.Account || model.Type == ItemType.Computer)
+                            {
+                                shouldHighlight = true;
+                                Logger.Debug("DragOver: highlighting {Label} (Type={Type}, IsDir={IsDir})", model.Label, model.Type, model.IsDirectory);
+                            }
+                            else
+                            {
+                                Logger.Debug("DragOver: NOT highlighting {Label} (Type={Type}, IsDir={IsDir}) - not a directory", model.Label, model.Type, model.IsDirectory);
+                            }
+                        }
+                        else
+                        {
+                            Logger.Debug("DragOver: no model found under pointer");
+                        }
+
+                        // If DataTransfer contains source paths, avoid highlighting when target equals any source (self-drop)
+                        try
+                        {
+                            if (dt != null && dt.Contains(JayaPathsFormat))
+                            {
+                                var payload = dt.TryGetValue(JayaPathsFormat);
+                                var sources = payload != null ? (System.Text.Json.JsonSerializer.Deserialize<string[]>(payload) ?? Array.Empty<string>()) : Array.Empty<string>();
+                                var targetModel = model?.Object as Jaya.Shared.Models.FileSystemObjectModel;
+                                var targetPath = targetModel?.Path;
+                                if (!string.IsNullOrWhiteSpace(targetPath) && sources.Any(s => string.Equals(s, targetPath, StringComparison.OrdinalIgnoreCase)))
+                                    shouldHighlight = false;
+                            }
+                        }
+                        catch { }
+
+                        UpdateDropTargetHighlightControl(shouldHighlight ? newTarget : null);
+                    }
+                    catch { }
                 }
                 else
                 {
@@ -949,8 +1006,21 @@ namespace Jaya.Ui.Views
             }
         }
 
+        void Root_DragLeave(object? sender, DragEventArgs e)
+        {
+            try
+            {
+                UpdateDropTargetHighlightControl(null);
+            }
+            catch { }
+        }
+
         async void Root_Drop(object? sender, DragEventArgs e)
         {
+            // Mark as handled immediately to prevent other handlers from processing rejected drops
+            e.Handled = true;
+            // Clear any highlight before processing drop
+            UpdateDropTargetHighlightControl(null);
             await ProcessDropAsync(e);
         }
 
@@ -963,6 +1033,8 @@ namespace Jaya.Ui.Views
         void DetailsDataGrid_Drop(object? sender, DragEventArgs e)
         {
             Logger.Verbose("DetailsDataGrid_Drop triggered");
+            // Mark as handled immediately to prevent other handlers from processing
+            e.Handled = true;
             // Fire and forget the async operation
             _ = ProcessDropAsync(e);
         }
@@ -992,11 +1064,32 @@ namespace Jaya.Ui.Views
 
                 // Determine drop target by visual under pointer/source
                 var targetModel = FindExplorerItemModel(e.Source as Avalonia.Visual);
+                Logger.Debug("Drop: FindExplorerItemModel via e.Source returned {IsNull}", targetModel == null ? "null" : targetModel.Label);
                 if (targetModel == null)
                 {
                     Logger.Debug("Target not found via e.Source, trying InputHitTest");
                     var point = e.GetPosition(this);
-                    targetModel = FindExplorerItemModel(this.InputHitTest(point) as Avalonia.Visual);
+                    var hitVisual = this.InputHitTest(point) as Avalonia.Visual;
+                    Logger.Debug("Drop: InputHitTest returned {VisualType}", hitVisual?.GetType().Name ?? "null");
+                    
+                    // First try to find a parent DataGridRow or ListBoxItem
+                    var containerControl = FindDropTargetControl(hitVisual);
+                    if (containerControl != null)
+                    {
+                        Logger.Debug("Drop: Found container {ContainerType}", containerControl.GetType().Name);
+                        if (containerControl.DataContext is Models.ExplorerItemModel model)
+                        {
+                            targetModel = model;
+                            Logger.Debug("Drop: Found model via container DataContext: {Label}", model.Label);
+                        }
+                    }
+                    
+                    // Fall back to walking up the visual tree
+                    if (targetModel == null)
+                    {
+                        targetModel = FindExplorerItemModel(hitVisual);
+                        Logger.Debug("Drop: FindExplorerItemModel via InputHitTest returned {IsNull}", targetModel == null ? "null" : targetModel.Label);
+                    }
                 }
 
                 if (targetModel == null)
@@ -1005,7 +1098,9 @@ namespace Jaya.Ui.Views
                     return;
                 }
 
-                Logger.Debug("Target found: {Label}, IsDirectory={IsDir}, Type={Type}", targetModel.Label, targetModel.IsDirectory, targetModel.Type);
+                Logger.Debug("Target found: {Label}, IsDirectory={IsDir}, Type={Type}, Object={ObjType}", 
+                    targetModel.Label, targetModel.IsDirectory, targetModel.Type, 
+                    targetModel.Object?.GetType().Name ?? "null");
 
                 var vm = DataContext as ExplorerViewModel;
                 if (vm == null)
@@ -1017,15 +1112,84 @@ namespace Jaya.Ui.Views
                 // Only allow dropping onto directories
                 if (!targetModel.IsDirectory && targetModel.Type != ItemType.Account && targetModel.Type != ItemType.Computer)
                 {
-                    Logger.Debug("Drop rejected: target is not a directory");
+                    Logger.Error("Drop rejected: target is a {ObjType} file (IsDirectory={IsDir}, Type={Type}), not a directory", 
+                        targetModel.Object?.GetType().Name ?? "unknown", targetModel.IsDirectory, targetModel.Type);
                     return;
                 }
 
+                // Prevent dropping onto the same item(s). If the target path equals any source path, reject.
+                try
+                {
+                    string? NormalizePath(string? p)
+                    {
+                        if (string.IsNullOrWhiteSpace(p))
+                            return p;
+                        try
+                        {
+                            // Handle file:// URIs
+                            if (p.StartsWith("file://", StringComparison.OrdinalIgnoreCase))
+                            {
+                                try
+                                {
+                                    var u = new Uri(p);
+                                    return System.IO.Path.GetFullPath(Uri.UnescapeDataString(u.LocalPath));
+                                }
+                                catch { }
+                            }
+
+                            return System.IO.Path.GetFullPath(p).TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
+                        }
+                        catch { return p; }
+                    }
+
+                    var targetFsObj = targetModel.Object as Jaya.Shared.Models.FileSystemObjectModel;
+                    var rawTargetPath = targetFsObj?.Path;
+                    var targetPath = NormalizePath(rawTargetPath);
+                    if (!string.IsNullOrWhiteSpace(targetPath))
+                    {
+                        var normalizedSources = obj.Select(p => NormalizePath(p)).Where(p => !string.IsNullOrWhiteSpace(p)).ToArray();
+                        // If any source path matches the target path, do not allow the drop (self-drop)
+                        if (normalizedSources.Any(p => string.Equals(p, targetPath, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            Logger.Debug("Drop rejected: target is one of the source paths (self-drop)");
+                            return;
+                        }
+                        // Also reject if target is a directory and all sources already live inside that directory (no-op)
+                        try
+                        {
+                            if (targetModel.IsDirectory)
+                            {
+                                var allInside = normalizedSources.All(s =>
+                                {
+                                    try
+                                    {
+                                        var parent = System.IO.Path.GetDirectoryName(s) ?? string.Empty;
+                                        return string.Equals(NormalizePath(parent), targetPath, StringComparison.OrdinalIgnoreCase);
+                                    }
+                                    catch { return false; }
+                                });
+                                if (allInside)
+                                {
+                                    Logger.Debug("Drop rejected: all sources already in target directory (no-op)");
+                                    return;
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+                }
+                catch { }
+
                 // call ViewModel to handle drop
                 var effect = e.KeyModifiers.HasFlag(KeyModifiers.Control) ? DragDropEffects.Copy : DragDropEffects.Move;
+                var targetDirectory = targetModel.Object as Jaya.Shared.Models.DirectoryModel;
+                if (targetDirectory == null)
+                {
+                    Logger.Debug("Drop rejected: target object is not a DirectoryModel");
+                    return;
+                }
                 Logger.Debug("Invoking HandleDropAsync with effect={Effect}", effect);
-                await vm.HandleDropAsync(obj, targetModel.Object as Jaya.Shared.Models.DirectoryModel, effect);
-                e.Handled = true;
+                await vm.HandleDropAsync(obj, targetDirectory, effect);
                 Logger.Debug("Drop handled successfully");
             }
             catch (Exception ex)
@@ -1077,6 +1241,37 @@ namespace Jaya.Ui.Views
 
             Logger.Debug("Did not find ExplorerItemModel (searched {Depth} levels)", depth);
             return null;
+        }
+
+        static Avalonia.Controls.Control? FindDropTargetControl(Avalonia.Visual? visual)
+        {
+            var depth = 0;
+            while (visual != null && depth < 60)
+            {
+                if (visual is Avalonia.Controls.DataGridRow row)
+                    return row;
+                if (visual is Avalonia.Controls.ListBoxItem lbi)
+                    return lbi;
+                visual = Avalonia.VisualTree.VisualExtensions.GetVisualParent(visual) as Avalonia.Visual;
+                depth++;
+            }
+            return null;
+        }
+
+        void UpdateDropTargetHighlightControl(Avalonia.Controls.Control? ctrl)
+        {
+            try
+            {
+                if (!ReferenceEquals(_currentDropTargetControl, ctrl))
+                {
+                    if (_currentDropTargetControl != null)
+                        _currentDropTargetControl.Classes.Remove("drop-target");
+                    _currentDropTargetControl = ctrl;
+                    if (_currentDropTargetControl != null)
+                        _currentDropTargetControl.Classes.Add("drop-target");
+                }
+            }
+            catch { }
         }
 
         void InlineEdit_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

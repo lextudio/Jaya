@@ -95,6 +95,15 @@ namespace Jaya.Ui.Views
                 var visual = this.InputHitTest(pt) as Visual;
                 var node = FindTreeNodeModel(visual);
                 var targetDir = node?.FileSystemObject as DirectoryModel;
+                
+                // Reject drop if target is not a directory
+                if (targetDir == null)
+                {
+                    e.Handled = true;
+                    UpdateDropTargetHighlight(null);
+                    return;
+                }
+                
                 var effect = e.KeyModifiers.HasFlag(KeyModifiers.Control) ? DragDropEffects.Copy : DragDropEffects.Move;
 
                 // Ask user to confirm the drop

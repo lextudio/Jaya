@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <OutputType Condition="$([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('windows'))">WinExe</OutputType>
-    <TargetFrameworks>net10.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <StartupObject>Jaya.Ui.Program</StartupObject>
     <LangVersion>latest</LangVersion>
     <ApplicationIcon>Logo.ico</ApplicationIcon>
